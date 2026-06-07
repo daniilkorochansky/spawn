@@ -1,0 +1,23 @@
+# === Python (Cache and byte-code) ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+env/
+venv/
+
+# === (gettext) ===
+*.mo
+
+# === Nuitka / PyInstaller ===
+build/
+dist/
+*.egg-info/
+.nuitka-cache/
+*.exe
+
+# === Spawn ===
+assets/
+system/
