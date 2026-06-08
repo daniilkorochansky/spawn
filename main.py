@@ -956,7 +956,6 @@ class SpawnIDE(SpawnFrame):
         cfg_icon = self.icon_indices.get("cfg", 1)
 
         for rel_path, status in self.git_manager.status_cache.items():
-            print(f"{rel_path} | {status}")
             if status not in ["modified", "untracked", "staged", "deleted"]:
                 continue
 

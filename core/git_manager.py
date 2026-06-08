@@ -24,7 +24,7 @@ import sys
 
 from git import Repo
 
-class GitManager:
+class GitManager: 
     def __init__(self, project_path, git_exe_path=""):
         self.project_path = project_path
         self.git_exe = git_exe_path
@@ -90,7 +90,13 @@ class GitManager:
 
         try:
             if not self.repo.head.is_valid():
-                pass
+                for key_item in self.repo.index.entries.keys():
+                    path = key_item[0] if isinstance(key_item, tuple) else key_item
+
+                    if path:
+                        clean_path = str(path).strip('"').replace('\\','/').strip().lower()
+                        if clean_path not in self.status_cache:
+                            self.status_cache[clean_path] = "staged"
             else:
                 for diff_item in self.repo.index.diff("HEAD"):
                     path = diff_item.a_path if diff_item.a_path else diff_item.b_path

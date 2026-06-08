@@ -106,7 +106,7 @@ class GitCommitHistoryDialog(wx.Dialog):
                 self.hash_map[short_hash] = commit.hexsha
 
         except Exception as e:
-            self.m_listCtrl_Log.InsertItem(0, "Reading History Error")
+            pass
 
     def on_history_item_selected(self, event):
         row_idx = event.GetIndex()
