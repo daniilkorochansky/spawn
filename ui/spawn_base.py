@@ -83,6 +83,8 @@ wx.ID_GIT_STAGE_ALL = 6055
 wx.ID_GIT_UNSTAGE_ALL = 6056
 wx.ID_RUN_STOP_SERVER = 6063
 wx.ID_GIT_COMMIT_HISTORY = 6064
+wx.ID_GIT_TERMINAL = 6065
+wx.ID_SELECT_ALL = 6066
 
 def get_app_root_dir():
     if 'NUITKA_ONEFILE_PARENT' in os.environ or getattr(sys, 'frozen', False):
@@ -296,6 +298,7 @@ class SpawnFrame ( wx.Frame ):
         self.SetMenuBar( self.m_menubar )
 
         self.m_statusBar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
+        self.SetStatusBarPane(-1)
         
         self.m_projectPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
         
@@ -306,7 +309,7 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_splitter_ProjectPanel = wx.SplitterWindow( self.m_projectPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D|wx.SP_LIVE_UPDATE )
         self.m_splitter_ProjectPanel.Bind( wx.EVT_IDLE, self.m_splitter_ProjectPanelOnIdle )
-        self.m_splitter_ProjectPanel.SetMinimumPaneSize(200)
+        self.m_splitter_ProjectPanel.SetMinimumPaneSize(260)
 
         self.m_panel_splitter_ProjectTree = wx.Panel( self.m_splitter_ProjectPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
         bSizer_splitter_ProjectTree = wx.BoxSizer( wx.VERTICAL )
@@ -427,7 +430,7 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_auiToolBar_Git.AddSeparator()
 
-        self.m_tool_GitTerminal = self.m_auiToolBar_Git.AddTool( wx.ID_GIT_COMMIT_HISTORY, _(u"Git Terminal"), wx.Bitmap(os.path.join(self.icons_folder,"tb_git_terminal.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"GitTerminal"), wx.EmptyString, None )
+        self.m_tool_GitTerminal = self.m_auiToolBar_Git.AddTool( wx.ID_GIT_TERMINAL, _(u"Git Terminal"), wx.Bitmap(os.path.join(self.icons_folder,"tb_git_terminal.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Git Terminal"), wx.EmptyString, None )
 
         self.m_auiToolBar_Git.Realize()
 
@@ -440,7 +443,7 @@ class SpawnFrame ( wx.Frame ):
         
 
         self.m_textCtrl_CommitText = wx.TextCtrl( self.m_panel_Git, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_textCtrl_CommitText.SetHint("What has changed?")
+        self.m_textCtrl_CommitText.SetHint(_(u"What has changed?"))
         bSizer_GitHistory.Add( self.m_textCtrl_CommitText, 0, wx.ALL|wx.EXPAND, 5 )
 
         self.m_button_Commit = wx.Button( self.m_panel_Git, wx.ID_GIT_COMMIT, _(u"Commit"), wx.DefaultPosition, wx.DefaultSize, 0)
@@ -507,9 +510,6 @@ class EditorTabPanel ( wx.Panel ):
         self.m_scintilla_Editor.SetMarginWidth( 0, self.m_scintilla_Editor.TextWidth( wx.stc.STC_STYLE_LINENUMBER, "_999999" ) )
         self.m_scintilla_Editor.SetSelBackground( True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT ) )
         self.m_scintilla_Editor.SetSelForeground( True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT ) )
-        
-
-        
 
         bSizer_EditorTab.Add( self.m_scintilla_Editor, 4, wx.EXPAND, 0 )
 
@@ -518,32 +518,32 @@ class EditorTabPanel ( wx.Panel ):
         self.m_scintilla_Minimap.Hide()
         
         self.m_menuMinimap = wx.Menu()
-        self.m_menuItem_Minimap_ZoomIn = wx.MenuItem( self.m_menuMinimap, wx.ID_ANY, _(u"Zoom In"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Minimap_ZoomIn = wx.MenuItem( self.m_menuMinimap, wx.ID_ANY, u"Zoom In", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuMinimap.Append( self.m_menuItem_Minimap_ZoomIn )
 
-        self.m_menuItem_Minimap_ZoomOut = wx.MenuItem( self.m_menuMinimap, wx.ID_ANY, _(u"Zoom Out"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Minimap_ZoomOut = wx.MenuItem( self.m_menuMinimap, wx.ID_ANY, u"Zoom Out", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuMinimap.Append( self.m_menuItem_Minimap_ZoomOut )
 
-        self.m_menuItem_Minimap_ZoomReset = wx.MenuItem( self.m_menuMinimap, wx.ID_ANY, _(u"Zoom Reset"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Minimap_ZoomReset = wx.MenuItem( self.m_menuMinimap, wx.ID_ANY, u"Zoom Reset", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuMinimap.Append( self.m_menuItem_Minimap_ZoomReset )
 
         self.m_menuMinimap.AppendSeparator()
 
         self.m_menu1 = wx.Menu()
-        self.m_menuItem_Minimap_Narrow = wx.MenuItem( self.m_menu1, wx.ID_MINIMAP_NARROW, _(u"Narrow"), wx.EmptyString, wx.ITEM_RADIO )
+        self.m_menuItem_Minimap_Narrow = wx.MenuItem( self.m_menu1, wx.ID_MINIMAP_NARROW, u"Narrow", wx.EmptyString, wx.ITEM_RADIO )
         self.m_menu1.Append( self.m_menuItem_Minimap_Narrow )
 
-        self.m_menuItem_Minimap_Normal = wx.MenuItem( self.m_menu1, wx.ID_MINIMAP_NORMAL, _(u"Normal"), wx.EmptyString, wx.ITEM_RADIO )
+        self.m_menuItem_Minimap_Normal = wx.MenuItem( self.m_menu1, wx.ID_MINIMAP_NORMAL, u"Normal", wx.EmptyString, wx.ITEM_RADIO )
         self.m_menu1.Append( self.m_menuItem_Minimap_Normal )
 
-        self.m_menuItem_Minimap_Wide = wx.MenuItem( self.m_menu1, wx.ID_MINIMAP_WIDE, _(u"Wide"), wx.EmptyString, wx.ITEM_RADIO )
+        self.m_menuItem_Minimap_Wide = wx.MenuItem( self.m_menu1, wx.ID_MINIMAP_WIDE, u"Wide", wx.EmptyString, wx.ITEM_RADIO )
         self.m_menu1.Append( self.m_menuItem_Minimap_Wide )
 
-        self.m_menuMinimap.AppendSubMenu( self.m_menu1, _(u"Width") )
+        self.m_menuMinimap.AppendSubMenu( self.m_menu1, u"Width" )
 
         self.m_menuMinimap.AppendSeparator()
 
-        self.m_menuItem_Minimap_Hide = wx.MenuItem( self.m_menuMinimap, wx.ID_MINIMAP_HIDE, _(u"Hide Minimap"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Minimap_Hide = wx.MenuItem( self.m_menuMinimap, wx.ID_MINIMAP_HIDE, u"Hide Minimap", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuMinimap.Append( self.m_menuItem_Minimap_Hide )
 
         self.m_scintilla_Minimap.Bind( wx.EVT_RIGHT_DOWN, self.m_scintilla_MinimapOnContextMenu )

@@ -25,7 +25,7 @@ import wx.html
 
 import os
 import json
-import webbrowser
+import re
 
 import markdown
 
@@ -62,7 +62,7 @@ class DependencyManagerDialog ( wx.Dialog ):
         bSizer_DependencyInstall.Add( self.m_staticText_Dependency, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, 5 )
 
         self.m_textCtrl_Dependency = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_textCtrl_Dependency.SetHint( _(u"user/repository (or plugin://user/repository)") )
+        self.m_textCtrl_Dependency.SetHint( _(u"user/repository (plugin://user/repository)") )
 
         bSizer_DependencyInstall.Add( self.m_textCtrl_Dependency, 1, wx.BOTTOM|wx.TOP, 15 )
 
@@ -76,7 +76,7 @@ class DependencyManagerDialog ( wx.Dialog ):
         bSizer_DependencyList = wx.BoxSizer( wx.HORIZONTAL )
 
         m_listBox_DependencyChoices = []
-        self.m_listBox_Dependency = wx.ListBox( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_listBox_DependencyChoices, 0 )
+        self.m_listBox_Dependency = wx.ListBox( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_listBox_DependencyChoices, wx.LB_HSCROLL )
         self.m_listBox_Dependency.SetMinSize( wx.Size( 200,-1 ) )
         self.m_listBox_Dependency.Bind(wx.EVT_LISTBOX, self.on_dependency_selected)
 
@@ -147,7 +147,6 @@ class DependencyManagerDialog ( wx.Dialog ):
 
         self.m_htmlWin_Readme = wx.html.HtmlWindow( self.m_panel_DependencyInfo, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.html.HW_NO_SELECTION|wx.html.HW_SCROLLBAR_AUTO )
         self.m_htmlWin_Readme.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
-        self.m_htmlWin_Readme.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.on_readme_link_clicked)
 
         bSizer_Submain_DependencyInfo.Add( self.m_htmlWin_Readme, 1, wx.BOTTOM|wx.EXPAND|wx.LEFT|wx.RIGHT, 15 )
 
@@ -230,13 +229,6 @@ class DependencyManagerDialog ( wx.Dialog ):
                 return
         self.Destroy()
 
-    def on_readme_link_clicked(self, event):
-        link_info = event.GetLinkInfo()
-        url = link_info.GetHref()
-        if url.startswith(("http://", "https://", "www.")):
-            webbrowser.open(url)
-        else:
-            event.Skip()
 
     def on_dependency_selected(self, event):
         
@@ -292,23 +284,44 @@ class DependencyManagerDialog ( wx.Dialog ):
                     break
                 except Exception:
                     pass
+
+        style = """
+        <style>
+        body {
+            font-family: Segoe UI;
+            font-size: 10pt;
+            margin: 8px;
+        }
+
+        code {
+            font-family: Consolas;
+        }
+        </style>
+        """
+
+        readme_html_content = re.sub(r'<img[^>]*>','',readme_html_content,flags=re.IGNORECASE)
+        readme_html_content = re.sub(r'<a\b[^>]*>(.*?)</a>',r'\1',readme_html_content,flags=re.IGNORECASE | re.DOTALL)
+
+        readme_html_content = re.sub(r'<pre><code[^>]*>','<table bgcolor="#F5F5F5" width="100%"><tr><td><pre>',readme_html_content,flags=re.IGNORECASE)
+        readme_html_content = re.sub(r'</code></pre>','</pre></td></tr></table>',readme_html_content,flags=re.IGNORECASE)
+        
         final_html = f"""
         <html>
         <body>
-        <div class='markdown-body'>
         {readme_html_content}
-        </div>
         </body>
         </html>
         """
-        self.m_htmlWin_Readme.SetPage(final_html)
+        
+        html = style + final_html
+        self.m_htmlWin_Readme.SetPage(html)
                 
 
     def on_close_dialog(self, event):
         if self.download_worker and self.download_worker.is_alive():
             res = wx.MessageBox(
-                u"Активен процесс работы с зависимостью! Вы уверены что хотите прервать операцию?",
-                u"Работа с зависимостью",
+                _(u"A dependency is being processed! Are you sure you want to abort the operation?"),
+                _(u"Working with dependency"),
                 wx.YES_NO | wx.ICON_WARNING,
                 self
                 )
@@ -323,7 +336,7 @@ class DependencyManagerDialog ( wx.Dialog ):
             return
 
         res = wx.MessageBox(f"Вы действительно хотите удалить зависимость {selection} из проекта?",
-                            u"Потверждение удаления", wx.YES_NO | wx.ICON_QUESTION)
+                            _(u"Deletion confirmation"), wx.YES_NO | wx.ICON_QUESTION)
         if res == wx.NO: return
 
         self.m_gaugeProgress.SetValue(0)
@@ -345,7 +358,7 @@ class DependencyManagerDialog ( wx.Dialog ):
 
     def on_ensure_all(self, event):
         self.m_gaugeProgress.SetValue(0)
-        self.m_staticText_CurrentDownStatus.SetLabel(u"Начало проверки зависимостей")
+        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Start checking dependencies..."))
 
         self.download_worker = DependencyDownloadWorker(
             project_path=self.project_path,
@@ -368,7 +381,7 @@ class DependencyManagerDialog ( wx.Dialog ):
         self.m_buttonUninstall.Enable(False)
        
 
-        self.m_staticText_CurrentDownStatus.SetLabel(u"Установка зависимости...")
+        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Installing dependency..."))
         self.download_worker = DependencyDownloadWorker(
             project_path=self.project_path,
             sampctl_bin=self.sampctl_bin,
@@ -389,7 +402,7 @@ class DependencyManagerDialog ( wx.Dialog ):
             
         elif percent == 100:
             self.m_gaugeProgress.SetValue(100)
-            self.m_staticText_CurrentDownStatus.SetLabel(u"Процесс успешно завершён!")
+            self.m_staticText_CurrentDownStatus.SetLabel(_(u"The process has been completed successfully."))
             self.m_textCtrl_Dependency.Enable(True)
             self.m_textCtrl_Dependency.SetValue("")
             self.m_button_DependencyInstall.Enable(True)

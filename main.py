@@ -24,6 +24,8 @@ import sys
 import json
 import re
 import subprocess
+import shutil
+import traceback
 
 import gettext
 _ = gettext.gettext
@@ -64,13 +66,11 @@ class SpawnIDE(SpawnFrame):
 
         self.server_process_thread = None
 
-        self.git_enabled = False
-
         self.last_picked_hex_color = "0xFFFFFFFF"
         
         self.m_statusBar.SetFieldsCount(4)
         self.m_statusBar.SetStatusWidths([-1,50,130,150])
-        self.m_statusBar.SetStatusText(u"Success", 0)
+        self.m_statusBar.SetStatusText(u"---", 0)
         self.m_statusBar.SetStatusText(u"---", 1)
         self.m_statusBar.SetStatusText(u"---", 2)
         self.m_statusBar.SetStatusText(u"---", 3)
@@ -86,6 +86,8 @@ class SpawnIDE(SpawnFrame):
         self.m_treeCtrl_ProjectTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_tree_item_clicked)
         self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
         self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.on_tab_closing)
+        self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSED, self.on_tab_closed)
+        
         self.Bind(wx.EVT_MENU, self.on_save_current_file, id=wx.ID_SAVE)
         self.Bind(wx.EVT_MENU, self.on_save_all_files, id=wx.ID_SAVE_ALL)
         self.Bind(wx.EVT_TOOL, self.on_save_all_files, id=wx.ID_TOOLBAR_SAVE_ALL)
@@ -95,7 +97,14 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_open_settings_tab_click, id=wx.ID_SETTINGS)
         self.Bind(wx.EVT_MENU, self.on_open_find_dialog, id=wx.ID_FIND_REPLACE)
         self.Bind(wx.EVT_MENU, self.on_execute_go_to_line, id=wx.ID_GO_TO_LINE)
-        self.Bind(wx.EVT_MENU, self.on_open_dependency_manager_click, id=wx.ID_SAMPCTL_DEPENDENCIES_MANAGER)      
+        self.Bind(wx.EVT_MENU, self.on_open_dependency_manager_click, id=wx.ID_SAMPCTL_DEPENDENCIES_MANAGER)
+
+        self.Bind(wx.EVT_MENU, self.on_copy_click, id=wx.ID_COPY)
+        self.Bind(wx.EVT_MENU, self.on_cut_click, id=wx.ID_CUT)
+        self.Bind(wx.EVT_MENU, self.on_paste_click, id=wx.ID_PASTE)
+        self.Bind(wx.EVT_MENU, self.on_select_all_click, id=wx.ID_SELECT_ALL)
+        self.Bind(wx.EVT_MENU, self.on_undo_click, id=wx.ID_UNDO)
+        self.Bind(wx.EVT_MENU, self.on_redo_click, id=wx.ID_REDO)
 
         self.Bind(wx.EVT_MENU, self.on_menu_convert_eol_crlf, id=wx.ID_EOL_CRLF)
         self.Bind(wx.EVT_MENU, self.on_menu_convert_eol_lf, id=wx.ID_EOL_LF)
@@ -155,8 +164,8 @@ class SpawnIDE(SpawnFrame):
 
             infobar_sizer = infobar.GetSizer()
             if infobar_sizer:
-                self.btn_sampctl = wx.Button(infobar, self.ID_INFOBAR_SETUP_SAMPCTL, _("Обзор..."))
-                self.btn_git = wx.Button(infobar, self.ID_INFOBAR_SETUP_GIT, _("Обзор..."))
+                self.btn_sampctl = wx.Button(infobar, self.ID_INFOBAR_SETUP_SAMPCTL, _(u"Browse..."))
+                self.btn_git = wx.Button(infobar, self.ID_INFOBAR_SETUP_GIT, _(u"Browse..."))
                 self.btn_sampctl.Hide()
                 self.btn_git.Hide()
 
@@ -182,6 +191,43 @@ class SpawnIDE(SpawnFrame):
         self.toggle_project_ui_state(False)
         self.update_button_is_no_tabs()
         self.update_git_ui_controls_state()
+
+    def on_undo_click(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            tab.m_scintilla_Editor.Undo()
+
+    def on_redo_click(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            tab.m_scintilla_Editor.Redo()
+
+    def on_copy_click(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            tab.m_scintilla_Editor.Copy()
+
+    def on_cut_click(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            tab.m_scintilla_Editor.Cut()
+
+    def on_paste_click(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            if wx.TheClipboard.Open():
+                try:
+                    text_data = wx.TextDataObject()
+
+                    if wx.TheClipboard.GetData(text_data):
+                        tab.m_scintilla_Editor.ReplaceSelection(text_data.GetText())
+                finally:
+                    wx.TheClipboard.Close()
+
+    def on_select_all_click(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            tab.m_scintilla_Editor.SelectAll()
         
 
     def on_frame_first_show(self, event):
@@ -191,7 +237,7 @@ class SpawnIDE(SpawnFrame):
         self.check_environment_on_startup()
 
     def show_file_diff_markers(self, absolute_path, relative_path):
-        if not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
+        if not self.git_manager or not self.git_manager.is_repo:
             return
 
         clean_rel_path = relative_path.replace('\\','/')
@@ -245,7 +291,7 @@ class SpawnIDE(SpawnFrame):
             print(f"[Change History Sync Error] {e}")
 
     def on_git_view_history_click(self, event):
-        if not getattr(self, 'git_enabled', True) or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
+        if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
             return
 
         with GitCommitHistoryDialog(self, self.git_manager.repo, self.execute_git_time_travel_reset) as dlg:
@@ -260,7 +306,7 @@ class SpawnIDE(SpawnFrame):
                 f"Это безвозвратно уничтожит все текущие незакоммиченные правки на диске "
                 f"и насильно вернёт файлы всего сервера в состояние этого коммита!\n\n"
                 f"Вы уверены, что хотите продолжить?",
-                u"Предупреждение",
+                _(u"Warning"),
                 wx.YES_NO | wx.ICON_ERROR | wx.NO_DEFAULT, self)
             if confirm == wx.NO: return
         else:
@@ -268,7 +314,7 @@ class SpawnIDE(SpawnFrame):
                 f"Вы хотите сделать мягкий возврат до коммита [{short_hash}].\n\n"
                 f"Указатель HEAD переместиться в прошлое, но весь ваш текущий написанный код останется в целости "
                 f"и просто перейдёт в статус изменений.\n\nПродолжить?",
-                u"Перемотка истории", wx.YES_NO|wx.ICON_QUESTION, self
+                _(u"Rewind history"), wx.YES_NO|wx.ICON_QUESTION, self
                 )
             if confirm == wx.NO: return
 
@@ -315,7 +361,8 @@ class SpawnIDE(SpawnFrame):
 
                         if os.path.exists(abs_file_path) and os.path.isfile(abs_file_path):
                             try:
-                                with open(abs_file_path, 'r', encoding="utf-8", errors="replace") as f:
+                                enc = tab.current_encoding
+                                with open(abs_file_path, 'r', encoding=enc, errors="replace") as f:
                                     clean_text = f.read().replace("\r\n", "\n")
 
                                 tab.m_scintilla_Editor.SetText(clean_text)
@@ -332,7 +379,7 @@ class SpawnIDE(SpawnFrame):
                           u"Успех", wx.OK|wx.ICON_INFORMATION, self)
         else:
             #[statusbar] Не удалось выполнить сброс Git
-            wx.MessageBox(f"Не удалось выполнить сброс:\n{error_message}", u"Ошибка", wx.OK|wx.ICON_ERROR, self)
+            wx.MessageBox(f"Не удалось выполнить сброс:\n{error_message}", _(u"Git Error"), wx.OK|wx.ICON_ERROR, self)
 
     def check_environment_on_startup(self):
         self.SendSizeEvent()
@@ -409,7 +456,7 @@ class SpawnIDE(SpawnFrame):
         self.m_menubar.Enable(wx.ID_NEW_PROJECT, sampctl_ready)
 
         if not sampctl_ready:
-            msg = u"Пожайлуста, укажите путь к исполняемому файлу SAMPCTL."
+            msg = _(u"Please provide the path to the SAMPCTL executable.")
             infobar.Hide()
             self.btn_sampctl.Show()
             
@@ -421,7 +468,7 @@ class SpawnIDE(SpawnFrame):
             return
 
         if not git_ready:
-            msg = u"Пожайлуста, укажите путь к исполняемому файлу GIT."
+            msg = _(u"Please provide the path to the Git executable.")
             infobar.Hide()
             self.btn_git.Show()
             
@@ -437,7 +484,7 @@ class SpawnIDE(SpawnFrame):
     def on_infobar_action_click(self, event):
         btn_id = event.GetId()
         if btn_id == self.ID_INFOBAR_SETUP_SAMPCTL:
-            with wx.FileDialog(self, u"Укажите путь к исполняемому файлу sampctl.exe",
+            with wx.FileDialog(self, _(u"Specify the path to the sampctl.exe executable file."),
                                defaultFile="sampctl.exe", wildcard="SAMPCTL (*.exe)|sampctl.exe",
                                style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
@@ -447,7 +494,7 @@ class SpawnIDE(SpawnFrame):
                     self.check_environment_on_startup()
                     
         elif btn_id == self.ID_INFOBAR_SETUP_GIT:
-            with wx.FileDialog(self, u"Укажите путь к исполняемому файлу git.exe",
+            with wx.FileDialog(self, _(u"Specify the path to the git.exe executable file."),
                                defaultFile="git.exe", wildcard="GIT (*.exe)|git.exe",
                                style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
@@ -460,18 +507,21 @@ class SpawnIDE(SpawnFrame):
     def update_git_ui_controls_state(self):
         toolbar = self.m_auiToolBar_Git
 
-        if not getattr(self, 'git_enabled', True) or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo or not toolbar:
+        if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo or not toolbar:
             if toolbar:
                 toolbar.EnableTool(wx.ID_GIT_DISCARD_ALL, False)
                 toolbar.EnableTool(wx.ID_GIT_REFRESH, False)
                 toolbar.EnableTool(wx.ID_GIT_STAGE_ALL, False)
                 toolbar.EnableTool(wx.ID_GIT_UNSTAGE_ALL, False)
+                toolbar.EnableTool(wx.ID_GIT_COMMIT_HISTORY, False)
+                toolbar.EnableTool(wx.ID_GIT_TERMINAL, False)
 
                 toolbar.Realize()
                 toolbar.Refresh()
                 toolbar.GetContainingSizer().Layout()
             self.m_textCtrl_CommitText.Enable(False)
             self.m_button_Commit.Enable(False)
+
             self.m_treeCtrl_GitHistory.DeleteAllItems()
             return
         
@@ -485,6 +535,8 @@ class SpawnIDE(SpawnFrame):
         toolbar.EnableTool(wx.ID_GIT_REFRESH, True)
         toolbar.EnableTool(wx.ID_GIT_STAGE_ALL, has_unstaged)
         toolbar.EnableTool(wx.ID_GIT_UNSTAGE_ALL, has_staged)
+        toolbar.EnableTool(wx.ID_GIT_COMMIT_HISTORY, True)
+        toolbar.EnableTool(wx.ID_GIT_TERMINAL, True)
 
         toolbar.Realize()
         toolbar.Refresh()
@@ -497,13 +549,13 @@ class SpawnIDE(SpawnFrame):
             self.m_textCtrl_CommitText.SetValue("")
 
     def on_git_unstage_all_click(self, event):
-        if not getattr(self, 'git_enabled', True) or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
+        if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
             return
 
         has_staged = any(status == "staged" for status in self.git_manager.status_cache.values())
         if not has_staged:
-            wx.MessageBox("Нет проиндексированных файлов для сброса!",
-                          "Индексация", wx.OK|wx.ICON_INFORMATION, self)
+            wx.MessageBox(_(u"There are no indexed files to reset."),
+                          _(u"Git Indexing"), wx.OK|wx.ICON_INFORMATION, self)
             return
 
         self.git_source_control_toggle_ui(False)
@@ -524,6 +576,8 @@ class SpawnIDE(SpawnFrame):
             self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_REFRESH, True)
             self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_STAGE_ALL, True)
             self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_UNSTAGE_ALL, True)
+            self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_COMMIT_HISTORY, True)
+            self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_TERMINAL, True)
         else:
             self.m_textCtrl_CommitText.Enable(False)
             self.m_button_Commit.Enable(False)
@@ -531,6 +585,8 @@ class SpawnIDE(SpawnFrame):
             self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_REFRESH, False)
             self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_STAGE_ALL, False)
             self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_UNSTAGE_ALL, False)
+            self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_COMMIT_HISTORY, False)
+            self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_TERMINAL, False)
 
     def on_git_unstage_all_async_finished(self, success, error_message):
         self.git_source_control_toggle_ui(True)
@@ -543,16 +599,16 @@ class SpawnIDE(SpawnFrame):
             #Индексация успешно сброшена
         else:
             wx.MessageBox(f"Не удалось сбросить индексацию:\n{error_message}",
-                          u"Ошибка Git", wx.OK|wx.ICON_ERROR, self)
+                          _(u"Git Error"), wx.OK|wx.ICON_ERROR, self)
         
 
     def on_git_stage_all_click(self, event):
-        if not getattr(self, 'git_enabled', True) or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
+        if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
             return
 
         if not self.git_manager.status_cache:
-            wx.MessageBox("В репозитории нет изменённых файлов для индексации!",
-                          "Индексация", wx.OK|wx.ICON_INFORMATION, self)
+            wx.MessageBox(_(u"There are no modified files in the repository to index."),
+                          _(u"Git Indexing"), wx.OK|wx.ICON_INFORMATION, self)
             return
 
         self.git_source_control_toggle_ui(False)
@@ -576,7 +632,7 @@ class SpawnIDE(SpawnFrame):
             #Здесь статус бар о том что всё проиндексировано
         else:
             wx.MessageBox(f"Не удалось проиндексировать файлы:\n{error_message}",
-                          u"Ошибка Git", wx.OK|wx.ICON_ERROR, self)
+                          _(u"Git Error"), wx.OK|wx.ICON_ERROR, self)
 
     def on_git_tree_right_click(self, event):
         tree = self.m_treeCtrl_GitHistory
@@ -612,13 +668,13 @@ class SpawnIDE(SpawnFrame):
         ID_GIT_SHOW_DIFF_LINES = 8503
 
         if status == "staged":
-            menu.Append(ID_GIT_SINGLE_STAGE, _("Unstage"))
+            menu.Append(ID_GIT_SINGLE_STAGE, _(u"Unstage"))
             self.Bind(wx.EVT_MENU, lambda evt: self.execute_git_single_stage_toggle(file_path, relative_path, is_unstage=True), id=ID_GIT_SINGLE_STAGE)
         else:
-            menu.Append(ID_GIT_SINGLE_STAGE, _("Stage"))
+            menu.Append(ID_GIT_SINGLE_STAGE, _(u"Stage"))
             self.Bind(wx.EVT_MENU, lambda evt: self.execute_git_single_stage_toggle(file_path, relative_path, is_unstage=False), id=ID_GIT_SINGLE_STAGE)
 
-        menu_label = u"Откатить изменения файла" if status != "deleted" else u"Восстановить удалённый файл"
+        menu_label = _(u"Revert File Changes") if status != "deleted" else _(u"Recover Deleted File")
         item_reset = menu.Append(ID_GIT_SINGLE_RESET, menu_label)
         
         if status == "modified":
@@ -647,12 +703,15 @@ class SpawnIDE(SpawnFrame):
     def on_git_single_stage_async_finished(self, success, relative_path, error_message):
         """Срабатывает по финишу: обновляет кэш и обновляет Project Tree, Git Tree"""
         self.git_source_control_toggle_ui(True)
-
+        
         if success:
             if hasattr(self, 'git_manager') and self.git_manager:
+            
                 self.git_manager.update_statuses_cache()
             self.refresh_project_tree()
             #[statusbar] Индекс файла успешно обновлён
+        else:
+            print(error_massage)
 
     
     def execute_git_single_file_reset(self, absolute_path, relative_path):
@@ -665,10 +724,10 @@ class SpawnIDE(SpawnFrame):
 
         if status == "untracked":
             msg = f"Файл '{file_name}' является абсолютно новым (untracked) и ещё не закоммичен.\n\nВы уверены, что хотите полностью стереть и удалить его с жёсткого диска?"
-            title = u"Удаление нового файла"
+            title = _(u"Deleting a new file")
         else:
             msg = f"Вы уверены, что хотите уничтожить локальные правки и вернуть файл '{file_name}' к состоянию последнего коммита?"
-            title = u"Откат файла"
+            title = _(u"Rolling back a file")
         confirm = wx.MessageBox(msg, title, wx.YES_NO | wx.ICON_QUESTION | wx.NO_DEFAULT, self)
         if confirm == wx.NO:
             return
@@ -714,7 +773,8 @@ class SpawnIDE(SpawnFrame):
                     if os.path.normpath(tab.file_path).lower() == abs_file_path.lower():
                         if os.path.exists(tab.file_path) and os.path.isfile(tab.file_path):
                             try:
-                                with open(tab.file_path, 'r', encoding="utf-8", errors="replace") as f:
+                                current_enc = tab.current_encoding
+                                with open(tab.file_path, 'r', encoding=current_enc, errors="replace") as f:
                                     clean_text = f.read().replace("\r\n", "\n")
 
                                 tab.m_scintilla_Editor.SetText(clean_text)
@@ -729,28 +789,30 @@ class SpawnIDE(SpawnFrame):
 
             #Здесь вывод в статус бар от том что откат файла завершён
         else:
-            wx.MessageBox(f"Не удалось откатить файл:\n{error_message}", u"Ошибка Git", wx.OK | wx.ICON_ERROR, self)
+            wx.MessageBox(f"Не удалось откатить файл:\n{error_message}", _(u"Git Error"), wx.OK | wx.ICON_ERROR, self)
         
 
     def on_menu_convert_eol_crlf(self, event):
         active_tab = self.m_auinotebook_Main.GetCurrentPage()
-        if active_tab and hasattr(active_tab, "native_eol"):
-            active_tab.native_eol = "CRLF"
+        if not active_tab.is_untitled:
+            if active_tab and hasattr(active_tab, "native_eol"):
+                active_tab.native_eol = "CRLF"
+                self.on_save_current_file(None)
 
-            active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_CRLF)
-            #active_tab.m_scintilla_Editor.SetSavePoint()
+                active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_CRLF)
+                self.on_save_current_file(None)
 
     def on_menu_convert_eol_lf(self, event):
         active_tab = self.m_auinotebook_Main.GetCurrentPage()
-        if active_tab and hasattr(active_tab, "native_eol"):
-            active_tab.native_eol = "LF"
-
-            active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_LF)
-            #active_tab.m_scintilla_Editor.SetSavePoint()
+        if not active_tab.is_untitled:
+            if active_tab and hasattr(active_tab, "native_eol"):
+                active_tab.native_eol = "LF"
+                active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_LF)
+                self.on_save_current_file(None)
 
     #Подготовка к встраиванию Git (GitPython библиотека)!
     def on_git_reset_all_changes_click(self, event):
-        if not getattr(self, 'git_enabled', True) or not hasattr(self, 'git_manager') or self.git_manager is None:
+        if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None:
             return
 
         if not self.current_project_path:
@@ -763,7 +825,7 @@ class SpawnIDE(SpawnFrame):
             u"Внимание! Это действие принудительно стерёт и уничтожит абсолютно все ваши незакоммиченные "
             u"изменения в кодовой базе до состояния последнего коммита!\n\n"
             u"Вы уверены, что хотите безвозвратно откатить код проекта?",
-            u"Откат изменений",
+            _(u"Rollback changes"),
             wx.YES_NO|wx.ICON_QUESTION|wx.NO_DEFAULT,
             self
             )
@@ -807,7 +869,7 @@ class SpawnIDE(SpawnFrame):
                         if os.path.exists(tab.file_path) and os.path.isfile(tab.file_path):
                             enc = getattr(tab, 'current_encoding', 'utf-8')
                             try:
-                                with open(tab.file_path, 'r', encoding="utf-8", errors="replace") as f:
+                                with open(tab.file_path, 'r', encoding=enc, errors="replace") as f:
                                     clean_text = f.read().replace("\r\n", "\n")
 
                                 tab.m_scintilla_Editor.SetText(clean_text)
@@ -826,7 +888,7 @@ class SpawnIDE(SpawnFrame):
 
         
     def on_git_manual_refresh(self, event):
-        if not getattr(self, 'git_enabled', True) or not hasattr(self, 'git_manager') or self.git_manager is None:
+        if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None:
             return
 
         if not self.current_project_path:
@@ -877,9 +939,10 @@ class SpawnIDE(SpawnFrame):
 
         tree.DeleteAllItems()
 
-        if not getattr(self, "git_enabled", True):
+        if not self.git_enabled:
             return
 
+        
         root_node = tree.AddRoot("Root")
 
         created_folders = {}
@@ -893,6 +956,7 @@ class SpawnIDE(SpawnFrame):
         cfg_icon = self.icon_indices.get("cfg", 1)
 
         for rel_path, status in self.git_manager.status_cache.items():
+            print(f"{rel_path} | {status}")
             if status not in ["modified", "untracked", "staged", "deleted"]:
                 continue
 
@@ -997,7 +1061,7 @@ class SpawnIDE(SpawnFrame):
         file_ext = os.path.splitext(file_name)[-1].lower()
 
         status = "normal"
-        if getattr(self, 'git_enabled', True) and hasattr(self, "git_manager") and self.git_manager.is_repo:
+        if self.git_enabled and hasattr(self, "git_manager") and self.git_manager and self.git_manager.is_repo:
             status = self.git_manager.get_file_status(relative_path)
 
         bg_color = tree_ctrl.GetBackgroundColour()
@@ -1010,7 +1074,7 @@ class SpawnIDE(SpawnFrame):
         elif status == "staged":
             text_color = wx.Colour(0,128,192)
 
-        elif status == "ignored" or file_name == "project.spawn":
+        elif status == "ignored" or file_name == ".spawn.yaml":
             text_color = wx.Colour(128,128,128)
             
         else:
@@ -1033,8 +1097,9 @@ class SpawnIDE(SpawnFrame):
     def on_open_dependency_manager_click(self, event):
         if not self.current_project_path:
             return
-
-        with DependencyManagerDialog(self, self.current_project_path, u"D:/User Files/Python Projects/Spawn/system/sampctl.exe") as dlg:
+        
+        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
+        with DependencyManagerDialog(self, self.current_project_path, sampctl_bin_path) as dlg:
             dlg.ShowModal()
 
     def on_execute_go_to_line(self, event=None):
@@ -1046,9 +1111,9 @@ class SpawnIDE(SpawnFrame):
 
         dlg = wx.NumberEntryDialog(
             self,
-            message=u"Введите номер строки:",
-            prompt=u"Переход к строке",
-            caption=u"Go to Line",
+            message=_(u"Enter line number:"),
+            prompt=_(u"Go to line"),
+            caption=_(u"Go to line"),
             value=editor.GetCurrentLine() + 1,
             min=1,
             max=total_lines
@@ -1081,7 +1146,7 @@ class SpawnIDE(SpawnFrame):
         self.active_find_dialog = wx.FindReplaceDialog(
             self,
             self.find_dialog_data,
-            u"Поиск и замена",
+            _(u"Search and replace"),
             style=wx.FR_REPLACEDIALOG
             )
         self.active_find_dialog.Bind(wx.EVT_FIND, self.on_find_dialog_event)
@@ -1186,20 +1251,32 @@ class SpawnIDE(SpawnFrame):
         tb = self.m_auiToolBar
 
         if self.server_process_thread and self.server_process_thread.is_alive():
-            self.m_statusBar.SetStatusText(u"Остановка сервера...", 0)
+            self.m_statusBar.SetStatusText(_(u"Stopping the server..."), 0)
 
             self.server_process_thread.stop_server()
             return
 
         self.m_richText_ServerConsole.Clear()
 
+        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
+        self.m_menuItem_Ensure.Enable(False)
+        self.m_menuItem_ProjectClose.Enable(False)
+        self.m_menuItem_CompileProject.Enable(False)
+        self.m_menuItem_CleanProject.Enable(False)
+        self.m_menuItem_NewProject.Enable(False)
+        self.m_menuItem_OpenProjectFolder.Enable(False)
+
+        self.m_auinotebook_Output.SetSelection(1)
+        
+        self.m_mgr.Update()
+
         sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
 
         self.m_richText_ServerConsole.BeginBold()
-        self.m_richText_ServerConsole.WriteText(u"Инициализация и запуск сервера\n\n")
+        self.m_richText_ServerConsole.WriteText(u"Initializing and starting the server...\n\n")
         self.m_richText_ServerConsole.EndBold()
 
-        self.m_statusBar.SetStatusText(u"Запуск сервера...", 0)
+        self.m_statusBar.SetStatusText(_(u"Starting the server..."), 0)
 
 
         tool_item = tb.FindTool(wx.ID_TOOLBAR_RUN_STOP_SERVER)
@@ -1218,6 +1295,15 @@ class SpawnIDE(SpawnFrame):
         self.server_process_thread.start()
 
     def on_server_stopped(self, manual_stop):
+        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, True)
+        self.m_menuItem_Ensure.Enable(True)
+        self.m_menuItem_ProjectClose.Enable(True)
+        self.m_menuItem_CompileProject.Enable(True)
+        self.m_menuItem_CleanProject.Enable(True)
+        self.m_menuItem_NewProject.Enable(True)
+        self.m_menuItem_OpenProjectFolder.Enable(True)
+        self.m_mgr.Update()
+        
         tb = self.m_auiToolBar
         tool_item = tb.FindTool(wx.ID_TOOLBAR_RUN_STOP_SERVER)
         if tool_item:
@@ -1225,28 +1311,40 @@ class SpawnIDE(SpawnFrame):
             tb.Realize()
             tb.Refresh()
             tb.GetContainingSizer().Layout()
-        
-        self.m_richText_ServerConsole.BeginBold()
+            
+        self.m_richText_ServerConsole.MoveEnd()
 
         if manual_stop:
             self.m_richText_ServerConsole.BeginBold()
-            self.m_richText_ServerConsole.WriteText(u"\nСервер успешно остановлен!")
+            self.m_richText_ServerConsole.WriteText(u"\n\nThe server has been stopped successfully.")
             self.m_richText_ServerConsole.EndBold()
-            self.m_statusBar.SetStatusText(u"Сервер успешно остановлен!", 0)
+            self.m_statusBar.SetStatusText(_(u"The server has been stopped successfully."), 0)
         else:
             self.m_richText_ServerConsole.BeginBold()
-            self.m_richText_ServerConsole.WriteText(u"\n\nСервер внезапно завершил работу")
+            self.m_richText_ServerConsole.WriteText(u"\n\nThe server terminated unexpectedly.")
             self.m_richText_ServerConsole.EndBold()
-            self.m_statusBar.SetStatusText(u"Сервер внезапно завершил работу", 0)
-        self.m_richText_ServerConsole.EndBold()
+            self.m_statusBar.SetStatusText(_(u"The server terminated unexpectedly."), 0)
         
-        self.m_richText_ServerConsole.MoveEnd()
+        
+        
     def on_build_project_execute(self, event):
         if not self.current_project_path:
             return
 
         self.on_save_all_files(None)
         self.toggle_project_ui_state(False)
+        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
+        self.m_menuItem_Ensure.Enable(False)
+        self.m_menuItem_ProjectClose.Enable(False)
+        self.m_menuItem_CompileProject.Enable(False)
+        self.m_menuItem_CleanProject.Enable(False)
+        self.m_menuItem_RunStopServer.Enable(False)
+        self.m_menuItem_NewProject.Enable(False)
+        self.m_menuItem_OpenProjectFolder.Enable(False)
+        self.m_mgr.Update()
+        
+        self.m_auinotebook_Output.SetSelection(0)
+        
         self.m_richText_BuildOutput.Clear()
 
         
@@ -1259,10 +1357,10 @@ class SpawnIDE(SpawnFrame):
 
         
         self.m_richText_BuildOutput.BeginBold()
-        self.m_richText_BuildOutput.WriteText("Запуск сборки проекта\n\n")
+        self.m_richText_BuildOutput.WriteText("Starting the project build...\n\n")
         self.m_richText_BuildOutput.EndBold()
 
-        self.m_statusBar.SetStatusText(u"Сборка проекта...", 0)
+        self.m_statusBar.SetStatusText(_(u"Building the project..."), 0)
 
         compiler_thread = BackgroundCompiler(
             project_path=self.current_project_path,
@@ -1277,14 +1375,24 @@ class SpawnIDE(SpawnFrame):
     def on_build_project_finished(self, success):
         self.toggle_project_ui_state(True)
 
+        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, True)
+        self.m_menuItem_Ensure.Enable(True)
+        self.m_menuItem_ProjectClose.Enable(True)
+        self.m_menuItem_CompileProject.Enable(True)
+        self.m_menuItem_CleanProject.Enable(True)
+        self.m_menuItem_RunStopServer.Enable(True)
+        self.m_menuItem_NewProject.Enable(True)
+        self.m_menuItem_OpenProjectFolder.Enable(True)
+        self.m_mgr.Update()
+
         self.m_richText_BuildOutput.MoveEnd()
         self.m_richText_BuildOutput.BeginBold()
         if success:
-            self.m_richText_BuildOutput.WriteText(u"\n\nСборка успешно завершена")
-            self.m_statusBar.SetStatusText(u"Сборка успешно завершена", 0)
+            self.m_richText_BuildOutput.WriteText(u"\n\nThe build was completed successfully.")
+            self.m_statusBar.SetStatusText(_(u"The build was completed successfully."), 0)
         else:
-            self.m_richText_BuildOutput.WriteText(u"\n\nСборка завершилась с ошибками")
-            self.m_statusBar.SetStatusText(u"Сборка завершилась с ошибками", 0)
+            self.m_richText_BuildOutput.WriteText(u"\n\nThe build completed with errors.")
+            self.m_statusBar.SetStatusText(_(u"The build completed with errors."), 0)
 
         self.m_richText_BuildOutput.EndBold()
 
@@ -1300,7 +1408,7 @@ class SpawnIDE(SpawnFrame):
         self.open_file_in_tab(global_config_path)
         active_tab = notebook.GetCurrentPage()
         if active_tab:
-            notebook.SetPageText(notebook.GetSelection(), u"Settings")
+            notebook.SetPageText(notebook.GetSelection(), _(u"Settings"))
             notebook.SetPageToolTip(notebook.GetSelection(), "")
 
     def on_project_tree_right_click(self, event):
@@ -1331,27 +1439,28 @@ class SpawnIDE(SpawnFrame):
         ID_TREE_OPEN_FILE = 8007
         ID_GIT_INIT = 8008
         if not is_directory:
-            menu.Append(ID_TREE_OPEN_FILE, u"Открыть файл")
+            menu.Append(ID_TREE_OPEN_FILE, _(u"Open file"))
 
         if item_id == root_item_id:
-            if hasattr(self, 'git_manager') and getattr(self, 'git_enabled', True) and not self.git_manager.is_repo:
-                menu.Append(ID_GIT_INIT, u"Инициализировать Git")
+            if hasattr(self, 'git_manager') and self.git_enabled and not self.git_manager.is_repo:
+                menu.Append(ID_GIT_INIT, _(u"Initialize Git"))
                 self.Bind(wx.EVT_MENU, self.on_git_init_repository_click, id=ID_GIT_INIT)
             
         if item_id != root_item_id:
-            menu.Append(ID_RENAME_ITEM, "Переименовать...")
+            menu.Append(ID_RENAME_ITEM, _(u"Rename..."))
             
         if is_directory:
-            menu.Append(ID_CREATE_NEW_FILE, u"Создать файл...")
-            menu.Append(ID_CREATE_NEW_FOLDER, u"Создать папку...")
+            menu.Append(ID_CREATE_NEW_FILE, _(u"Create file..."))
+            menu.Append(ID_CREATE_NEW_FOLDER, _(u"Create folder..."))
             
         else:
-            if file_ext in ['.pwn']:
-                menu.Append(ID_SET_AS_ENTRY_POINT, u"Сделать главный файлом сервера")
+            #if file_ext in ['.pwn']:
+                #menu.Append(ID_SET_AS_ENTRY_POINT, u"Сделать главный файлом сервера")
+            pass
         
-        menu.Append(ID_OPEN_IN_EXPLORER, u"Открыть в проводнике")
+        menu.Append(ID_OPEN_IN_EXPLORER, _(u"Open in Explorer"))
         if item_id != root_item_id:
-            menu.Append(ID_DELETE_ITEM, u"Удалить")
+            menu.Append(ID_DELETE_ITEM, _(u"Delete"))
 
         self._context_selected_path = absolute_path
         self._context_selected_item_id = item_id
@@ -1370,9 +1479,8 @@ class SpawnIDE(SpawnFrame):
 # Подготовка к интеграции Git
     def on_git_init_repository_click(self, event):
         if not self.current_project_path: return
-
-        if not getattr(self, 'git_enabled', True):
-            return
+        if not self.git_enabled: return
+        if getattr(self, 'git_manager', None) == None: return
 
         try:
             new_repo = Repo.init(self.current_project_path)
@@ -1386,7 +1494,7 @@ class SpawnIDE(SpawnFrame):
 
             self.refresh_project_tree()
         except Exception as e:
-            wx.MessageBox(f"Не удалось инициализировать репозиторий: {e}", "Ошибка Git", wx.ID_OK|wx.ICON_ERROR, self)
+            wx.MessageBox(f"Не удалось инициализировать репозиторий: {e}", _(u"Git Error"), wx.ID_OK|wx.ICON_ERROR, self)
 
 
     def on_tree_set_as_entry(self, event):
@@ -1395,7 +1503,7 @@ class SpawnIDE(SpawnFrame):
             return
         pawn_json_path = os.path.join(self.current_project_path, "pawn.json")
         if not os.path.exists(pawn_json_path):
-            wx.MessageBox(u"Файл конфигурации pawn.json не найден!", u"Ошибка", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(u"Файл конфигурации pawn.json не найден!", _(u"Error"), wx.OK | wx.ICON_ERROR)
             return
         relative_path = os.path.relpath(absolute_file_path, self.current_project_path)
         clean_json_entry_path = relative_path.replace('\\', '/')
@@ -1422,18 +1530,18 @@ class SpawnIDE(SpawnFrame):
         parent_dir = getattr(self, "_context_selected_path", "")
         if not parent_dir or not os.path.isdir(parent_dir): return
 
-        dlg = wx.TextEntryDialog(self, u"Введите имя новой папки:", u"Создание папки")
+        dlg = wx.TextEntryDialog(self, _(u"Enter a name for the new folder:"), _(u"Creating a folder"))
         if dlg.ShowModal() == wx.ID_OK:
             new_folder_name = dlg.GetValue().strip()
             if new_folder_name:
                 full_new_dir = os.path.join(parent_dir, new_folder_name)
                 try:
                     os.makedirs(full_new_dir, exist_ok=True)
-                    if hasattr(self, 'git_manager') and self.git_manager.is_repo:
+                    if self.git_enabled and os.path.isfile(git_executable) and self.git_manager.is_repo:
                         self.git_manager.update_statuses_cache()
-                    #self.refresh_project_tree()
+                    self.refresh_project_tree()
                 except Exception as e:
-                    wx.MessageBox(f"Не удалось создать папку: {e}", u"Ошибка", wx.OK | wx.ICON_ERROR)
+                    wx.MessageBox(f"Не удалось создать папку: {e}", _(u"Error"), wx.OK | wx.ICON_ERROR)
         dlg.Destroy()
 
     def on_tree_rename_item(self, event):
@@ -1443,8 +1551,8 @@ class SpawnIDE(SpawnFrame):
         old_name = os.path.basename(old_path)
         is_dir = os.path.isdir(old_path)
 
-        title = u"Переименование папки" if is_dir else u"Переименование файла"
-        dlg = wx.TextEntryDialog(self, u"Введите новое имя:", title, old_name)
+        title = _(u"Renaming a folder") if is_dir else _(u"Renaming a file")
+        dlg = wx.TextEntryDialog(self, _(u"Enter a new name:"), title, old_name)
         if dlg.ShowModal() == wx.ID_OK:
             new_name = dlg.GetValue().strip()
             if not new_name or new_name == old_name:
@@ -1452,7 +1560,7 @@ class SpawnIDE(SpawnFrame):
                 return
             full_new_path = os.path.join(parent_dir, new_name)
             if os.path.exists(full_new_path):
-                wx.MessageBox(u"Объект с таким именем уже существует!", u"Ошибка", wx.OK | wx.ICON_ERROR)
+                wx.MessageBox(_(u"An object with this name already exists!"), _(u"Error"), wx.OK | wx.ICON_ERROR)
                 dlg.Destroy()
                 return
 
@@ -1478,7 +1586,7 @@ class SpawnIDE(SpawnFrame):
                             
                 self.refresh_project_tree()
             except Exception as e:
-                wx.MessageBox(f"Не удалось переименовать: {e}", u"Ошибка", wx.OK | wx.ICON_ERROR)
+                wx.MessageBox(f"Не удалось переименовать: {e}", _(u"Error"), wx.OK | wx.ICON_ERROR)
             finally:
                 if hasattr(self, 'file_watcher'): self.file_watcher.resume()
         dlg.Destroy()
@@ -1498,13 +1606,12 @@ class SpawnIDE(SpawnFrame):
         item_name = os.path.basename(path)
         msg = f"Вы уверены, что хотите навсегда удалить '{item_name}' жёсткого диска?"
 
-        res = wx.MessageBox(msg, u"Потверждение удаления", wx.YES_NO | wx.CANCEL | wx.ICON_WARNING)
+        res = wx.MessageBox(msg, _(u"Deletion confirmation"), wx.YES_NO | wx.CANCEL | wx.ICON_WARNING)
         if res == wx.YES:
             try:
                 if hasattr(self, 'file_watcher'): self.file_watcher.pause()
 
                 if os.path.isdir(path):
-                    import shutil
                     shutil.rmtree(path)
                 else:
                     os.remove(path)
@@ -1517,7 +1624,7 @@ class SpawnIDE(SpawnFrame):
                 self.update_button_is_no_tabs()
                 self.refresh_project_tree()
             except Exception as e:
-                wx.MessageBox(f"Ошибка при удалении: {e}", u"Ошибка", wx.OK | wx.ICON_ERROR)
+                wx.MessageBox(f"Ошибка при удалении: {e}", _(u"Error"), wx.OK | wx.ICON_ERROR)
             finally:
                 if hasattr(self, 'file_watcher'): self.file_watcher.resume()
 
@@ -1525,7 +1632,7 @@ class SpawnIDE(SpawnFrame):
         parent_dir = getattr(self, "_context_selected_path", "")
         if not parent_dir or not os.path.isdir(parent_dir): return
 
-        dlg = wx.TextEntryDialog(self, u"Введите имя нового файла:", u"Создание файла")
+        dlg = wx.TextEntryDialog(self, _(u"Enter a name for the new file:"), _(u"Creating a file"))
         dlg.SetValue("")
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -1545,23 +1652,27 @@ class SpawnIDE(SpawnFrame):
                     default_content = ""
 
                 try:
-                    with open(full_new_path, "w", encoding="utf-8", newline="") as f:
+                    with open(full_new_path, "w", encoding=file_encoding, newline="") as f:
                         f.write(default_content)
-                        if hasattr(self, 'git_manager') and self.git_manager.is_repo:
+                        
+                        if self.git_enabled and self.git_manager.is_repo:
                             self.git_manager.update_statuses_cache()
                     self.refresh_project_tree()
                 except Exception as e:
-                    wx.MessageBox(f"Не удалось создать файл: {e}", u"Ошибка", wx.OK | wx.ICON_ERROR)
+                    wx.MessageBox(f"Не удалось создать файл: {e}", _(u"Error"), wx.OK | wx.ICON_ERROR)
         dlg.Destroy()
 
     def on_new_file(self,event):
         new_tab = CustomEditorTab(self.m_auinotebook_Main, "")
         self.m_auinotebook_Main.AddPage( new_tab, "Untitled", True, wx.NullBitmap )
+        new_tab.is_untitled = True
         self.update_button_is_no_tabs()
+   
+        self.m_statusBar.SetStatusText(u"---", 2)
 
     def on_open_single_file(self, event):
-        with wx.FileDialog(self, u"Открыть файл",
-                           wildcard="All Files (*.pwn;*.inc;*.json;*.ini;*.cfg)|*.pwn;*.inc;*.json;*.ini;*.cfg|Pawn Files (*.pwn;*.inc)|*.pwn;*.inc|JSON File (*.json)|*.json|INI File (*.ini)|*.ini|Configuration File (*.cfg)|*.cfg",
+        with wx.FileDialog(self, _(u"Open file..."),
+                           wildcard="All Files (*.pwn;*.inc;*.json;*.ini;*.cfg;*.yaml)|*.pwn;*.inc;*.json;*.ini;*.cfg;*.yaml|Pawn Files (*.pwn;*.inc)|*.pwn;*.inc|JSON File (*.json)|*.json|INI File (*.ini)|*.ini|Configuration File (*.cfg)|*.cfg|Configuration File (*.yaml)|*.yaml",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
@@ -1573,10 +1684,11 @@ class SpawnIDE(SpawnFrame):
         if not self.current_project_path:
             return
 
-        if hasattr(self, "git_manager") and self.git_manager:
+        if self.git_manager:
             self.git_manager.status_cache.clear()
             self.git_manager.is_repo = False
             self.git_manager.repo = None
+            self.git_manager = None
 
         global_config_path = getattr(self.ide_cfg, "config_path", "")
 
@@ -1593,11 +1705,11 @@ class SpawnIDE(SpawnFrame):
                     file_name = os.path.basename(tab.file_path) if tab.file_path else u"Untitled"
                     
                     if tab.file_path == global_config_path:
-                        msg = u"Файл настроек изменён. Сохранить его перед выходом?"
+                        msg = _(u"The settings file has been modified. Save it before exiting?")
                     else:
                         msg = f"Файл '{file_name}' изменён или удалён. Сохранить его перед выходом?"
                    
-                    res = wx.MessageBox(msg, u"Закрытие проекта", wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
+                    res = wx.MessageBox(msg, _(u"Closing the project"), wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
 
                     if res == wx.YES:
                         self.on_save_current_file(None)
@@ -1652,7 +1764,7 @@ class SpawnIDE(SpawnFrame):
             self.toggle_project_ui_state(False)
 
 
-            self.m_statusBar.SetStatusText(u"Проект закрыт", 0)
+            self.m_statusBar.SetStatusText(_(u"The project has been successfully closed."), 0)
             self.m_statusBar.SetStatusText(u"---", 2)
             self.m_statusBar.SetStatusText(u"---", 3)
             self.m_statusBar.SetStatusText(u"---", 1)
@@ -1691,7 +1803,7 @@ class SpawnIDE(SpawnFrame):
                         else:
                             msg = f"Файл '{file_name}' изменён. Сохранить его перед выходом?"
 
-                    res = wx.MessageBox(msg, u"Сохранение проекта", wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
+                    res = wx.MessageBox(msg, _(u"Saving a project"), wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
                     if res == wx.YES:
                         self.on_save_current_file(None)
                         if tab.m_scintilla_Editor.GetModify() or (hasattr(tab,"file_path") and not os.path.exists(tab.file_path)):
@@ -1716,6 +1828,12 @@ class SpawnIDE(SpawnFrame):
         
         event.Skip()
         self.Destroy()
+
+    def on_tab_closed(self, event):
+        if self.m_auinotebook_Main.GetPageCount() < 1:
+            self.m_statusBar.SetStatusText(u"---", 3)
+            self.m_statusBar.SetStatusText(u"---", 2)
+            self.m_statusBar.SetStatusText(u"---", 1)
                 
         
     def on_tab_closing(self, event):
@@ -1738,7 +1856,7 @@ class SpawnIDE(SpawnFrame):
                 else:
                     msg = f"Файл '{file_name}' изменён. Сохранить его перед выходом?"
 
-            res = wx.MessageBox(msg, u"Закрытие файла", wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
+            res = wx.MessageBox(msg, _(u"Closing a file"), wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
             if res == wx.YES:
                 self.m_auinotebook_Main.SetSelection(page_idx)
                 self.on_save_current_file(None)
@@ -1748,6 +1866,7 @@ class SpawnIDE(SpawnFrame):
             elif res == wx.CANCEL:
                 event.Veto()
         wx.CallAfter(self.update_button_is_no_tabs)
+        
          
     def on_new_project(self,event):
         with NewProjectDialog(self) as dlg:
@@ -1769,7 +1888,7 @@ class SpawnIDE(SpawnFrame):
                 confirm = wx.MessageBox(
                     _("Указанный каталог уже существует и не является пустым!\n"
                       "Вы уверены, что хотите развернуть сервер внутри этой папки?"),
-                    _("Предупреждение"), wx.YES_NO| wx.ICON_QUESTION, self
+                    _("Warning"), wx.YES_NO| wx.ICON_QUESTION, self
                     )
                 if confirm == wx.NO: return
 
@@ -1780,10 +1899,12 @@ class SpawnIDE(SpawnFrame):
             worker.start()
         except Exception as e:
             self.Enable(True)
-            wx.MessageBox(f"{_('Не удалось запустить процесс инициализации сервера:')} {e}", _("Инициализация сервера"), wx.OK|wx.ICON_ERROR, self)
+            self.Raise()
+            wx.MessageBox(f"{_('Не удалось запустить процесс инициализации сервера:')} {e}", _(u"Server initialization"), wx.OK|wx.ICON_ERROR, self)
 
     def on_new_project_async_finished(self, success, target_path):
         self.Enable(True)
+        self.Raise()
         target_pawn_json = os.path.join(target_path, "pawn.json")
         print(success)
         if not success or not os.path.exists(target_pawn_json):
@@ -1795,8 +1916,8 @@ class SpawnIDE(SpawnFrame):
                         os.rmdir(target_path)
                 except Exception:
                     pass
-            wx.MessageBox(_("Инициализация сервера отменена: файл pawn.json не обнаружен."),
-                          _("Инициализация сервера"), wx.OK | wx.ICON_WARNING, self)
+            wx.MessageBox(_(u"Server initialization aborted: pawn.json file not found."),
+                          _(u"Server initialization"), wx.OK | wx.ICON_WARNING, self)
             return
 
         self.on_close_project_click(None)
@@ -1809,7 +1930,7 @@ class SpawnIDE(SpawnFrame):
             return
         #Встраивание Git
         if self.git_enabled:
-            if getattr(self, 'git_manager', True) and hasattr(self, 'git_manager') and self.git_manager and self.git_manager.is_repo:
+            if getattr(self, 'git_manager', None) and self.git_manager and self.git_manager.is_repo:
                 self.git_manager.update_statuses_cache()
                 branch_name = self.git_manager.get_active_branch_name()
                 #Обновляем бранч в StatusBar
@@ -1858,10 +1979,10 @@ class SpawnIDE(SpawnFrame):
             if new_root_id.IsOk():
                 restore_expanded_state(new_root_id)
         except Exception as e:
-            pass
+            print(str(e))
         finally:
             tree.Thaw()
-            if self.git_enabled:
+            if self.git_enabled and self.git_manager:
                 self.rebuild_git_changes_tree()
             self.update_git_ui_controls_state()
 
@@ -1890,13 +2011,13 @@ class SpawnIDE(SpawnFrame):
         
 
     def on_open_project_folder_click(self, event):
-        with wx.DirDialog(self, u"Выберите папку с вашим проектом", style=wx.DD_DEFAULT_STYLE|wx.DD_DIR_MUST_EXIST) as dirDialog:
+        with wx.DirDialog(self, _(u"Select the server folder"), style=wx.DD_DEFAULT_STYLE|wx.DD_DIR_MUST_EXIST) as dirDialog:
             if dirDialog.ShowModal() == wx.ID_CANCEL:
                 return
 
             chosen_path = dirDialog.GetPath()
             if not os.path.exists(os.path.join(chosen_path, "pawn.json")):
-                wx.MessageBox(u"В выбранной папке не найден файл pawn.json!\n\nУбедитесь, что папка является проектом.",u"Ошибка открытия файла", wx.OK|wx.ICON_ERROR)
+                wx.MessageBox(u"В выбранной папке не найден файл pawn.json!\n\nУбедитесь, что папка является проектом.",_(u"Opening the server folder"), wx.OK|wx.ICON_ERROR)
                 return
             
             if self.current_project_path != chosen_path:
@@ -1937,43 +2058,43 @@ class SpawnIDE(SpawnFrame):
         self.m_auiToolBar.GetContainingSizer().Layout()
 
     def load_project(self,path):
-        self.current_project_path = path
-        self.ide_cfg.set_project(path)
-        
-        self.toggle_project_ui_state(True)
-        ProjectTreeManager.populate_tree(self.m_treeCtrl_ProjectTree, path, self.icon_indices)
-   
-        #self.load_build_targets()
-        self.file_watcher.start(path)
+        try:
+            self.current_project_path = path
+            self.ide_cfg.set_project(path)
+            
+            self.toggle_project_ui_state(True)
+       
+            #self.load_build_targets()
+            self.file_watcher.start(path)
+            
+            if self.git_enabled:
+                git_executable = self.ide_cfg.get("system.git.executable_path", "")
+                #Обновляем в StatusBar имя бранча
+                self.git_manager = GitManager(path, git_executable)
+                if self.git_manager.is_repo:
+                    self.git_manager.update_statuses_cache()
+                    branch_name = self.git_manager.get_active_branch_name()
 
-        
-        self.git_enabled = self.ide_cfg.get("system.git.enable", False)
-
-        if self.git_enabled:
-            git_executable = self.ide_cfg.get("system.git.path", "")
-            #Обновляем в StatusBar имя бранча
-            git_executable = "C:/Program Files/Git/bin" #Для теста!!
-            self.git_manager = GitManager(path, git_executable)
-            if git_executable != "" and self.git_manager.is_repo:
-                self.git_manager.update_statuses_cache()
-                branch_name = self.git_manager.get_active_branch_name()
-
-                if hasattr(self, 'rebuild_git_changes_tree'):
-                    self.rebuild_git_changes_tree()
-
-                wx.CallAfter(self.refresh_project_tree)
-                
-                print(f"Project loaded. Git: {branch_name}")
+                    if hasattr(self, 'rebuild_git_changes_tree'):
+                        self.rebuild_git_changes_tree()
+                    
+                    print(f"Project loaded. Git: {branch_name}")
+                else:
+                    self.m_statusBar.SetStatusText(_(u"The project has been successfully opened."), 0)
+                    self.m_treeCtrl_GitHistory.DeleteAllItems()
+                    self.git_manager = None
+                    
             else:
-                print(u"Project loaded.")
+                self.m_statusBar.SetStatusText(_(u"The project has been successfully opened."), 0)
                 self.m_treeCtrl_GitHistory.DeleteAllItems()
+                self.git_manager = None
                 
-        else:
-            self.m_treeCtrl_GitHistory.DeleteAllItems()
-            self.git_manager = None
-
-        self.update_git_ui_controls_state()
-        self.check_environment_on_startup()
+            wx.CallAfter(self.refresh_project_tree)
+            
+            self.update_git_ui_controls_state()
+            self.check_environment_on_startup()
+        except Exception as e:
+            traceback.print_exc()
 
         #--------------------------
         
@@ -1993,10 +2114,7 @@ class SpawnIDE(SpawnFrame):
 
         new_page_idx = self.m_auinotebook_Main.GetPageCount() - 1
         self.m_auinotebook_Main.SetPageToolTip(new_page_idx, file_path)
-        self.update_button_is_no_tabs()
-
-
-   
+        self.update_button_is_no_tabs() 
 
     def on_tree_item_clicked(self,event):
         item = event.GetItem()
@@ -2017,12 +2135,21 @@ class SpawnIDE(SpawnFrame):
 
             if hasattr(active_tab, "native_eol") and active_tab.native_eol:
                 current_eol = active_tab.native_eol
+                current_enc = active_tab.current_encoding
                 if "CRLF" in current_eol:
                     eol = "CRLF"
                     self.item_crlf.Check(True)
+                    
+                    enc_status = current_enc.upper()
+                    eol_status = current_eol.upper()
+                    self.m_statusBar.SetStatusText(f"{enc_status} | {eol_status}", 2)
                 else:
                     eol = "LF"
                     self.item_lf.Check(True)
+
+                    enc_status = current_enc.upper()
+                    eol_status = current_eol.upper()
+                    self.m_statusBar.SetStatusText(f"{enc_status} | {eol_status}", 2)
         event.Skip()
 
     def on_save_all_files(self, event):
@@ -2037,7 +2164,13 @@ class SpawnIDE(SpawnFrame):
             self.m_auinotebook_Main.SetSelection(original_selection)
 
         self.m_auinotebook_Main.Thaw()
-        self.m_statusBar.SetStatusText(u"Все открытые файлы успешно сохранены", 0)
+        self.m_statusBar.SetStatusText(_(u"All open files were saved successfully."), 0)
+
+    @property
+    def git_enabled(self):
+        config_enable = self.ide_cfg.get("system.git.enable", False)
+        git_executable = self.ide_cfg.get("system.git.executable_path", "")
+        return bool(config_enable and git_executable and os.path.isfile(git_executable))
 
     def on_save_current_file(self,event):
         active_tab = self.m_auinotebook_Main.GetCurrentPage()
@@ -2067,7 +2200,7 @@ class SpawnIDE(SpawnFrame):
                     with open(active_tab.file_path, "wb") as f:
                         f.write(raw_bytes)
                 except UnicodeEncodeError:
-                    confirm_enc = wx.MessageBox(u"Текущий файл содержит не допустимые символы, которые нельзя сохранить в CP1251\n\nКонвертировать в UTF-8 (LF)?", u"Предупреждение", wx.YES_NO|wx.ICON_WARNING,self)
+                    confirm_enc = wx.MessageBox(u"Текущий файл содержит не допустимые символы, которые нельзя сохранить в CP1251\n\nКонвертировать в UTF-8 (LF)?", _(u"Warning"), wx.YES_NO|wx.ICON_WARNING,self)
                     if confirm_enc == wx.NO:
                         return
                     chosen_encoding = "utf-8"
@@ -2080,25 +2213,26 @@ class SpawnIDE(SpawnFrame):
                 
                     active_tab.current_encoding = chosen_encoding
                     
+                    enc_status = chosen_encoding.upper()
+                    eol_status = file_eol.upper()
+                    self.m_statusBar.SetStatusText(f"{enc_status} | {eol_status}", 2)
+                    
 
                 #Git------------------
                 if self.git_enabled:
-                    if hasattr(self, 'git_manager') and self.git_manager.is_repo:
+                    if getattr(self, 'git_manager', None) and self.git_manager.is_repo:
                         self.git_manager.update_statuses_cache()
-                    #self.refresh_project_tree()
                 #---------------------
+                self.refresh_project_tree()
 
                 active_tab.m_scintilla_Editor.SetSavePoint()
-                self.m_statusBar.SetStatusText(u"Файл успешно сохранён!", 0)
+                self.m_statusBar.SetStatusText(_(u"File saved successfully."), 0)
 
                 if self.git_enabled:
                     active_tab.m_scintilla_Editor.MarkerDeleteAll(12) #Удаляем все Git маркеры изменений
-
-                #Здесь в будущем будет обновление кэша ctags и symbols
-                #self.trigger_ctags_indexing(active_tab)
                 
             else:
-                with wx.FileDialog(self, u"Сохранить файл как...", defaultDir=self.current_project_path or "", defaultFile="", wildcard="Pawn Files (*.pwn;*.inc)|*.pwn;*.inc|All Files (*.*)|*.*", style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT) as saveDialog:
+                with wx.FileDialog(self, _(u"Save file as..."), defaultDir=self.current_project_path or "", defaultFile="", wildcard="Pawn Files (*.pwn;*.inc)|*.pwn;*.inc|All Files (*.*)|*.*", style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT) as saveDialog:
                     if saveDialog.ShowModal() == wx.ID_CANCEL:
                         if hasattr(self, "file_watcher"): self.file_watcher.resume()
                         return
@@ -2106,7 +2240,7 @@ class SpawnIDE(SpawnFrame):
 
                     chosen_encoding = "utf-8"
                     active_tab.native_eol = "LF"
-                    active_tab.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_LF)
+                    active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_LF)
                     disk_text = active_tab.m_scintilla_Editor.GetText()
 
                     active_tab.file_path = actual_path
@@ -2116,6 +2250,9 @@ class SpawnIDE(SpawnFrame):
                     with open(actual_path, "w", encoding=active_tab.current_encoding, newline="") as f:
                         f.write(disk_text)
 
+                    enc_status = chosen_encoding.upper()
+                    self.m_statusBar.SetStatusText(f"{enc_status} | LF", 2)
+
 
                     page_idx = self.m_auinotebook_Main.GetPageIndex(active_tab)
                     self.m_auinotebook_Main.SetPageText(page_idx, os.path.basename(actual_path))
@@ -2124,6 +2261,12 @@ class SpawnIDE(SpawnFrame):
                     active_tab.apply_lexer_by_extension()
 
                     active_tab.m_scintilla_Editor.SetSavePoint()
+                    #Git------------------
+                    if self.git_enabled:
+                        if getattr(self, 'git_manager', None) and self.git_manager.is_repo:
+                            self.git_manager.update_statuses_cache()
+                    #---------------------
+                    self.refresh_project_tree()
                     
         except Exception as f:
             print(f)
@@ -2141,7 +2284,20 @@ class SpawnIDE(SpawnFrame):
                     elif hasattr(loop_tab, "apply_json_styles") and loop_tab.file_path.endswith(".json"):
                         loop_tab.apply_json_styles()
                 self.check_environment_on_startup()
-                self.m_statusBar.SetStatusText("Настройки успешно сохранены!", 0)
+                self.m_statusBar.SetStatusText(_(u"Settings saved successfully."), 0)
+
+                if not self.git_enabled:
+                    # 1. Стираем менеджер, чтобы фоновые процессы не трогали Git
+                    if getattr(self, 'git_manager', None) and hasattr(self.git_manager, 'status_cache'):
+                        self.git_manager.status_cache.clear()
+                        self.git_manager.is_repo = False
+                        self.git_manager.repo = None
+                        self.git_manager = None
+                        
+                    self.git_source_control_toggle_ui(False)
+                    # 2. Очищаем дерево истории изменений Git в интерфейсе
+                    self.m_treeCtrl_GitHistory.DeleteAllItems()
+                
             #------------------------
             if hasattr(self, "file_watcher"):
                 self.file_watcher.resume()

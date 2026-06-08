@@ -24,6 +24,9 @@ import subprocess
 import threading
 import wx
 
+import gettext
+_ = gettext.gettext
+
 class DependencyDownloadWorker(threading.Thread):
     def __init__(self, project_path, sampctl_bin, package_url, ui_callback, add_command=""):
         super().__init__()
@@ -41,7 +44,7 @@ class DependencyDownloadWorker(threading.Thread):
 
         cmd = [self.sampctl_bin,self.add_command, self.package_url]
         try:
-            wx.CallAfter(self.ui_callback, 10, f"Подготовка к работе с зависимостью...")
+            wx.CallAfter(self.ui_callback, 10, _(u"Preparing to work with dependency..."))
 
             process = subprocess.Popen(
                 cmd,
@@ -73,6 +76,6 @@ class DependencyDownloadWorker(threading.Thread):
                 wx.CallAfter(self.ui_callback, 100, u"")
             else:
                 
-                wx.CallAfter(self.ui_callback, -1, u"Процесс прерван.")
+                wx.CallAfter(self.ui_callback, -1, _(u"The process has been interrupted."))
         except Exception as e:
             wx.CallAfter(self.ui_callback, -1, f"{e}")

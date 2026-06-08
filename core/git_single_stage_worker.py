@@ -21,6 +21,7 @@
 
 import threading
 import wx
+import time
 
 class GitSingleStageWorker(threading.Thread):
     def __init__(self, repo_obj, relative_file_path, is_unstage, on_finished_callback):

@@ -19,6 +19,8 @@
 #   along with Spawn.  If not, see <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------------------------------------------------
 
+import os
+
 import wx
 import wx.xrc
 
@@ -45,7 +47,7 @@ class NewProjectDialog ( wx.Dialog ):
 
         self.m_textCtrl_ProjectName = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
         bSizer_ProjectName.Add( self.m_textCtrl_ProjectName, 1, wx.ALL, 5 )
-
+        self.m_textCtrl_ProjectName.Bind(wx.EVT_TEXT,self.on_project_name_changed)
 
         bSizer_SubMain.Add( bSizer_ProjectName, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 15 )
 
@@ -58,6 +60,7 @@ class NewProjectDialog ( wx.Dialog ):
 
         self.m_dirPicker_ProjectLocation = wx.DirPickerCtrl( self, wx.ID_ANY, wx.EmptyString, _(u"Select a folder"), wx.DefaultPosition, wx.DefaultSize, wx.DIRP_CHANGE_DIR|wx.DIRP_DEFAULT_STYLE|wx.DIRP_SMALL )
         bSizer_ProjectLocation.Add( self.m_dirPicker_ProjectLocation, 1, wx.ALL, 5 )
+        self.m_dirPicker_ProjectLocation.Bind(wx.EVT_DIRPICKER_CHANGED,self.on_location_changed)
 
 
         bSizer_SubMain.Add( bSizer_ProjectLocation, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 15 )
@@ -75,7 +78,7 @@ class NewProjectDialog ( wx.Dialog ):
 
         bSizer_SubMain.Add( bSizer_ProjectResult, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 15 )
 
-        self.m_staticTextSampctlInfo = wx.StaticText( self, wx.ID_ANY, _(u"Примечание: После нажатия на кнопку 'Создать', откроется инструмент командной строки SAMPCTL в котором вам нужно следовать дальнейшим инструкциям."), wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticTextSampctlInfo = wx.StaticText( self, wx.ID_ANY, _(u"Note: After clicking Create, the SAMPCTL command-line tool will be launched. Follow the on-screen instructions to complete project creation."), wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_staticTextSampctlInfo.Wrap( -1 )
 
         bSizer_SubMain.Add( self.m_staticTextSampctlInfo, 1, wx.ALL, 20 )
@@ -97,6 +100,22 @@ class NewProjectDialog ( wx.Dialog ):
         self.Layout()
 
         self.Centre( wx.BOTH )
+
+    def on_project_name_changed(self, event):
+        self.update_result_path()
+        event.Skip()
+
+    def on_location_changed(self, event):
+        self.update_result_path()
+        event.Skip()
+
+    def update_result_path(self):
+        project_name = self.m_textCtrl_ProjectName.GetValue().strip()
+        base_path = self.m_dirPicker_ProjectLocation.GetPath()
+
+        result = os.path.join(base_path, project_name)
+
+        self.m_textCtrl_ProjectResult.SetValue(result)
 
     def __del__( self ):
         pass

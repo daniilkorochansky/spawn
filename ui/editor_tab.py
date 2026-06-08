@@ -93,8 +93,22 @@ class CustomEditorTab(gui.EditorTabPanel):
             if editor.IsFrozen():
                 event.Skip()
                 return
+            if mod_type & stc.STC_MOD_INSERTTEXT:
+                pos = event.GetPosition()
+                length = event.GetLength()
+                start_line = editor.LineFromPosition(pos)
+                end_line = editor.LineFromPosition(pos + length)
+
+                if end_line >= editor.GetLineCount():
+                    end_line = editor.GetLineCount() - 1
+
+                for current_line in range(start_line, end_line + 1):
+                    if current_line < editor.GetLineCount():
+                        new_paste_marker = editor.MarkerAdd(current_line, self.MARKER_MODIFIED_ID)
+                        self.modified_markers_handles.append(new_paste_marker)
             
             if mod_type & (stc.STC_MOD_INSERTTEXT | stc.STC_MOD_DELETETEXT):
+
                 modified_target_line = editor.GetCurrentLine()
                 git_marker_modified_mask = editor.MarkerGet(modified_target_line)
                 has_git_modified_marker = bool(git_marker_modified_mask & (1 << 12))
@@ -174,22 +188,27 @@ class CustomEditorTab(gui.EditorTabPanel):
         wx.ID_EDITOR_GO_TO_DEFINITION = 7007
         wx.ID_EDITOR_PICK_COLOR = 7008
         wx.ID_EDITOR_LAST_COLOR = 7009
-        wx.ID_EDITOR_COLORIZE_SELECTION = 7010 
+        wx.ID_EDITOR_COLORIZE_SELECTION = 7010
+        wx.ID_EDITOR_SELECT_ALL = 7011
 
         self.m_menuEditor = wx.Menu()
-        self.m_menuItem_Editor_Undo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_UNDO, _(u"Undo"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Undo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_UNDO, _(u"Undo")+ u"\t" + u"Ctrl+Z", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Undo )
-        self.m_menuItem_Editor_Redo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_REDO, _(u"Redo"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Redo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_REDO, _(u"Redo")+ u"\t" + u"Ctrl+Y", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Redo )
         self.m_menuEditor.AppendSeparator()
         self.m_menuItem_Editor_Cut = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_CUT, _(u"Cut")+ u"\t" + u"Ctrl+X", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Cut )
         self.m_menuItem_Editor_Copy = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_COPY, _(u"Copy")+ u"\t" + u"Ctrl+C", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Copy )
+      
+        
         self.m_menuItem_Editor_Paste = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_PASTE, _(u"Paste")+ u"\t" + u"Ctrl+V", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Paste )
-        self.m_menuItem_Editor_Delete = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_DELETE, _(u"Delete"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Delete = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_DELETE, _(u"Delete")+ u"\t" + u"Delete", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Delete )
+        self.m_menuItem_Editor_SelectAll = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_SELECT_ALL, _(u"Select All")+ u"\t" + u"Ctrl+A", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuEditor.Append( self.m_menuItem_Editor_SelectAll )
         self.m_menuEditor.AppendSeparator()
         #self.m_menuItem_Editor_GoToDefinition = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_GO_TO_DEFINITION, _(u"Go to Definition")+ u"\t" + u"F12", wx.EmptyString, wx.ITEM_NORMAL )
         #self.m_menuEditor.Append( self.m_menuItem_Editor_GoToDefinition )
@@ -214,6 +233,8 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_pick_color_menu_click, id=wx.ID_EDITOR_PICK_COLOR)
         self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_paste_last_color_menu_click, id=wx.ID_EDITOR_LAST_COLOR)
         self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_colorize_selection_click, id=wx.ID_EDITOR_COLORIZE_SELECTION)
+
+        
         
         self.m_scintilla_Editor.PopupMenu( self.m_menuEditor, event.GetPosition() )
         self.m_menuEditor.Destroy()
@@ -430,6 +451,13 @@ class CustomEditorTab(gui.EditorTabPanel):
 
         editor.StyleClearAll()
         editor.Refresh()
+
+        editor.MarkerDeleteAll(self.MARKER_MODIFIED_ID)
+        editor.MarkerDeleteAll(self.MARKER_SAVED_ID)
+        editor.MarkerDeleteAll(self.MARKER_GIT_MODIFIED_ID)
+
+        editor.SetMarginWidth(1, 0)
+        editor.SetMarginWidth(2, 0)
 
     def apply_pawn_styles(self):
         editor = self.m_scintilla_Editor
