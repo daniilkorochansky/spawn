@@ -56,10 +56,12 @@ wx.ID_BUILD_AND_RUN = 6022
 wx.ID_CLEAN_PROJECT = 6023
 wx.ID_SETTINGS = 6024
 wx.ID_DONATE = 6026
+
 wx.ID_MINIMAP_NARROW = 6037
 wx.ID_MINIMAP_NORMAL = 6038
 wx.ID_MINIMAP_WIDE = 6039
 wx.ID_MINIMAP_HIDE = 6040
+
 wx.ID_SAMPCTL_DEPENDENCIES_MANAGER = 6041
 wx.ID_PROJECT_SETTINGS = 6042
 wx.ID_SAVE = 6043
@@ -76,15 +78,26 @@ wx.ID_TOOLBAR_NEW_FILE = 6053
 wx.ID_EXIT = 6054
 wx.ID_EOL_CRLF = 6057
 wx.ID_EOL_LF = 6058
+
 wx.ID_GIT_COMMIT = 6059
 wx.ID_GIT_DISCARD_ALL = 6060
 wx.ID_GIT_REFRESH = 6062
 wx.ID_GIT_STAGE_ALL = 6055
 wx.ID_GIT_UNSTAGE_ALL = 6056
-wx.ID_RUN_STOP_SERVER = 6063
 wx.ID_GIT_COMMIT_HISTORY = 6064
 wx.ID_GIT_TERMINAL = 6065
+
+wx.ID_RUN_STOP_SERVER = 6063
 wx.ID_SELECT_ALL = 6066
+wx.ID_RESET_SETTINGS = 6067
+
+wx.ID_REOPEN_TO_UTF8 = 6068
+wx.ID_REOPEN_TO_CP1251 = 6069
+wx.ID_CONVERT_TO_UTF8 = 6070
+wx.ID_CONVERT_TO_CP1251 = 6071
+
+wx.ID_LANGUAGE_ENGLISH = 6072
+wx.ID_LANGUAGE_RUSSIAN = 6073
 
 def get_app_root_dir():
     if 'NUITKA_ONEFILE_PARENT' in os.environ or getattr(sys, 'frozen', False):
@@ -201,34 +214,43 @@ class SpawnFrame ( wx.Frame ):
         #self.m_edit.Append( self.m_menuItem_QuickOutline )
         self.m_edit.AppendSeparator()
 
+        encoding_submenu = wx.Menu()
+        self.m_edit.AppendSubMenu(encoding_submenu, _(u"Encoding"), wx.EmptyString)
+        encoding_reopen_submenu = wx.Menu()
+        self.item_reopen_to_utf8 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_UTF8, u"UTF-8")
+        self.item_reopen_to_cp1251 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1251, u"Windows-1251 (CP1251)")
+        encoding_submenu.AppendSubMenu(encoding_reopen_submenu, _(u"Reopen"), wx.EmptyString)
+        
+##        encoding_convert_submenu = wx.Menu()
+##        self.item_convert_to_utf8 = encoding_convert_submenu.Append(wx.ID_CONVERT_TO_UTF8, _(u"UTF-8"))
+##        self.item_convert_to_cp1251 = encoding_convert_submenu.Append(wx.ID_CONVERT_TO_CP1251, _(u"Windows-1251 (CP1251)"))
+##        encoding_submenu.AppendSubMenu(encoding_convert_submenu, _(u"Convert"), wx.EmptyString)
+
         eol_submenu = wx.Menu()
         self.item_crlf = eol_submenu.AppendRadioItem(wx.ID_EOL_CRLF, u"Windows (CRLF)")
         self.item_lf = eol_submenu.AppendRadioItem(wx.ID_EOL_LF, u"Unix (LF)")
-        self.m_edit.AppendSubMenu(eol_submenu, u"Line Endings (EOL)", u"Смена символов переноса строк")
+        self.m_edit.AppendSubMenu(eol_submenu, _(u"Line Endings"), wx.EmptyString)
         self.m_menubar.Append( self.m_edit, _(u"Edit") )
 
-        
-
         self.m_view = wx.Menu()
-        self.m_menuItem_FullScreen = wx.MenuItem( self.m_view, wx.ID_FULLSCREEN, _(u"Full Screen")+ u"\t" + u"F11", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_view.Append( self.m_menuItem_FullScreen )
+        #self.m_menuItem_FullScreen = wx.MenuItem( self.m_view, wx.ID_FULLSCREEN, _(u"Full Screen")+ u"\t" + u"F11", wx.EmptyString, wx.ITEM_NORMAL )
+        #self.m_view.Append( self.m_menuItem_FullScreen )
 
         #self.m_menuItem_ZenMode = wx.MenuItem( self.m_view, wx.ID_TOGGLE_ZEN_MODE, _(u"Toggle Zen Mode")+ u"\t" + u"Ctrl+K", wx.EmptyString, wx.ITEM_NORMAL )
         #self.m_view.Append( self.m_menuItem_ZenMode )
 
-        self.m_view.AppendSeparator()
+        #self.m_view.AppendSeparator()
+        self.m_menuItem_ToggleToolbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_TOOLBAR, _(u"Toggle Tool Bar")+ u"\t" + u"Ctrl+1", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_view.Append( self.m_menuItem_ToggleToolbar )
 
-        self.m_menuItem_ToggleProjectPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_PROJECT_PANEL, _(u"Toggle Project Panel")+ u"\t" + u"Ctrl+B", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleProjectPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_PROJECT_PANEL, _(u"Toggle Project Panel")+ u"\t" + u"Ctrl+2", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleProjectPanel )
 
-        self.m_menuItem_ToggleOutputPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_OUTPUT_PANEL, _(u"Toggle Output Panel"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleOutputPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_OUTPUT_PANEL, _(u"Toggle Output Panel")+ u"\t" + u"Ctrl+3", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleOutputPanel )
 
         #self.m_menuItem_ToggleMinimap = wx.MenuItem( self.m_view, wx.ID_TOGGLE_MINIMAP, _(u"Toggle Minimap"), wx.EmptyString, wx.ITEM_NORMAL )
         #self.m_view.Append( self.m_menuItem_ToggleMinimap )
-
-        self.m_menuItem_ToggleToolbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_TOOLBAR, _(u"Toggle Tool Bar"), wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_view.Append( self.m_menuItem_ToggleToolbar )
 
         #self.m_menuItem_ToggleStatusBar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_STATUSBAR, _(u"Toggle Status Bar"), wx.EmptyString, wx.ITEM_NORMAL )
         #self.m_view.Append( self.m_menuItem_ToggleStatusBar )
@@ -267,10 +289,10 @@ class SpawnFrame ( wx.Frame ):
         #self.m_menuItem_CompileAndRun = wx.MenuItem( self.m_build, wx.ID_BUILD_AND_RUN, _(u"Build and Run")+ u"\t" + u"Ctrl+F5", wx.EmptyString, wx.ITEM_NORMAL )
         #self.m_build.Append( self.m_menuItem_CompileAndRun )
 
-        self.m_build.AppendSeparator()
-
-        self.m_menuItem_CleanProject = wx.MenuItem( self.m_build, wx.ID_CLEAN_PROJECT, _(u"Clean Project"), wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_build.Append( self.m_menuItem_CleanProject )
+##        self.m_build.AppendSeparator()
+##
+##        self.m_menuItem_CleanProject = wx.MenuItem( self.m_build, wx.ID_CLEAN_PROJECT, _(u"Clean Project"), wx.EmptyString, wx.ITEM_NORMAL )
+##        self.m_build.Append( self.m_menuItem_CleanProject )
 
         self.m_menubar.Append( self.m_build, _(u"Build") )
 
@@ -279,9 +301,21 @@ class SpawnFrame ( wx.Frame ):
         self.m_server.Append( self.m_menuItem_RunStopServer )
         self.m_menubar.Append( self.m_server, _(u"Server") )
 
+        
+
         self.m_tools = wx.Menu()
+
+        language_submenu = wx.Menu()
+        self.item_english = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_ENGLISH, u"English")
+        self.item_russian = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_RUSSIAN, u"Русский")
+        self.m_tools.AppendSubMenu(language_submenu, _(u"Language"), wx.EmptyString)
+
+        self.m_tools.AppendSeparator()
+        
         self.m_menuItem_Settings = wx.MenuItem( self.m_tools, wx.ID_SETTINGS, _(u"Settings..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_tools.Append( self.m_menuItem_Settings )
+        self.m_menuItem_ResetSettings = wx.MenuItem( self.m_tools, wx.ID_RESET_SETTINGS, _(u"Reset Settings"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_tools.Append( self.m_menuItem_ResetSettings )
 
         self.m_menubar.Append( self.m_tools, _(u"Tools") )
 
@@ -468,7 +502,9 @@ class SpawnFrame ( wx.Frame ):
         self.m_outputPanel.SetSizer( bSizer_OutputPanel )
         self.m_outputPanel.Layout()
         bSizer_OutputPanel.Fit( self.m_outputPanel )
-        self.m_auinotebook_Main = wx.aui.AuiNotebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.aui.AUI_NB_CLOSE_ON_ALL_TABS )
+
+        #Code Editor Notebook
+        self.m_auinotebook_Main = wx.aui.AuiNotebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.aui.AUI_NB_CLOSE_ON_ALL_TABS|wx.aui.AUI_NB_SCROLL_BUTTONS|wx.aui.AUI_NB_TAB_SPLIT)
         self.m_mgr.AddPane( self.m_auinotebook_Main, wx.aui.AuiPaneInfo() .Center() .CaptionVisible( False ).PinButton( True ).Movable( False ).Dock().Resizable().FloatingSize( wx.DefaultSize ).BottomDockable( False ).TopDockable( False ).LeftDockable( False ).RightDockable( False ).Floatable( False ).Row( 1 ) )
 
 
@@ -489,7 +525,7 @@ class SpawnFrame ( wx.Frame ):
 class EditorTabPanel ( wx.Panel ):
 
     def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
-        # Панель инициализируется независимо и привязывается к переданному parent (блокноту)
+        # The panel is initialized independently and bound to the passed parent (notebook)
         wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )
 
         bSizer_EditorTab = wx.BoxSizer( wx.HORIZONTAL )
@@ -505,11 +541,7 @@ class EditorTabPanel ( wx.Panel ):
       
         self.m_scintilla_Editor.SetIndentationGuides( False )
         self.m_scintilla_Editor.SetReadOnly( False )
-
-        self.m_scintilla_Editor.SetMarginType( 0, wx.stc.STC_MARGIN_NUMBER )
-        self.m_scintilla_Editor.SetMarginWidth( 0, self.m_scintilla_Editor.TextWidth( wx.stc.STC_STYLE_LINENUMBER, "_999999" ) )
-        self.m_scintilla_Editor.SetSelBackground( True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT ) )
-        self.m_scintilla_Editor.SetSelForeground( True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT ) )
+        
 
         bSizer_EditorTab.Add( self.m_scintilla_Editor, 4, wx.EXPAND, 0 )
 

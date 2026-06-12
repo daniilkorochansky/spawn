@@ -17,7 +17,11 @@ dist/
 *.egg-info/
 .nuitka-cache/
 *.exe
+*.bat
 
 # === Spawn ===
 assets/
 system/
+
+*.bat
+mapping.cfg

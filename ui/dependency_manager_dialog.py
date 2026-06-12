@@ -62,7 +62,7 @@ class DependencyManagerDialog ( wx.Dialog ):
         bSizer_DependencyInstall.Add( self.m_staticText_Dependency, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, 5 )
 
         self.m_textCtrl_Dependency = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_textCtrl_Dependency.SetHint( _(u"user/repository (plugin://user/repository)") )
+        self.m_textCtrl_Dependency.SetHint( u"user/repository (plugin://user/repository)" )
 
         bSizer_DependencyInstall.Add( self.m_textCtrl_Dependency, 1, wx.BOTTOM|wx.TOP, 15 )
 
@@ -194,7 +194,7 @@ class DependencyManagerDialog ( wx.Dialog ):
 
         bSizer_DownloadingStatus.Add( self.m_staticText_Status, 0, wx.LEFT, 15 )
 
-        self.m_staticText_CurrentDownStatus = wx.StaticText( sbSizerGroupBoxStatus.GetStaticBox(), wx.ID_ANY, _(u"-"), wx.DefaultPosition, wx.DefaultSize, wx.ST_ELLIPSIZE_MIDDLE )
+        self.m_staticText_CurrentDownStatus = wx.StaticText( sbSizerGroupBoxStatus.GetStaticBox(), wx.ID_ANY, u"-", wx.DefaultPosition, wx.DefaultSize, wx.ST_ELLIPSIZE_MIDDLE )
         self.m_staticText_CurrentDownStatus.Wrap( -1 )
 
         bSizer_DownloadingStatus.Add( self.m_staticText_CurrentDownStatus, 0, wx.RIGHT, 15 )
@@ -220,8 +220,8 @@ class DependencyManagerDialog ( wx.Dialog ):
     def close_dialog_clicked(self, event):
         if self.download_worker and self.download_worker.is_alive():
             res = wx.MessageBox(
-                u"Активен процесс работы с зависимостью! Вы уверены что хотите прервать операцию?",
-                u"Работа с зависимостью",
+                _(u"A dependency is being processed! Are you sure you want to abort the operation?"),
+                _(u"Working with dependency"),
                 wx.YES_NO | wx.ICON_WARNING,
                 self
                 )
@@ -335,12 +335,12 @@ class DependencyManagerDialog ( wx.Dialog ):
             wx.Bell()
             return
 
-        res = wx.MessageBox(f"Вы действительно хотите удалить зависимость {selection} из проекта?",
+        res = wx.MessageBox(_(u"Do you really want to remove the dependency {selection} from the project?").format(selection=selection),
                             _(u"Deletion confirmation"), wx.YES_NO | wx.ICON_QUESTION)
         if res == wx.NO: return
 
         self.m_gaugeProgress.SetValue(0)
-        self.m_staticText_CurrentDownStatus.SetLabel(f"Удаление зависимости {selection}")
+        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Удаление зависимости {selection}").format(selection=selection))
 
         self.m_textCtrl_Dependency.Enable(False)
         self.m_button_DependencyInstall.Enable(False)
@@ -415,7 +415,7 @@ class DependencyManagerDialog ( wx.Dialog ):
             if main_win:
                 main_win.refresh_project_tree()
         else:
-            #Идёт скачивание
+            #Downloading in progress
             self.m_staticText_CurrentDownStatus.SetLabel(text)
             self.m_gaugeProgress.SetValue(percent)
 

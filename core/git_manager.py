@@ -24,19 +24,57 @@ import sys
 
 from git import Repo
 
-class GitManager: 
+class GitManager:
+    """
+    Provides Git repository integration for Spawn IDE.
+
+    This class is responsible for detecting Git repositories,
+    opening and managing GitPython repository instances,
+    retrieving branch information, and maintaining a cache of
+    file statuses used by the Project Tree and Source Control UI.
+
+    Supported file states include:
+
+    - modified
+    - staged
+    - untracked
+    - deleted
+    - ignored
+    - normal
+
+    The status cache is periodically refreshed from the repository
+    and allows fast status lookups without repeatedly querying Git.
+
+    Attributes:
+        project_path (str):
+            Absolute path to the project directory.
+
+        git_exe (str):
+            Path to the Git executable used by GitPython.
+
+        is_repo (bool):
+            Indicates whether the project directory is a valid
+            Git repository.
+
+        repo (git.Repo | None):
+            Active GitPython repository instance.
+
+        status_cache (dict[str, str]):
+            Cached mapping of relative file paths to Git status
+            values.
+    """
     def __init__(self, project_path, git_exe_path=""):
         self.project_path = project_path
         self.git_exe = git_exe_path
         self.is_repo = False
         self.repo = None
-        #Кэш статусов
+        
         self.status_cache = {}
 
         if self.git_exe and os.path.exists(self.git_exe):
             os.environ["GIT_PYTHON_GIT_EXECUTABLE"] = self.git_exe
 
-        #Первичная проверка
+        #Initial check
         self.check_repository()
 
     def check_repository(self):
@@ -50,7 +88,7 @@ class GitManager:
                 self.repo = Repo(self.project_path)
                 self.is_repo = True
             except Exception as e:
-                print(f"Не удалось открыть репозиторий: {e}")
+                print(f"Failed to open repository: {e}")
                 self.is_repo = False
         else:
             self.is_repo = False
@@ -66,7 +104,7 @@ class GitManager:
             return "detached"
     
     def update_statuses_cache(self):
-        #Сканирует репозиторий через GitPython и обновляет словарь кэша
+        """Scans the repository via GitPython and updates the cache dictionary"""
 
         self.status_cache.clear()
         if not self.is_repo or not self.repo:
@@ -86,7 +124,7 @@ class GitManager:
                     else:
                         self.status_cache[clean_path] = "modified"
         except Exception as e:
-            print(f"Ошибка чтения изменённых файлов: {e}")
+            print(f"Error reading modified files: {e}")
 
         try:
             if not self.repo.head.is_valid():
@@ -105,7 +143,7 @@ class GitManager:
                         if clean_path not in self.status_cache:
                             self.status_cache[clean_path] = "staged"
         except Exception as e:
-            print(f"[Git Cache] Варнинг HEAD-индекса: {e}")
+            print(f"[Git Cache] HEAD index warning: {e}")
 
         try:
             for untracked_file in self.repo.untracked_files:
@@ -114,7 +152,7 @@ class GitManager:
                     if clean_path not in self.status_cache:
                         self.status_cache[clean_path] = "untracked"
         except Exception as e:
-            print(f"[Git Cache] Ошибка чтения новых файлов: {e}")
+            print(f"[Git Cache] Error reading new files: {e}")
 
         try:
             ignored_raw = self.repo.git.status("--ignored", "--porcelain")
@@ -125,13 +163,24 @@ class GitManager:
                     if clean_path not in self.status_cache:
                         self.status_cache[clean_path] = "ignored"
         except Exception as e:
-            print(f"[Git Cache] Ошибка чтения .gitignore: {e}")
-        #print(f"[Git Ram] Текущий кэш: {self.status_cache}")
+            print(f"[Git Cache] Reading error .gitignore: {e}")
+        #print(f"[Git Cache] Current cache: {self.status_cache}")
 
     def get_file_status(self, relative_path):
-        #Возвращает статус конкретного файла
+        clean_path = relative_path.replace('\\', '/').strip().lower()
 
-        clean_path = relative_path.replace('\\','/').strip().lower()
-        return self.status_cache.get(clean_path, "normal")
+        status = self.status_cache.get(clean_path)
+        if status:
+            return status
+
+        for cached_path, cached_status in self.status_cache.items():
+            if (
+                cached_status == "ignored"
+                and cached_path.endswith("/")
+                and clean_path.startswith(cached_path)
+            ):
+                return "ignored"
+
+        return "normal"
 
             

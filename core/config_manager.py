@@ -33,6 +33,7 @@ class ConfigManager:
 
         self._schema = {
             "system": {
+                "language": ("en", str),
                 "git": {
                     "enable": (False, bool),
                     "executable_path": ("", str)
@@ -42,12 +43,9 @@ class ConfigManager:
                     }
                 },
             "editor": {
-                "general": {
-                    "tab_size": (4, int),
-                    },
                 "font": {
                     "size": (11, int),
-                    "line_spacing": (0, int),
+                    "line_spacing": (1, int),
                     "family": ("Consolas", str)
                 },
                 "features": {
@@ -61,74 +59,12 @@ class ConfigManager:
                         },
                     "brace_matching": {
                         "enabled": (True, bool),
-                        "color_bracelight": ("#0000FF", str),
+                        "color_bracelight": ("#FFFFFF", str),
                         "backcolor_bracelight": ("#E0E0FF", str),
-                        "color_bracebad": ("#FF0000", str),
-                        "backcolor_bracebad": ("#FFE0E0", str)
+                        "color_bracebad": ("#FFFFFF", str),
+                        "backcolor_bracebad": ("#E51400", str)
                         }
-                },
-                "syntax_highlighting": {
-                    "pawn": {
-                        "comment": {
-                        "color": ("#008000", str),
-                        "bold": (False, bool)
-                            },
-                        "comment_line": {
-                        "color": ("#008000", str),
-                        "bold": (False, bool)
-                            },
-                        "comment_doc": {
-                        "color": ("#008000", str),
-                        "bold": (False, bool)
-                            },
-                        "keyword": {
-                        "color": ("#0000FF", str),
-                        "bold": (True, bool)
-                            },
-                        "type": {
-                        "color": ("#008080", str),
-                        "bold": (False, bool)
-                            },
-                        "preprocessor": {
-                        "color": ("#A31515", str),
-                        "bold": (False, bool)
-                            },
-                        "string": {
-                        "color": ("#A31515", str),
-                        "bold": (False, bool)
-                            },
-                        "character": {
-                        "color": ("#A31515", str),
-                        "bold": (False, bool)
-                            },
-                        "number": {
-                        "color": ("#000000", str),
-                        "bold": (False, bool)
-                            }
-                        },
-                    "json": {
-                        "property": {
-                        "color": ("#0451A5", str),
-                        "bold": (False, bool)
-                            },
-                        "string": {
-                            "color": ("#A31515", str),
-                            "bold": (False, bool)
-                            },
-                        "number": {
-                            "color": ("#098658", str),
-                            "bold": (False, bool)
-                            },
-                        "keyword": {
-                            "color": ("#0000FF", str),
-                            "bold": (False, bool)
-                            },
-                        "operator": {
-                            "color": ("#000000", str),
-                            "bold": (False, bool)
-                            }
-
-                        }
+                           
                 }
             }
         }
@@ -141,6 +77,10 @@ class ConfigManager:
         self.project_config = {}
         self.load()
 
+    def reset_settings(self):
+        self.current_config = self._extract_defaults(self._schema)
+        self.save() 
+
     def set_project(self, project_path):
         if not project_path or not os.path.isdir(project_path):
             self.project_root = None
@@ -148,7 +88,7 @@ class ConfigManager:
             self.project_config = {}
             return
         self.project_root = project_path
-        self.project_config_path = os.path.join(project_path, "project.spawn")
+        self.project_config_path = os.path.join(project_path, "spawn.yaml")
         self.load_project_config()
 
     def load_project_config(self):
@@ -223,10 +163,10 @@ class ConfigManager:
             pass
 
     def get(self, path_str, default=None):
-        #Конфиг проекта
-        if path_str in self.project_config:
-            return self.project_config[path_str]
-        #Глобальный конфиг
+##        #Project config
+##        if path_str in self.project_config:
+##            return self.project_config[path_str]
+        #Global config
         keys = path_str.split('.')
         data = self.current_config
         for key in keys:
@@ -237,15 +177,15 @@ class ConfigManager:
         return data
 
     def set(self, path_str, value):
-        #Конфиг проекта
-        if path_str in self._project_schema:
-            _, expected_type = self._project_schema[path_str]
-            if isinstance(value, expected_type):
-                self.project_config[path_str] = value
-                if self.project_config_path:
-                    self.save_project_config()
+##        #Project config
+##        if path_str in self._project_schema:
+##            _, expected_type = self._project_schema[path_str]
+##            if isinstance(value, expected_type):
+##                self.project_config[path_str] = value
+##                if self.project_config_path:
+##                    self.save_project_config()
 
-        #Глобальный конфиг
+        #Global config
         keys = path_str.split('.')
 
         schema_data = self._schema

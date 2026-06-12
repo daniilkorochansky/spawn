@@ -78,7 +78,7 @@ class NewProjectDialog ( wx.Dialog ):
 
         bSizer_SubMain.Add( bSizer_ProjectResult, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 15 )
 
-        self.m_staticTextSampctlInfo = wx.StaticText( self, wx.ID_ANY, _(u"Note: After clicking Create, the SAMPCTL command-line tool will be launched. Follow the on-screen instructions to complete project creation."), wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticTextSampctlInfo = wx.StaticText( self, wx.ID_ANY, _(u"Note: After clicking 'Create', the SAMPCTL command-line tool will be launched. Follow the on-screen instructions to complete project creation."), wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_staticTextSampctlInfo.Wrap( -1 )
 
         bSizer_SubMain.Add( self.m_staticTextSampctlInfo, 1, wx.ALL, 20 )
@@ -87,9 +87,9 @@ class NewProjectDialog ( wx.Dialog ):
         bSizer_Main.Add( bSizer_SubMain, 1, wx.EXPAND, 5 )
 
         m_sdbSizerOkCancel = wx.StdDialogButtonSizer()
-        self.m_sdbSizerOkCancelOK = wx.Button( self, wx.ID_OK )
+        self.m_sdbSizerOkCancelOK = wx.Button( self, wx.ID_OK, _(u"Create"))
         m_sdbSizerOkCancel.AddButton( self.m_sdbSizerOkCancelOK )
-        self.m_sdbSizerOkCancelCancel = wx.Button( self, wx.ID_CANCEL )
+        self.m_sdbSizerOkCancelCancel = wx.Button( self, wx.ID_CANCEL, _(u"Cancel"))
         m_sdbSizerOkCancel.AddButton( self.m_sdbSizerOkCancelCancel )
         m_sdbSizerOkCancel.Realize()
 

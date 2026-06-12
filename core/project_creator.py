@@ -36,7 +36,7 @@ class ProjectCreateWorker(threading.Thread):
             
             exec_command = os.path.normpath(self.sampctl_path)
             print(exec_command)
-            cmd = (f'cmd.exe /K "cls && echo ========================================== && echo Initializing new server... && echo ========================================== && echo. && "{exec_command}" init"')
+            cmd = (f'cmd.exe /K "cls && echo. && "{exec_command}" init"')
             process = subprocess.Popen(
                 cmd,
                 cwd=self.target_path,

@@ -23,25 +23,60 @@ import os
 import wx
 
 class ProjectTreeManager:
+    """
+    Provides project tree population and file system traversal
+    for the Spawn.
+
+    This utility class is responsible for building the visual
+    project hierarchy displayed in the Project Tree panel.
+
+    It scans the project directory, creates folder and file nodes,
+    assigns appropriate icons, stores file system paths in tree
+    items, and applies Git status decorations when available.
+
+    The tree is optimized for Pawn and open.mp development by
+    automatically filtering generated files, dependency folders,
+    plugins, components, and other non-essential project assets.
+
+    Supported file types include:
+
+    - Pawn source files (.pwn)
+    - Pawn include files (.inc)
+    - Configuration files (.json, .ini, .cfg, .yaml)
+    - Text files (.txt)
+    - Lock files (.lock)
+
+    Features:
+        - Recursive directory scanning
+        - Automatic icon assignment
+        - Git status integration
+        - Alphabetical sorting
+        - Project-specific file filtering
+        - Flicker-free tree updates
+
+    Notes:
+        This class operates entirely through static methods and
+        does not maintain any internal state.
+    """
     @staticmethod
     def populate_tree(tree_ctrl, root_path, icon_indices):
-        """Принимает ГОТОВОЕ дерево из GUI и заполняет его файлами"""
-        tree_ctrl.Freeze()  # Замораживаем отрисовку, чтобы дерево не моргало
+        """It takes a ready-made tree from the GUI and populates it with files."""
+        tree_ctrl.Freeze()  # We freeze rendering to prevent the tree from flickering.
         tree_ctrl.DeleteAllItems()
         
         if not os.path.exists(root_path):
             tree_ctrl.Thaw()
             return
 
-        # Создаем главный корень (имя открытой папки сервера)
+        # Create the main root (the name of the open server folder).
         root_name = os.path.basename(root_path) or root_path
         root_node = tree_ctrl.AddRoot(root_name, image=icon_indices["folder_root"])
         tree_ctrl.SetItemImage(root_node, icon_indices["folder_root_opened"], wx.TreeItemIcon_Expanded)
         
-        # Привязываем полный путь к корню
+        # Bind the full path to the root.
         tree_ctrl.SetItemData(root_node, root_path)
         
-        # Сканируем директорию
+        # Scanning the directory
         ProjectTreeManager._scan_directory(tree_ctrl, root_node, root_path, icon_indices)
         
         tree_ctrl.Expand(root_node)

@@ -25,6 +25,49 @@ import threading
 import wx
 
 class BackgroundRunner(threading.Thread):
+    """
+    Runs an server through sampctl in a background thread.
+
+    This class is responsible for launching the server process,
+    streaming console output to a wx.RichTextCtrl, handling server
+    shutdown requests, and notifying the IDE when the process exits.
+
+    The server is executed using:
+
+        sampctl run
+
+    All stdout and stderr output is captured and forwarded to the
+    integrated Spawn console in real time.
+
+    Attributes:
+        project_path (str):
+            Path to the project directory where the server will be
+            started.
+
+        sampctl_bin (str):
+            Absolute path to the sampctl executable.
+
+        console (wx.richtext.RichTextCtrl):
+            Output console used to display server logs.
+
+        on_finished (callable | None):
+            Optional callback invoked when the server process exits.
+            Receives a boolean value indicating whether the shutdown
+            was requested by the user.
+
+        process (subprocess.Popen | None):
+            Active server process instance.
+
+        _stop_requested (bool):
+            Indicates whether a stop request was initiated by the user.
+
+    Features:
+        - Background server execution
+        - Real-time console output streaming
+        - UTF-8 and CP1251 output decoding
+        - Graceful server termination support
+        - Automatic UI notification on process exit
+    """
     def __init__(self, project_path, sampctl_executable, rich_text_ctrl, on_finished_callback=None):
         super().__init__()
         self.project_path = project_path
@@ -78,7 +121,7 @@ class BackgroundRunner(threading.Thread):
                 wx.CallAfter(self.on_finished, self._stop_requested)
                 
         except Exception as e:
-            wx.CallAfter(self.append_to_rich_console, f"[Spawn Error] Ошибка запуска сервера: {e}\n")
+            wx.CallAfter(self.append_to_rich_console, _(u"Server startup error: {e}\n").format(e=e))
             if self.on_finished:
                 wx.CallAfter(self.on_finished, False)
 
@@ -97,7 +140,7 @@ class BackgroundRunner(threading.Thread):
                 else:
                     self.process.terminate()
             except Exception as e:
-                print("Не удалось остановить сервер")
+                print("Failed to stop the server")
 
     def append_to_rich_console(self, text):
         if self.console:

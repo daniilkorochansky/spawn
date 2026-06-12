@@ -25,6 +25,7 @@ import wx.xrc
 import git
 
 import datetime
+
 import gettext
 _ = gettext.gettext
 
@@ -32,7 +33,7 @@ class GitCommitHistoryDialog(wx.Dialog):
 
     def __init__( self, parent, repo_obj, execute_reset_callback):
         wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"Commit History"), pos = wx.DefaultPosition, size = wx.Size( 700,400 ), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
-        self.SetSizeHints( wx.Size( 460,360 ), wx.DefaultSize )
+        self.SetSizeHints( wx.Size( 560,400 ), wx.DefaultSize )
 
         self.repo = repo_obj
         self.execute_reset = execute_reset_callback
@@ -46,10 +47,10 @@ class GitCommitHistoryDialog(wx.Dialog):
         top_sizer = wx.BoxSizer( wx.VERTICAL )
 
         self.m_listCtrl_Log = wx.ListCtrl( self.m_panel_top, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT|wx.LC_SINGLE_SEL )
-        self.m_listCtrl_Log.InsertColumn(0, _("Hash"), width=70)
-        self.m_listCtrl_Log.InsertColumn(1, _("Commit Message"), width=400)
-        self.m_listCtrl_Log.InsertColumn(2, _("User"), width=120)
-        self.m_listCtrl_Log.InsertColumn(3, _("Date"), width=100)
+        self.m_listCtrl_Log.InsertColumn(0, _(u"Hash"), width=70)
+        self.m_listCtrl_Log.InsertColumn(1, _(u"Commit Message"), width=400)
+        self.m_listCtrl_Log.InsertColumn(2, _(u"User"), width=120)
+        self.m_listCtrl_Log.InsertColumn(3, _(u"Date"), width=100)
         top_sizer.Add( self.m_listCtrl_Log, 1, wx.ALL|wx.EXPAND, 5 )
         self.m_panel_top.SetSizer(top_sizer)
         self.m_listCtrl_Log.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_history_item_selected)
@@ -85,7 +86,7 @@ class GitCommitHistoryDialog(wx.Dialog):
         try:
             commits = list(self.repo.iter_commits(max_count=30))
             
-            self.commits_list = commits[1:] #Важно! Срезаем наш последний коммит
+            self.commits_list = commits[1:] #Important! We're cutting off our last commit.
             
 
             for idx, commit in enumerate(self.commits_list):
@@ -135,13 +136,13 @@ class GitCommitHistoryDialog(wx.Dialog):
                         changed_files.append(f"{status_char} {clean_path}")
 
             if not changed_files:
-                self.m_listBox_Files.Append("В данном коммите нет изменённых файлов")
+                self.m_listBox_Files.Append(_("There are no changed files in this commit."))
             else:
                 for display_string in changed_files:
                     self.m_listBox_Files.Append(display_string)
 
         except Exception as e:
-            self.m_listBox_Files.Append(f"Не удалось получить список файлов: {e}")
+            self.m_listBox_Files.Append(_(u"Failed to get file list: {e}").format(e=e))
 
     def on_history_item_right_click(self, event):
         item_obj = event.GetItem()
@@ -156,7 +157,7 @@ class GitCommitHistoryDialog(wx.Dialog):
         commit_hash = self.hash_map.get(short_hash)
 
         if not commit_hash:
-            print(f"[Git] Хэш для {short_hash} не найден!")
+            print(f"[Git] Hash for {short_hash} not found!")
             return
         
 
@@ -164,8 +165,8 @@ class GitCommitHistoryDialog(wx.Dialog):
         ID_RESET_SOFT = 8701
         ID_RESET_HARD = 8702
 
-        menu.Append(ID_RESET_SOFT, f'{_("Soft Reset to ")}{short_hash}')
-        menu.Append(ID_RESET_HARD, f'{_("Hard Reset to ")}{short_hash}')
+        menu.Append(ID_RESET_SOFT, u'{soft_reset} {short_hash}'.format(soft_reset=_("Soft Reset to"), short_hash=short_hash))
+        menu.Append(ID_RESET_HARD, u'{hard_reset} {short_hash}'.format(hard_reset=_("Hard Reset to"), short_hash=short_hash))
 
         self.Bind(wx.EVT_MENU, lambda evt, h=commit_hash: self.trigger_reset_action(h, is_hard=False), id=ID_RESET_SOFT)
         self.Bind(wx.EVT_MENU, lambda evt, h=commit_hash: self.trigger_reset_action(h, is_hard=True), id=ID_RESET_HARD)

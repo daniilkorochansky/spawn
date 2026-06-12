@@ -26,9 +26,9 @@ import time
 class GitSingleStageWorker(threading.Thread):
     def __init__(self, repo_obj, relative_file_path, is_unstage, on_finished_callback):
         """
-        repo_obj: Объект Repo из GitPython
-        relative_file_path: Относительный путь
-        is_unstage: True если убираем из индекса, False если добавляем
+        repo_obj: GitPython Repo object
+        relative_file_path: Relative path
+        is_unstage: True if we remove from the index, False if we add
         """
         super().__init__()
         self.repo = repo_obj
@@ -54,7 +54,7 @@ class GitSingleStageWorker(threading.Thread):
             
             except Exception as e:
                 error_msg = str(e)
-                print(f"Попытка индексации {attempt + 1} сорвалась. Ждём...")
+                print(f"Attempt to index {attempt + 1} broke down. We're waiting...")
                 time.sleep(0.08)
 
         wx.CallAfter(self.on_finished, success, self.rel_path, error_msg)

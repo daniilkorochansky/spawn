@@ -65,6 +65,12 @@ class CustomEditorTab(gui.EditorTabPanel):
         
         self.m_scintilla_Editor.Bind(stc.EVT_STC_MODIFIED, self.on_editor_modified_tracker)
 
+        if wx.Platform == '__WXMSW__':
+            try:
+                self.m_scintilla_Editor.SetTechnology(stc.STC_TECHNOLOGY_DIRECTWRITE)
+            except:
+                pass
+
         #Initialize Editor Settings
         self.color_preview = True
         self.brace_matching = True
@@ -75,6 +81,8 @@ class CustomEditorTab(gui.EditorTabPanel):
         if self.file_path:
             self.load_file(self.file_path)
             self.apply_lexer_by_extension()
+        else:
+            self.set_plain_text_mode()
 
     def on_zoom_changed(self, event):
         self.update_zoom_status()
@@ -86,7 +94,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.base_win.m_statusBar.SetStatusText(str(zoom_percentage) + "%", 1)
 
     def on_editor_modified_tracker(self, event):
-        if self.show_change_history:
+        if self.show_change_history and not self.is_untitled:
             editor = self.m_scintilla_Editor
             mod_type = event.GetModificationType()
 
@@ -94,6 +102,7 @@ class CustomEditorTab(gui.EditorTabPanel):
                 event.Skip()
                 return
             if mod_type & stc.STC_MOD_INSERTTEXT:
+                #If text was inserted, then we set line change markers, and erase Diff markers if there were any
                 pos = event.GetPosition()
                 length = event.GetLength()
                 start_line = editor.LineFromPosition(pos)
@@ -106,12 +115,14 @@ class CustomEditorTab(gui.EditorTabPanel):
                     if current_line < editor.GetLineCount():
                         new_paste_marker = editor.MarkerAdd(current_line, self.MARKER_MODIFIED_ID)
                         self.modified_markers_handles.append(new_paste_marker)
+                        editor.MarkerDelete(current_line, self.MARKER_GIT_MODIFIED_ID)
+                #------------------------------------------------------------------------------------------------
             
             if mod_type & (stc.STC_MOD_INSERTTEXT | stc.STC_MOD_DELETETEXT):
 
-                modified_target_line = editor.GetCurrentLine()
+                modified_target_line = editor.LineFromPosition(event.GetPosition())
                 git_marker_modified_mask = editor.MarkerGet(modified_target_line)
-                has_git_modified_marker = bool(git_marker_modified_mask & (1 << 12))
+                has_git_modified_marker = bool(git_marker_modified_mask & (1 << self.MARKER_GIT_MODIFIED_ID))
 
                 if has_git_modified_marker:
                     editor.MarkerDelete(modified_target_line, self.MARKER_GIT_MODIFIED_ID)
@@ -184,7 +195,6 @@ class CustomEditorTab(gui.EditorTabPanel):
         wx.ID_EDITOR_CUT = 7003
         wx.ID_EDITOR_COPY = 7004
         wx.ID_EDITOR_PASTE = 7005
-        wx.ID_EDITOR_DELETE = 7006
         wx.ID_EDITOR_GO_TO_DEFINITION = 7007
         wx.ID_EDITOR_PICK_COLOR = 7008
         wx.ID_EDITOR_LAST_COLOR = 7009
@@ -192,35 +202,34 @@ class CustomEditorTab(gui.EditorTabPanel):
         wx.ID_EDITOR_SELECT_ALL = 7011
 
         self.m_menuEditor = wx.Menu()
-        self.m_menuItem_Editor_Undo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_UNDO, _(u"Undo")+ u"\t" + u"Ctrl+Z", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Undo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_UNDO, _(u"Undo"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Undo )
-        self.m_menuItem_Editor_Redo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_REDO, _(u"Redo")+ u"\t" + u"Ctrl+Y", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Redo = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_REDO, _(u"Redo"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Redo )
         self.m_menuEditor.AppendSeparator()
-        self.m_menuItem_Editor_Cut = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_CUT, _(u"Cut")+ u"\t" + u"Ctrl+X", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Cut = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_CUT, _(u"Cut"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Cut )
-        self.m_menuItem_Editor_Copy = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_COPY, _(u"Copy")+ u"\t" + u"Ctrl+C", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Copy = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_COPY, _(u"Copy"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Copy )
       
         
-        self.m_menuItem_Editor_Paste = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_PASTE, _(u"Paste")+ u"\t" + u"Ctrl+V", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_Paste = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_PASTE, _(u"Paste"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_Paste )
-        self.m_menuItem_Editor_Delete = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_DELETE, _(u"Delete")+ u"\t" + u"Delete", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_menuEditor.Append( self.m_menuItem_Editor_Delete )
-        self.m_menuItem_Editor_SelectAll = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_SELECT_ALL, _(u"Select All")+ u"\t" + u"Ctrl+A", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuEditor.AppendSeparator()
+        self.m_menuItem_Editor_SelectAll = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_SELECT_ALL, _(u"Select All"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_SelectAll )
         self.m_menuEditor.AppendSeparator()
         #self.m_menuItem_Editor_GoToDefinition = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_GO_TO_DEFINITION, _(u"Go to Definition")+ u"\t" + u"F12", wx.EmptyString, wx.ITEM_NORMAL )
         #self.m_menuEditor.Append( self.m_menuItem_Editor_GoToDefinition )
         self.m_menuItem_Editor_ColorizeSelection = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_COLORIZE_SELECTION, _(u"Colorize Selected Text..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_ColorizeSelection )
-        
+        self.m_menuEditor.AppendSeparator()
         self.m_menuItem_Editor_PickColor = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_PICK_COLOR, _(u"Paste Color from Palette..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_PickColor )
         
         last_color = getattr(self.base_win, "last_picked_hex_color", "0xFFFFFFFF")
 
-        self.m_menuItem_Editor_LastColor = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_LAST_COLOR, _(u"Paste Last Color") + f" ({last_color})" + u"\t" + u"Ctrl+J", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Editor_LastColor = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_LAST_COLOR, _(u"Paste Last Color ({last_color})").format(last_color=last_color), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_LastColor )
 
         start, end = self.m_scintilla_Editor.GetSelection()
@@ -234,11 +243,41 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_paste_last_color_menu_click, id=wx.ID_EDITOR_LAST_COLOR)
         self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_colorize_selection_click, id=wx.ID_EDITOR_COLORIZE_SELECTION)
 
+        self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_undo_click, id=wx.ID_EDITOR_UNDO)
+        self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_redo_click, id=wx.ID_EDITOR_REDO)
         
-        
+        self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_cut_click, id=wx.ID_EDITOR_CUT)
+        self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_copy_click, id=wx.ID_EDITOR_COPY)
+        self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_paste_click, id=wx.ID_EDITOR_PASTE)
+        self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_select_all_click, id=wx.ID_EDITOR_SELECT_ALL)
+
         self.m_scintilla_Editor.PopupMenu( self.m_menuEditor, event.GetPosition() )
         self.m_menuEditor.Destroy()
 
+    def on_editor_cut_click(self, event):
+        self.m_scintilla_Editor.Cut()
+
+    def on_editor_copy_click(self, event):
+        self.m_scintilla_Editor.Copy()
+
+    def on_editor_paste_click(self, event):
+        if wx.TheClipboard.Open():
+            try:
+                text_data = wx.TextDataObject()
+
+                if wx.TheClipboard.GetData(text_data):
+                    self.m_scintilla_Editor.ReplaceSelection(text_data.GetText())
+            finally:
+                wx.TheClipboard.Close()
+                
+    def on_editor_select_all_click(self, event):
+        self.m_scintilla_Editor.SelectAll()
+
+    def on_editor_undo_click(self, event):
+        self.m_scintilla_Editor.Undo()
+
+    def on_editor_redo_click(self, event):
+        self.m_scintilla_Editor.Redo()
 
     def on_colorize_selection_click(self, event):
         editor = self.m_scintilla_Editor
@@ -299,7 +338,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         pos = editor.GetCurrentPos()
         line = editor.LineFromPosition(pos) + 1
         col = editor.GetColumn(pos) + 1
-        self.base_win.m_statusBar.SetStatusText(f"Line {line}, Column {col}", 3)
+        self.base_win.m_statusBar.SetStatusText(u"{strline} {line}, {cl} {col}".format(strline=_(u"Ln"),line=line, cl=_(u"Col"), col=col), 3)
 
         #Brace Matching
         if self.brace_matching:
@@ -466,7 +505,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.brace_matching = self.ide_cfg.get("editor.features.brace_matching.enabled", True)
         self.show_change_history = self.ide_cfg.get("editor.features.show_change_history.enabled", True)
         
-        pawn_keywords = "public stock forward native new enum const static if else switch case default for while do break continue return sizeof state goto char"
+        pawn_keywords = "public stock forward native new enum const static if else switch case default for while do break continue return sizeof state goto char hook"
         pawn_types = "bool Float Text PlayerText Text3D Menu DB DBResult Bit Group File SV_GSTREAM SV_STREAM"
         pawn_preprocessor = "define include pragma endinput if else elseif endif assert tryinclude error emit undef"
         
@@ -485,59 +524,83 @@ class CustomEditorTab(gui.EditorTabPanel):
         else:
             editor.SetExtraAscent(line_spacing)
             editor.SetExtraDescent(0)
+
+        editor.StyleSetForeground(stc.STC_STYLE_DEFAULT, "#1E1E1E")
                   
         editor.StyleClearAll()
 
         editor.SetKeyWords(0, pawn_keywords)
         editor.SetKeyWords(1, pawn_types)
         editor.SetKeyWords(2, pawn_preprocessor)
-
-        editor.StyleSetForeground(stc.STC_C_COMMENT, "#008000")
-        editor.StyleSetForeground(stc.STC_C_COMMENTLINE, "#008000")
-        editor.StyleSetForeground(stc.STC_C_COMMENTDOC, "#008000")
-        editor.StyleSetForeground(stc.STC_C_WORD, "#0000FF")
-        editor.StyleSetBold(stc.STC_C_WORD, True)
-        editor.StyleSetForeground(stc.STC_C_WORD2, "#008080")
-        editor.StyleSetForeground(stc.STC_C_PREPROCESSOR, "#A31515")
-        editor.StyleSetForeground(stc.STC_C_WORD, "#0000FF")
-        editor.StyleSetForeground(stc.STC_C_STRING, "#A31515")
+        
+        editor.StyleSetForeground(stc.STC_C_COMMENT, "#6A9955")
+        editor.StyleSetForeground(stc.STC_C_COMMENTLINE, "#6A9955")
+        editor.StyleSetForeground(stc.STC_C_COMMENTDOC, "#6A9955")
+        editor.StyleSetForeground(stc.STC_C_WORD, "#005CC5")
+        #editor.StyleSetBold(stc.STC_C_WORD, True)
+        editor.StyleSetForeground(stc.STC_C_WORD2, "#6F42C1")
+        editor.StyleSetForeground(stc.STC_C_PREPROCESSOR, "#AF00DB")
+        editor.StyleSetForeground(stc.STC_C_STRING, "#C41A16")
         editor.StyleSetForeground(stc.STC_C_CHARACTER, "#A31515")
-        editor.StyleSetForeground(stc.STC_C_NUMBER, "#000000")
+        editor.StyleSetForeground(stc.STC_C_NUMBER, "#098658")
+        editor.StyleSetForeground(stc.STC_C_IDENTIFIER,"#1E1E1E")
+        editor.StyleSetForeground(stc.STC_C_OPERATOR, "#333333")
 
         editor.SetTabWidth(4)
         editor.SetUseTabs(False)
 
-        editor.SetCaretForeground("#000000")
+        editor.SetCaretForeground("#1E1E1E")
         editor.SetCaretLineVisible(True)
-        editor.SetCaretLineBackground("#E8E8E8")
+        editor.SetCaretLineBackground("#F8FAFD")
+
+        color_bracelight = self.ide_cfg.get("editor.features.brace_matching.color_bracelight", "#FFFFFF")
+        backcolor_bracelight = self.ide_cfg.get("editor.features.brace_matching.backcolor_bracelight", "#E0E0FF")
+        color_bracebad = self.ide_cfg.get("editor.features.brace_matching.color_bracebad", "#FFFFFF")
+        backcolor_bracebad = self.ide_cfg.get("editor.features.brace_matching.backcolor_bracebad", "#E51400")
 
         editor.StyleSetFont(stc.STC_STYLE_BRACELIGHT, wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family))
-        editor.StyleSetForeground(stc.STC_STYLE_BRACELIGHT, "#0000FF")
-        editor.StyleSetBackground(stc.STC_STYLE_BRACELIGHT, "#E0E0FF")
+        editor.StyleSetForeground(stc.STC_STYLE_BRACELIGHT, color_bracelight)
+        editor.StyleSetBackground(stc.STC_STYLE_BRACELIGHT, backcolor_bracelight)
         editor.StyleSetFont(stc.STC_STYLE_BRACEBAD, wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family))
-        editor.StyleSetForeground(stc.STC_STYLE_BRACEBAD, "#FF0000")
-        editor.StyleSetBackground(stc.STC_STYLE_BRACEBAD, "#FFE0E0")
+        editor.StyleSetForeground(stc.STC_STYLE_BRACEBAD, color_bracebad)
+        editor.StyleSetBackground(stc.STC_STYLE_BRACEBAD, backcolor_bracebad)
+
+        is_line_numbers = self.ide_cfg.get("editor.features.line_numbers", False)
+        if is_line_numbers:
+            editor.SetMarginType( 0, stc.STC_MARGIN_NUMBER )
+            editor.SetMarginWidth( 0, editor.TextWidth( stc.STC_STYLE_LINENUMBER, "_999999" ) )
 
         editor.SetMarginType(1, stc.STC_MARGIN_SYMBOL)
         editor.SetMarginWidth(1, 4)
         editor.SetMarginMask(1, (1 << 13) | (1 << 14))
         editor.SetMarginSensitive(1, False)
+
+        marker_modified_color = self.ide_cfg.get("editor.features.show_change_history.color_marker_modified", "#FFD324")
+        marker_saved_color = self.ide_cfg.get("editor.features.show_change_history.color_marker_saved", "#228B22")
+        
         editor.MarkerDefine(self.MARKER_MODIFIED_ID, stc.STC_MARK_FULLRECT)
-        editor.MarkerSetForeground(self.MARKER_MODIFIED_ID, "#FFD324")
-        editor.MarkerSetBackground(self.MARKER_MODIFIED_ID, "#FFD324")
+        editor.MarkerSetForeground(self.MARKER_MODIFIED_ID, marker_modified_color)
+        editor.MarkerSetBackground(self.MARKER_MODIFIED_ID, marker_modified_color)
         editor.MarkerDefine(self.MARKER_SAVED_ID, stc.STC_MARK_FULLRECT)
-        editor.MarkerSetForeground(self.MARKER_SAVED_ID, "#228B22")
-        editor.MarkerSetBackground(self.MARKER_SAVED_ID, "#228B22")
+        editor.MarkerSetForeground(self.MARKER_SAVED_ID, marker_saved_color)
+        editor.MarkerSetBackground(self.MARKER_SAVED_ID, marker_saved_color)
 
         editor.MarkerDefine(self.MARKER_GIT_MODIFIED_ID, wx.stc.STC_MARK_BACKGROUND)
-        editor.MarkerSetBackground(self.MARKER_GIT_MODIFIED_ID, wx.Colour(255, 243, 224))
+        editor.MarkerSetBackground(self.MARKER_GIT_MODIFIED_ID, "#FFF3CD")
+
+        editor.SetSelBackground( True, "#CCE8FF" )
+        editor.SetSelForeground( True, "#1E1E1E" )
+        editor.StyleSetForeground(stc.STC_STYLE_LINENUMBER,"#808080")
+        editor.StyleSetBackground(stc.STC_STYLE_LINENUMBER,"#F3F3F3")
+        editor.SetFoldMarginColour(True, "#F7F7F7")
+        editor.SetFoldMarginHiColour(True, "#F7F7F7")
 
         editor.SetMarginType(2, stc.STC_MARGIN_SYMBOL)
         editor.SetMarginWidth(2, 16)
         editor.SetMarginMask(2, stc.STC_MASK_FOLDERS)
         editor.SetMarginSensitive(2, True)
 
-        v = ('white', 'black')
+        v = ('#F3F3F3', '#606060')
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, *v)
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, *v)
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, *v)
@@ -546,24 +609,33 @@ class CustomEditorTab(gui.EditorTabPanel):
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, *v)
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, *v)
 
-        editor.SetProperty("fold", "1")
-        editor.SetProperty("fold.comment", "1")
-        editor.SetProperty("fold.compact", "0")
-        editor.SetFoldFlags(stc.STC_FOLDFLAG_LINEBEFORE_CONTRACTED) 
+        is_folding = self.ide_cfg.get("editor.features.folding", False)
+        if is_folding:
+            editor.SetProperty("fold", "1")
+            editor.SetProperty("fold.comment", "1")
+            editor.SetProperty("fold.compact", "0")
+            editor.SetFoldFlags(stc.STC_FOLDFLAG_LINEBEFORE_CONTRACTED)
 
         editor.Refresh()
 
     def apply_json_styles(self):
         editor = self.m_scintilla_Editor
-        #Здесь добавляем ключевые слова и настраиваем подсветку
         editor.SetLexer(stc.STC_LEX_JSON)
         
         font_size = self.ide_cfg.get("editor.font.size", 11)
         font_family = self.ide_cfg.get("editor.font.family", "Consolas")
         font = wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family)
-
-        editor.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
         editor.StyleResetDefault()
+        
+        editor.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
+        line_spacing = self.ide_cfg.get("editor.font.line_spacing", 0)
+        if line_spacing < 0:
+            editor.SetExtraAscent(0)
+            editor.SetExtraDescent(line_spacing)
+        else:
+            editor.SetExtraAscent(line_spacing)
+            editor.SetExtraDescent(0)
+            
         editor.StyleClearAll()
 
         editor.StyleSetForeground(stc.STC_JSON_PROPERTYNAME, "#0451A5")
@@ -594,8 +666,8 @@ class CustomEditorTab(gui.EditorTabPanel):
                     self.m_scintilla_Editor.SetCodePage(wx.stc.STC_CP_UTF8)
                     self.m_scintilla_Editor.SetText("")
                     self.current_encoding = "utf-8"
-                    self.native_eol = "LF"
-                    self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_LF)
+                    self.native_eol = "CRLF"
+                    self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_CRLF)
                     return
 
             try:
@@ -607,7 +679,7 @@ class CustomEditorTab(gui.EditorTabPanel):
                     self.current_encoding = "cp1251"
                 except UnicodeDecodeError:
                     text_content = binary_data.decode("utf-8", errors="replace")
-                    self.current_encoding = "unknown"
+                    self.current_encoding = "utf-8" #or cp1251
                 
             if b"\r\n" in binary_data:
                 self.native_eol = "CRLF"
@@ -616,7 +688,7 @@ class CustomEditorTab(gui.EditorTabPanel):
                 self.native_eol = "LF"
                 self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_LF)
 
-            text_content = text_content.replace("\r\n", "\n") #Нужно чтобы Scintila неставил пробелы между строк. А при сохранении файла всё возвращается обратно зная native_eol
+            text_content = text_content.replace("\r\n", "\n") #I need Scintila to not put spaces between lines. And when I save the file, everything goes back to normal using native_eol.
             text_content = text_content.replace("\r", "\n")
 
             self.m_scintilla_Editor.SetCodePage(wx.stc.STC_CP_UTF8)
@@ -632,6 +704,6 @@ class CustomEditorTab(gui.EditorTabPanel):
 
             #self.current_encoding = "utf-8"
         except Exception as e:
-            self.m_scintilla_Editor.SetText(f"// Ошибка буфера диска:\n// {e}")
+            self.m_scintilla_Editor.SetText(f"// Disk buffer error:\n// {e}")
             
     

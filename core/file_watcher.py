@@ -35,7 +35,7 @@ class ProjectHandler(FileSystemEventHandler):
         if self.is_paused:
             return
         
-        if any(folder in event.src_path for folder in [".git", "dependencies", "components"]): #На какие папки и файлы не обращать внимание
+        if any(folder in event.src_path for folder in [".git", "dependencies", "components", "plugins"]): #Which folders should you ignore?
             return
 
         if event.is_directory and event.event_type == 'modified':

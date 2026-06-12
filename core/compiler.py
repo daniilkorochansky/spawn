@@ -22,9 +22,65 @@
 import os
 import subprocess
 import threading
+
 import wx
 
+import gettext
+_ = gettext.gettext
+
 class BackgroundCompiler(threading.Thread):
+    """
+    Runs a server build through sampctl in a background thread.
+
+    This class is responsible for executing the build process,
+    capturing compiler output in real time, forwarding messages
+    to the integrated Spawn build console, and notifying the IDE
+    when compilation has finished.
+
+    The build is executed using:
+
+        sampctl build
+
+    Additional compiler flags may be passed to customize the
+    build process.
+
+    All stdout and stderr output is captured and streamed to the
+    build output panel as it becomes available.
+
+    Attributes:
+        project_path (str):
+            Path to the project directory containing the Pawn
+            source code and pawn.json configuration.
+
+        sampctl_bin (str):
+            Absolute path to the sampctl executable.
+
+        build_target (str):
+            Reserved build target identifier for future build
+            configurations.
+
+        extra_flags (str):
+            Additional command-line flags passed to the compiler.
+
+        console (wx.richtext.RichTextCtrl):
+            Output console used to display build and compiler logs.
+
+        on_finished (callable | None):
+            Optional callback invoked when the build process
+            completes. Receives a boolean value indicating
+            whether the build succeeded.
+
+        process (subprocess.Popen | None):
+            Active compiler process instance.
+
+    Features:
+        - Background server compilation
+        - Real-time compiler output streaming
+        - UTF-8 and CP1251 output decoding
+        - Build success/failure reporting
+        - Automatic UI notification on completion
+        - Support for additional compiler flags
+    """
     def __init__(self, project_path, sampctl_executable, build_target, extra_flags, rich_text_ctrl, on_finished_callback=None):
         super().__init__()
         self.project_path = project_path
@@ -34,7 +90,6 @@ class BackgroundCompiler(threading.Thread):
         self.console = rich_text_ctrl
         self.on_finished = on_finished_callback
         self.process = None
-        print(self.sampctl_bin)
 
     def run(self):
         startupinfo = None
@@ -87,7 +142,7 @@ class BackgroundCompiler(threading.Thread):
             if self.on_finished:
                 wx.CallAfter(self.on_finished, success)
         except Exception as e:
-            wx.CallAfter(self.append_to_rich_console, f"[Spawn Error] Ошибка вызова компилятора: {e}\n")
+            wx.CallAfter(self.append_to_rich_console, _(u"Compiler call error: {e}\n").format(e=e))
             if self.on_finished:
                 wx.CallAfter(self.on_finished, False)
 
