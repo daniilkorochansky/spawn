@@ -38,6 +38,7 @@ A fast and modern development environment (IDE), created specifically for creati
   - [Requirements](#requirements)
   - [Install Dependencies](#install-dependencies)
   - [Run](#run)
+  - [Tests](#tests)
 - [Stability](#stability)
 - [Contributors](#contributors)
   - [Bug Report](#bug-report)
@@ -88,7 +89,7 @@ These tools can be configured later in Settings.
 4. Once the process is complete, close the SAMPCTL command-line tool. Spawn will pick up the new project.
 
 ### Manage Dependencies
-1. Select 'Project' → 'Dependency Manager'.
+1. Select 'Project' → 'Dependency Manager...'.
 2. Enter the package name in the 'Dependency' field
 3. Click 'Install'.
 
@@ -117,6 +118,7 @@ You're ready to develop open.mp and SA-MP servers with Spawn.
 + GitPython
 + Markdown
 + watchdog
++ pytest
 
 ### Install Dependencies
 ```python
@@ -126,6 +128,15 @@ pip install -r requirements.txt
 ```python
 python main.py
 ```
+
+### Tests
+You can conduct tests to verify the functionality of new features or changes to key system components.
+To run the tests, follow these steps:
+1. Open a command prompt in the root folder
+2. Execute the following command: ```pytest -v```
+
+All tests must return a ‘PASSED’ result.
+Otherwise, you need to find and fix the error or bug in the code, and then run the tests again.
 
 ## Stability
 
