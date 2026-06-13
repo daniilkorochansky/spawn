@@ -136,4 +136,4 @@ class ProjectTreeManager:
 
                 
         except Exception:
-            SpawnLogger.error(f"Scan Directory(Project Tree) Error: {e}")
+            SpawnLogger.error(f"Scan Directory (Project Tree): {e}")

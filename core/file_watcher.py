@@ -69,7 +69,7 @@ class ProjectFileWatcher:
             self.observer.schedule(handler, path, recursive=True)
             self.observer.start()
         except Exception as e:
-            SpawnLogger.error(f"File Watcher Start Error: {e}")
+            SpawnLogger.error(f"Start (File Watcher): {e}")
             self.stop()
 
     def pause(self):
@@ -113,6 +113,6 @@ class ProjectFileWatcher:
                 self.observer.stop()
                 self.observer.join()
             except Exception as e:
-                SpawnLogger.error(f"File Watcher Stop Error: {e}")
+                SpawnLogger.error(f"Stop (File Watcher): {e}")
                 
             self.observer = None

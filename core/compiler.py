@@ -144,7 +144,7 @@ class BackgroundCompiler(threading.Thread):
             if self.on_finished:
                 wx.CallAfter(self.on_finished, success)
         except Exception as e:
-            SpawnLogger.error(f"Compiler Call Error: {e}")
+            SpawnLogger.error(f"Compiler Call: {e}")
             wx.CallAfter(self.append_to_rich_console, _(u"Compiler call error: {e}\n").format(e=e))
             if self.on_finished:
                 wx.CallAfter(self.on_finished, False)

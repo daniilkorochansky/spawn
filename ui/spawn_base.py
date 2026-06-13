@@ -134,7 +134,7 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_auiToolBar.AddSeparator()
 
-        self.m_tool_CompileProject = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_BUILD_PROJECT, _(u"Build Project"), wx.Bitmap(os.path.join(self.icons_folder,"tb_project_build.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Build Project"), wx.EmptyString, None )
+        self.m_tool_CompileProject = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_BUILD_PROJECT, _(u"Build Server"), wx.Bitmap(os.path.join(self.icons_folder,"tb_project_build.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Build Server"), wx.EmptyString, None )
 
         m_choice_BuildsChoices = []
         self.m_choice_Builds = wx.Choice( self.m_auiToolBar, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_BuildsChoices, 0 )
@@ -285,7 +285,7 @@ class SpawnFrame ( wx.Frame ):
         self.m_menubar.Append( self.m_project, _(u"Project") )
 
         self.m_build = wx.Menu()
-        self.m_menuItem_CompileProject = wx.MenuItem( self.m_build, wx.ID_BUILD_PROJECT, _(u"Build Project")+ u"\t" + u"F5", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_CompileProject = wx.MenuItem( self.m_build, wx.ID_BUILD_PROJECT, _(u"Build Server")+ u"\t" + u"F5", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_build.Append( self.m_menuItem_CompileProject )
 
         #self.m_menuItem_CompileAndRun = wx.MenuItem( self.m_build, wx.ID_BUILD_AND_RUN, _(u"Build and Run")+ u"\t" + u"Ctrl+F5", wx.EmptyString, wx.ITEM_NORMAL )

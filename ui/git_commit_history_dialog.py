@@ -23,6 +23,7 @@ import wx
 import wx.xrc
 
 import git
+from git.exc import BadName
 
 import datetime
 
@@ -86,6 +87,9 @@ class GitCommitHistoryDialog(wx.Dialog):
             self.hash_map.clear()
         
         try:
+            if not self.repo.head.is_valid():
+                return
+
             commits = list(self.repo.iter_commits(max_count=30))
             
             self.commits_list = commits[1:] #Important! We're cutting off our last commit.
@@ -109,7 +113,7 @@ class GitCommitHistoryDialog(wx.Dialog):
                 self.hash_map[short_hash] = commit.hexsha
 
         except Exception as e:
-            SpawnLogger.error(f"Commit History(Populate) Error: {e}")
+            SpawnLogger.error(f"Populate (Commit History): {e}")
 
     def on_history_item_selected(self, event):
         row_idx = event.GetIndex()
@@ -144,7 +148,7 @@ class GitCommitHistoryDialog(wx.Dialog):
                     self.m_listBox_Files.Append(display_string)
 
         except Exception as e:
-            SpawnLogger.error(f"Commit History Get File List Error: {e}")
+            SpawnLogger.error(f"Get File List (Commit History): {e}")
             self.m_listBox_Files.Append(_(u"Failed to get file list"))
 
     def on_history_item_right_click(self, event):
@@ -160,7 +164,7 @@ class GitCommitHistoryDialog(wx.Dialog):
         commit_hash = self.hash_map.get(short_hash)
 
         if not commit_hash:
-            print(f"[Git] Hash for {short_hash} not found!")
+            SpawnLogger.error(f"Hash Not Found (Commit History): {e}")
             return
         
 

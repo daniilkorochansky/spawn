@@ -96,9 +96,10 @@ class SpawnLogger:
                 with open(log_file_path, "r", encoding="utf-8", errors="replace") as f:
                     lines = f.readlines()
 
-                report.extend(
-                    [line.rstrip() for line in lines[-100:]]
-                )
+                if lines:
+                    report.extend([line.rstrip() for line in lines[-100:]])
+                else:
+                    report.append("No log entries found. Please describe the issue below.")
             except Exception as e:
                 report.append(f"Failed to read log: {e}")
         else:

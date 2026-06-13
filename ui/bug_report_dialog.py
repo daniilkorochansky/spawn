@@ -84,7 +84,7 @@ class BugReportDialog ( wx.Dialog ):
 
         self.Centre( wx.BOTH )
         
-        report = SpawnLogger.generate_bug_report("0.9.0")
+        report = SpawnLogger.generate_bug_report("1.0.0")
         self.m_textCtrl_Logs.SetValue(report)
 
     def on_copy_logs(self, event):

@@ -84,7 +84,7 @@ class SpawnIDE(SpawnFrame):
         self.last_picked_hex_color = "0xFFFFFFFF"
         
         self.m_statusBar.SetFieldsCount(4)
-        self.m_statusBar.SetStatusWidths([-1,40,80,150])
+        self.m_statusBar.SetStatusWidths([-1,40,80,140])
         self.m_statusBar.SetStatusText(u"---", 0)
         self.m_statusBar.SetStatusText(u"---", 1)
         self.m_statusBar.SetStatusText(u"---", 2)
@@ -287,6 +287,7 @@ dependencies/
 # but make sure the `rcon_password` field is set externally
 # you can use the environment variable `SAMP_RCON_PASSWORD` to do this.
 server.cfg
+config.json
 bans.json
 sampctl_build_file.inc 
 
@@ -321,7 +322,7 @@ samp.ban
             return True
 
         except Exception as e:
-            SpawnLogger.error(f"Creating .gitignore Error: {e}")
+            SpawnLogger.error(f"Creating .gitignore: {e}")
             return False
 
     def on_git_open_terminal_click(self, event):
@@ -390,7 +391,7 @@ samp.ban
 
                 tab.m_scintilla_Editor.SetSavePoint()
             except Exception as e:
-                SpawnLogger.error(f"Reopening File(SetText) Error: {e}")
+                SpawnLogger.error(f"Reopening File(SetText): {e}")
 
             finally:
                 tab.m_scintilla_Editor.Thaw()
@@ -407,8 +408,8 @@ samp.ban
             self.m_statusBar.SetStatusText(_("Cannot reopen file using {encoding}. Decoding failed.").format(encoding=new_encoding.upper()),0)
 
         except Exception as e:
-            SpawnLogger.error(f"Reopening File Error: {e}")
-            self.m_statusBar.SetStatusText(_("Error reopening file: {error}").format(error=str(e)),0)
+            SpawnLogger.error(f"Reopening File: {e}")
+            self.m_statusBar.SetStatusText(_("Error reopening file"),0)
             
 
     def on_menu_reopen_enc_utf8(self, event):
@@ -460,7 +461,7 @@ samp.ban
                     if wx.TheClipboard.GetData(text_data):
                         tab.m_scintilla_Editor.ReplaceSelection(text_data.GetText())
                 except Exception as e:
-                    SpawnLogger.error(f"Paste Error: {e}")
+                    SpawnLogger.error(f"Paste: {e}")
 
                 finally:
                     wx.TheClipboard.Close()
@@ -538,7 +539,7 @@ samp.ban
                 editor.VerticalCentreCaret()
                 
         except Exception as e:
-            SpawnLogger.error(f"Git History Sync Error: {e}")
+            SpawnLogger.error(f"Git History Sync: {e}")
 
     def on_git_view_history_click(self, event):
         if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
@@ -618,15 +619,16 @@ samp.ban
                                 tab.m_scintilla_Editor.MarkerDeleteAll(13)
                                 tab.m_scintilla_Editor.MarkerDeleteAll(14)
                                 tab.m_scintilla_Editor.SetSavePoint()
-                            except Exception:
-                                SpawnLogger.error(f"Git Reset Commit(Finished) Error: {e}")
+                            except Exception as e:
+                                SpawnLogger.error(f"Git Reset Commit: {e}")
                         else:
                             notebook.DeletePage(page_idx)
            
             wx.MessageBox(_(u"The operation was completed successfully!\nThe repository branch has been rewound to the commit [{short_hash}]").format(short_hash=short_hash),
                           _(u"Success"), wx.OK|wx.ICON_INFORMATION, self)
         else:
-            wx.MessageBox(_(u"Reset failed:\n{error_message}").format(error_message=error_message), _(u"Git Error"), wx.OK|wx.ICON_ERROR, self)
+            SpawnLogger.error(f"Git Reset Commit: {error_message}")
+            wx.MessageBox(_(u"Reset failed"), _(u"Git Error"), wx.OK|wx.ICON_ERROR, self)
 
     def check_environment_on_startup(self):
         self.SendSizeEvent()
@@ -854,7 +856,8 @@ samp.ban
             self.refresh_project_tree()
             self.m_statusBar.SetStatusText(_(u"[Git] Indexing reset successfully."),0)
         else:
-            wx.MessageBox(_(u"Failed to reset indexing:\n{error}").format(error=error_message),
+            SpawnLogger.error(f"Git Reset Indexing: {error_message}")
+            wx.MessageBox(_(u"Failed to reset indexing"),
                           _(u"Git Error"), wx.OK|wx.ICON_ERROR, self)
         
 
@@ -886,7 +889,8 @@ samp.ban
             self.refresh_project_tree()
             self.m_statusBar.SetStatusText(_(u"[Git] Everything was indexed successfully."),0)
         else:
-            wx.MessageBox(_(u"Failed to index files:\n{error}").format(error=error_message),
+            SpawnLogger.error(f"Git Index Files: {error_message}")
+            wx.MessageBox(_(u"Failed to index files"),
                           _(u"Git Error"), wx.OK|wx.ICON_ERROR, self)
 
     def on_git_tree_right_click(self, event):
@@ -971,7 +975,8 @@ samp.ban
             self.refresh_project_tree()
             self.m_statusBar.SetStatusText(_(u"[Git] The file index has been updated successfully."),0)
         else:
-            self.m_statusBar.SetStatusText(_(u"[Git] Error indexing file: {error}").format(error=error_message),0)
+            SpawnLogger.error(f"Git Indexing File: {error_message}")
+            self.m_statusBar.SetStatusText(_(u"[Git] Error indexing file"),0)
 
     
     def execute_git_single_file_reset(self, absolute_path, relative_path):
@@ -1042,14 +1047,15 @@ samp.ban
                                 tab.m_scintilla_Editor.MarkerDeleteAll(13)
                                 tab.m_scintilla_Editor.MarkerDeleteAll(14)
                                 tab.m_scintilla_Editor.SetSavePoint()
-                            except Exception:
-                                SpawnLogger.error(f"Git Reset(Finished) Error: {e}")
+                            except Exception as e:
+                                SpawnLogger.error(f"Git Rollback File(SetText): {e}")
                         else:
                             notebook.DeletePage(page_idx)
 
             self.m_statusBar.SetStatusText(_(u"[Git] File rollback completed successfully."),0)
         else:
-            wx.MessageBox(_(u"Failed to rollback file:\n{error_message}").format(error_message=error_message), _(u"Git Error"), wx.OK | wx.ICON_ERROR, self)
+            SpawnLogger.error(f"Git Rollback File: {error_message}")
+            wx.MessageBox(_(u"Failed to rollback file"), _(u"Git Error"), wx.OK | wx.ICON_ERROR, self)
         
 
     def on_menu_convert_eol_crlf(self, event):
@@ -1143,6 +1149,7 @@ samp.ban
                                 tab.m_scintilla_Editor.MarkerDeleteAll(14)
                                 tab.m_scintilla_Editor.SetSavePoint()
                             except Exception as e:
+                                SpawnLogger.error(f"Git Overwriting Open Tabs After Reset: {e}")
                                 self.m_statusBar.SetStatusText(_(u"[Git] Error overwriting open tabs after reset."),0)
                         else:
                             notebook.DeletePage(page_idx)
@@ -1171,7 +1178,7 @@ samp.ban
                 
             self.refresh_project_tree()
         except Exception as e:
-            SpawnLogger.error(f"Git Sync Error: {e}")
+            SpawnLogger.error(f"Git Sync: {e}")
             self.m_statusBar.SetStatusText(_(u"[Git] Sync failed"),0)
         finally:
             self.m_treeCtrl_GitHistory.Thaw()
@@ -1474,7 +1481,7 @@ samp.ban
                 try:
                     editor.ReplaceSelection(replace_query)
                 except Exception as e:
-                    SpawnLogger.error(f"Find / Replace Error: {e}")
+                    SpawnLogger.error(f"Find / Replace: {e}")
                     
                 finally:
                     editor.EndUndoAction()
@@ -1498,7 +1505,7 @@ samp.ban
                     current_pos = res + len(replace_query)
                     count += 1
             except Exception as e:
-                SpawnLogger.error(f"Find / Replace Error: {e}")
+                SpawnLogger.error(f"Find / Replace: {e}")
                 
             finally:
                 editor.EndUndoAction()
@@ -1527,6 +1534,11 @@ samp.ban
             self.server_process_thread.stop_server()
             return
 
+        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
+        if not os.path.exists(sampctl_bin_path):
+            self.check_environment_on_startup()
+            return
+
         self.m_richText_ServerConsole.Clear()
 
         self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
@@ -1540,8 +1552,6 @@ samp.ban
         self.m_auinotebook_Output.SetSelection(1)
         
         self.m_mgr.Update()
-
-        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
 
         self.m_richText_ServerConsole.BeginBold()
         self.m_richText_ServerConsole.WriteText(_(u"Initializing and starting the server...\n\n"))
@@ -1610,6 +1620,11 @@ samp.ban
         if not self.current_project_path:
             return
 
+        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
+        if not os.path.exists(sampctl_bin_path):
+            self.check_environment_on_startup()
+            return
+
         self.on_save_all_files(None)
         self.toggle_project_ui_state(False)
         self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
@@ -1627,7 +1642,7 @@ samp.ban
         self.m_richText_BuildOutput.Clear()
 
         
-        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
+        
         
         selected_target = ""
 
@@ -1636,10 +1651,10 @@ samp.ban
 
         
         self.m_richText_BuildOutput.BeginBold()
-        self.m_richText_BuildOutput.WriteText(_("Starting the project build...\n\n"))
+        self.m_richText_BuildOutput.WriteText(_("Starting the server build...\n\n"))
         self.m_richText_BuildOutput.EndBold()
 
-        self.m_statusBar.SetStatusText(_(u"Building the project..."), 0)
+        self.m_statusBar.SetStatusText(_(u"Building the server..."), 0)
 
         compiler_thread = BackgroundCompiler(
             project_path=self.current_project_path,
@@ -1774,8 +1789,8 @@ samp.ban
 
             self.refresh_project_tree()
         except Exception as e:
-            SpawnLogger.error(f"Git Repository Initialization Error: {e}")
-            wx.MessageBox(_(u"Failed to initialize repository: {e}").format(e=e), _(u"Git Error"), wx.ID_OK|wx.ICON_ERROR, self)
+            SpawnLogger.error(f"Git Repository Initialization: {e}")
+            wx.MessageBox(_(u"Failed to initialize repository"), _(u"Git Error"), wx.ID_OK|wx.ICON_ERROR, self)
 
 
     def on_tree_set_as_entry(self, event):
@@ -1799,6 +1814,7 @@ samp.ban
 
             wx.MessageBox(f"Файл '{clean_json_entry_path}' успешно назначен главным файлом сборки сервера!", u"Точка входа изменена", wx.OK | wx.ICON_INFORMATION)
         except Exception as e:
+            SpawnLogger.error(f"Set Entry File: {e}")
             wx.MessageBox(u"Не удалось обновить pawn.json", u"Ошибка", wx.OK | wx.ICON_ERROR)
 
 
@@ -1818,11 +1834,12 @@ samp.ban
                 full_new_dir = os.path.join(parent_dir, new_folder_name)
                 try:
                     os.makedirs(full_new_dir, exist_ok=True)
+                    git_executable = self.ide_cfg.get("system.git.executable_path", "")
                     if self.git_enabled and os.path.isfile(git_executable) and self.git_manager.is_repo:
                         self.git_manager.update_statuses_cache()
                     self.refresh_project_tree()
                 except Exception as e:
-                    SpawnLogger.error(f"Create Folder(Project Tree) Error: {e}")
+                    SpawnLogger.error(f"Create Folder (Project Tree): {e}")
                     wx.MessageBox(_(u"Failed to create folder"), _(u"Error"), wx.OK | wx.ICON_ERROR)
         dlg.Destroy()
 
@@ -1868,7 +1885,7 @@ samp.ban
                             
                 self.refresh_project_tree()
             except Exception as e:
-                SpawnLogger.error(f"Rename(Project Tree) Error: {e}")
+                SpawnLogger.error(f"Rename (Project Tree): {e}")
                 wx.MessageBox(_(u"Failed to rename"), _(u"Error"), wx.OK | wx.ICON_ERROR)
             finally:
                 if hasattr(self, 'file_watcher'): self.file_watcher.resume()
@@ -1907,7 +1924,7 @@ samp.ban
                 self.update_button_is_no_tabs()
                 self.refresh_project_tree()
             except Exception as e:
-                SpawnLogger.error(f"Delete(Project Tree) Error: {e}")
+                SpawnLogger.error(f"Delete (Project Tree): {e}")
                 wx.MessageBox(_(u"Error during deletion"), _(u"Error"), wx.OK | wx.ICON_ERROR)
             finally:
                 if hasattr(self, 'file_watcher'): self.file_watcher.resume()
@@ -1943,7 +1960,7 @@ samp.ban
                             self.git_manager.update_statuses_cache()
                     self.refresh_project_tree()
                 except Exception as e:
-                    SpawnLogger.error(f"Create File(Project Tree) Error: {e}")
+                    SpawnLogger.error(f"Create File (Project Tree): {e}")
                     wx.MessageBox(_(u"Failed to create file"), _(u"Error"), wx.OK | wx.ICON_ERROR)
         dlg.Destroy()
 
@@ -2057,7 +2074,7 @@ samp.ban
             self.update_git_ui_controls_state()
             self.check_environment_on_startup()
         except Exception as e:
-            SpawnLogger.error(f"Close Project Error: {e}")
+            SpawnLogger.error(f"Close Project: {e}")
 
         finally:
             self.Thaw()
@@ -2188,7 +2205,7 @@ samp.ban
         except Exception as e:
             self.Enable(True)
             self.Raise()
-            SpawnLogger.error(f"Server Initialization Error: {e}")
+            SpawnLogger.error(f"Server Initialization: {e}")
             wx.MessageBox(u"{msg}".format(msg=_('Failed to start server initialization process')), _(u"Server initialization"), wx.OK|wx.ICON_ERROR, self)
 
     def on_new_project_async_finished(self, success, target_path):
@@ -2204,7 +2221,7 @@ samp.ban
                     if not os.listdir(target_path):
                         os.rmdir(target_path)
                 except Exception:
-                    SpawnLogger.error(f"New Project(Finished) Error: {e}")
+                    SpawnLogger.error(f"New Project: {e}")
                 
             wx.MessageBox(_(u"Server initialization aborted: 'pawn.json' file not found."),
                           _(u"Server initialization"), wx.OK | wx.ICON_WARNING, self)
@@ -2267,7 +2284,7 @@ samp.ban
             if new_root_id.IsOk():
                 restore_expanded_state(new_root_id)
         except Exception as e:
-            SpawnLogger.error(f"Refresh Project Tree Error: {e}")
+            SpawnLogger.error(f"Refresh (Project Tree): {e}")
         finally:
             tree.Thaw()
             if self.git_enabled and self.git_manager:
@@ -2357,7 +2374,7 @@ samp.ban
     def load_project(self,path):
         try:
             self.current_project_path = path
-            self.ide_cfg.set_project(path)
+            #self.ide_cfg.set_project(path)
             
             self.toggle_project_ui_state(True)
        
@@ -2391,7 +2408,7 @@ samp.ban
             self.update_git_ui_controls_state()
             self.check_environment_on_startup()
         except Exception as e:
-            SpawnLogger.error(f"Load Project Error: {e}")
+            SpawnLogger.error(f"Load Project: {e}")
 
         #--------------------------
         
@@ -2567,7 +2584,7 @@ samp.ban
                     self.refresh_project_tree()
                     
         except Exception as f:
-            SpawnLogger.error(f"Save Current File Error: {f}")
+            SpawnLogger.error(f"Save Current File: {f}")
         finally:
             active_tab.convert_modified_markers_to_saved()
             #Apply saves IDE settings

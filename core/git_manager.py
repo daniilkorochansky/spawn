@@ -90,7 +90,7 @@ class GitManager:
                 self.repo = Repo(self.project_path)
                 self.is_repo = True
             except Exception as e:
-                SpawnLogger.error(f"Git Manager(Open Repository) Error: {e}")
+                SpawnLogger.warning(f"Open Repository (Git Manager): {e}")
                 self.is_repo = False
         else:
             self.is_repo = False
@@ -114,7 +114,7 @@ class GitManager:
         try:
             self.repo.git.status(porcelain=True)
         except Exception as e:
-            SpawnLogger.error(f"Git Manager(Get Statuses) Error: {e}")
+            SpawnLogger.error(f"Get Statuses (Git Manager): {e}")
         
         try:
             for diff_item in self.repo.index.diff(None):
@@ -126,7 +126,7 @@ class GitManager:
                     else:
                         self.status_cache[clean_path] = "modified"
         except Exception as e:
-            SpawnLogger.error(f"Git Manager(Reading Modified Statuses) Error: {e}")
+            SpawnLogger.error(f"Reading Modified Statuses (Git Manager): {e}")
 
         try:
             if not self.repo.head.is_valid():
@@ -145,7 +145,7 @@ class GitManager:
                         if clean_path not in self.status_cache:
                             self.status_cache[clean_path] = "staged"
         except Exception as e:
-            SpawnLogger.warning(f"Git Manager Cache(HEAD Index) Warning: {e}")
+            SpawnLogger.warning(f"HEAD Index (Git Manager Cache): {e}")
 
         try:
             for untracked_file in self.repo.untracked_files:
@@ -154,7 +154,7 @@ class GitManager:
                     if clean_path not in self.status_cache:
                         self.status_cache[clean_path] = "untracked"
         except Exception as e:
-            SpawnLogger.error(f"Git Manager Cache(Reading New Files) Error: {e}")
+            SpawnLogger.error(f"Reading New Files (Git Manager Cache): {e}")
 
         try:
             ignored_raw = self.repo.git.status("--ignored", "--porcelain")
@@ -165,7 +165,7 @@ class GitManager:
                     if clean_path not in self.status_cache:
                         self.status_cache[clean_path] = "ignored"
         except Exception as e:
-            SpawnLogger.error(f"Git Manager Cache(Reading .gitignore) Error: {e}")
+            SpawnLogger.error(f"Reading .gitignore (Git Manager Cache): {e}")
         #print(f"[Git Cache] Current cache: {self.status_cache}")
 
     def get_file_status(self, relative_path):

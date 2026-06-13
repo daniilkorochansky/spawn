@@ -123,7 +123,7 @@ class BackgroundRunner(threading.Thread):
                 wx.CallAfter(self.on_finished, self._stop_requested)
                 
         except Exception as e:
-            SpawnLogger.error(f"Server Startup Error: {e}")
+            SpawnLogger.error(f"Server Startup: {e}")
             wx.CallAfter(self.append_to_rich_console, _(u"Server startup error: {e}\n").format(e=e))
             if self.on_finished:
                 wx.CallAfter(self.on_finished, False)
@@ -143,7 +143,7 @@ class BackgroundRunner(threading.Thread):
                 else:
                     self.process.terminate()
             except Exception as e:
-                SpawnLogger.error(f"Server Stop Error: {e}")
+                SpawnLogger.error(f"Server Stop: {e}")
 
     def append_to_rich_console(self, text):
         if self.console:

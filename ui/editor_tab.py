@@ -70,7 +70,7 @@ class CustomEditorTab(gui.EditorTabPanel):
             try:
                 self.m_scintilla_Editor.SetTechnology(stc.STC_TECHNOLOGY_DIRECTWRITE)
             except:
-                SpawnLogger.error(f"Editor Set Technology Error: {e}")
+                SpawnLogger.error(f"Editor Set Technology: {e}")
 
         #Initialize Editor Settings
         self.color_preview = True
@@ -170,7 +170,7 @@ class CustomEditorTab(gui.EditorTabPanel):
                     self.saved_markers_handles.append(new_saved_handle)
             self.modified_markers_handles.clear()
         except Exception as e:
-            SpawnLogger.error(f"Convert Modified Markers Error: {e}")
+            SpawnLogger.error(f"Convert Modified Markers: {e}")
             
         finally:
             editor.Thaw()
@@ -271,6 +271,10 @@ class CustomEditorTab(gui.EditorTabPanel):
 
                 if wx.TheClipboard.GetData(text_data):
                     self.m_scintilla_Editor.ReplaceSelection(text_data.GetText())
+
+            except Exception as e:
+                SpawnLogger.error(f"Paste: {e}")
+
             finally:
                 wx.TheClipboard.Close()
                 
@@ -410,7 +414,7 @@ class CustomEditorTab(gui.EditorTabPanel):
 
                     editor.IndicatorFillRange(highlight_start, highlight_length)
                 except Exception as e:
-                    SpawnLogger.error(f"Init Color Preview Indicator Error: {e}")
+                    SpawnLogger.error(f"Init Color Preview Indicator: {e}")
         event.Skip()
 
     def on_savepoint_left(self,event):
@@ -706,14 +710,14 @@ class CustomEditorTab(gui.EditorTabPanel):
                 self.m_scintilla_Editor.EmptyUndoBuffer()
                 self.m_scintilla_Editor.SetSavePoint()
             except Exception as e:
-                SpawnLogger.error(f"Editor SetText(Load File) Error: {e}")
+                SpawnLogger.error(f"Load File: {e}")
                 
             finally:
                 self.m_scintilla_Editor.Thaw()
 
             #self.current_encoding = "utf-8"
         except Exception as e:
-            SpawnLogger.error(f"Editor Load File Error: {e}")
+            SpawnLogger.error(f"Load File: {e}")
             self.m_scintilla_Editor.SetText(f"// Disk buffer error")
             
     

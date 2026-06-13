@@ -271,8 +271,8 @@ class DependencyManagerDialog ( wx.Dialog ):
                 if "contributors" in dep_data and isinstance(dep_data["contributors"], list):
                     contributors = ", ".join(dep_data["contributors"])
                     self.m_staticText_ContributorsInfo.SetLabel(contributors)
-            except Exception:
-                SpawnLogger.error(f"Dependency Manager(Parsing Selected Item) Error: {e}")
+            except Exception as e:
+                SpawnLogger.error(f"Parsing Selected Item (Dependency Manager): {e}")
                 
         readme_html_content = ""
         for name in ["README.md", "readme.md", "Readme.md", "ReadMe.md", "readMe.md"]:
@@ -284,8 +284,8 @@ class DependencyManagerDialog ( wx.Dialog ):
 
                     readme_html_content = markdown.markdown(md_text, extensions=['tables', 'fenced_code'])
                     break
-                except Exception:
-                    SpawnLogger.error(f"Dependency Manager(Read README.md) Error: {e}")
+                except Exception as e:
+                    SpawnLogger.error(f"Read README.md (Dependency Manager): {e}")
 
         style = """
         <style>
@@ -470,7 +470,7 @@ class DependencyManagerDialog ( wx.Dialog ):
                 if is_installed:
                     deps_list.Append(raw_string)
         except Exception as e:
-            SpawnLogger.error(f"Dependency Manager(Load Dependencies) Error: {e}")
+            SpawnLogger.error(f"Load Dependencies (Dependency Manager): {e}")
         
     def __del__( self ):
         pass

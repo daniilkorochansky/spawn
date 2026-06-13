@@ -89,7 +89,7 @@ class ConfigManager:
             self.project_config = {}
             return
         self.project_root = project_path
-        self.project_config_path = os.path.join(project_path, "spawn.yaml")
+        self.project_config_path = os.path.join(project_path, "spawn.json")
         self.load_project_config()
 
     def load_project_config(self):
@@ -101,7 +101,7 @@ class ConfigManager:
                 raw_data = json.load(f)
         except (json.JSONDecodeError, IOError) as e:
             raw_data = {}
-            SpawnLogger.error(f"Config Manager Load Project Config Error: {e}")
+            SpawnLogger.error(f"Config Manager Load Project Config: {e}")
 
         self.project_config = {}
         for key, (default, expected_type) in self._project_schema.items():
@@ -137,9 +137,9 @@ class ConfigManager:
         try:
             with open(self.config_path, 'r', encoding="utf-8") as f:
                 raw_data = json.load(f)
-        except (json.JSONDecodeError, IOError)as e:
+        except (json.JSONDecodeError, IOError) as e:
             raw_data = {}
-            SpawnLogger.error(f"Config Manager Load Config Error: {e}")
+            SpawnLogger.error(f"Config Manager Load Config: {e}")
             
         self.current_config = self._validate_level(self._schema, raw_data)
 
@@ -158,14 +158,14 @@ class ConfigManager:
             with open(self.project_config_path, 'w', encoding="utf-8") as f:
                 json.dump(self.project_config, f, indent=4, ensure_ascii=False)
         except IOError as e:
-            SpawnLogger.error(f"Config Manager Save Project Config Error: {e}")
+            SpawnLogger.error(f"Config Manager Save Project Config: {e}")
 
     def save(self):
         try:
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.current_config, f, indent=4, ensure_ascii=False)
         except IOError as e:
-            SpawnLogger.error(f"Config Manager Save Config Error: {e}")
+            SpawnLogger.error(f"Config Manager Save Config: {e}")
 
     def get(self, path_str, default=None):
 ##        #Project config
@@ -182,6 +182,7 @@ class ConfigManager:
         return data
 
     def set(self, path_str, value):
+        
 ##        #Project config
 ##        if path_str in self._project_schema:
 ##            _, expected_type = self._project_schema[path_str]
