@@ -46,14 +46,17 @@ A fast and modern development environment (IDE), created specifically for creati
 - [License](#license)
 
 ## Features
-+ Integration with [SAMPCTL](https://github.com/Southclaws/sampctl)
-+ Developed specifically for [open.mp](https://github.com/openmultiplayer) & SA-MP
-+ Dependency Manager for server components and packages
-+ RGBA/HEX color highlighting directly in the code editor
-+ Integrated Git support with source control panel
-+ Split Editor View for working with multiple files side-by-side
-+ Project Tree optimized for large gamemode projects
-+ Integrated build and server output panels
++ Designed specifically for [open.mp](https://github.com/openmultiplayer) & SA-MP development
++ Built-in [SAMPCTL](https://github.com/Southclaws/sampctl) integration for building, running and managing projects
++ Dependency Manager for easy installation and updating of server packages and components
++ Integrated Git support with repository status indicators and commit history
++ Color preview for RGBA and HEX values directly inside the editor
++ Color Picker integration for quick color insertion into Pawn code
++ Split Editor mode for working with multiple files simultaneously
++ Project Tree optimized for large projects
++ Integrated build output and server console panels
++ Automatic project files monitoring and refresh
++ Portable distribution (no installation required)
 
 ## Screenshots
 ### Project Creation
