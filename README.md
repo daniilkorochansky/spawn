@@ -44,6 +44,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
   - [Clone the Repository](#clone-the-repository)
   - [Install Dependencies](#install-dependencies)
   - [Run](#run)
+  - [Build Executable (Windows)](#build-executable-windows)
   - [Tests](#tests)
 - [Stability](#stability)
 - [Contributors](#contributors)
@@ -143,7 +144,9 @@ Project-specific functionality such as the Project Tree, Git integration, Depend
 + pytest
 
 ### Clone the Repository
-```https://github.com/daniilkorochansky/spawn.git```
+```
+https://github.com/daniilkorochansky/spawn.git
+```
 
 ### Install Dependencies
 ```python
@@ -153,6 +156,24 @@ pip install -r requirements.txt
 ```python
 python main.py
 ```
+
+### Build Executable (Windows)
+Spawn uses Nuitka to create standalone executable builds.
+
+1. Install Microsoft Visual Studio Build Tools with the C++ workload:
+https://visualstudio.microsoft.com/downloads/
+3. Install Nuitka:
+```
+pip install nuitka
+```
+3. Open a command prompt in the root folder and build the executable:
+```
+nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+```
+
+The generated executable will be available in the dist directory.
+
+*Official releases are built and tested on Windows x64.*
 
 ### Tests
 You can conduct tests to verify the functionality of new features or changes to key system components.
