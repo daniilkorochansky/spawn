@@ -131,7 +131,7 @@ To edit a single file:
 
 When working with individual files, editor features such as syntax highlighting, color previews, brace matching, split view, and change history markers remain fully available.
 
-Project-specific functionality such as the Project Tree, Git integration, Dependency Manager, and sampctl tools requires an opened project.
+Project-specific functionality such as the Project Tree, Git integration, Dependency Manager, and SAMPCTL tools requires an opened project.
 
 ## Development
 ### Requirements
