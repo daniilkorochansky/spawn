@@ -27,7 +27,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 - [Screenshots](#screenshots)
   - [Project Creation](#project-creation)
   - [Split Editor View](#split-editor-view)
-  - [RGBA/HEX Color Highlighting](#rgbahex-color-highlighting)
+  - [RGBA/HEX Color Preview](#rgbahex-color-preview)
   - [Dependency Manager](#dependency-manager)
   - [Git and Source Control](#git-and-source-control)
   - [Project Tree](#project-tree)
@@ -56,7 +56,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 + Integrated Git support with repository status indicators and commit history
 + Color preview for RGBA and HEX values directly inside the editor
 + Color Picker integration for quick color insertion into Pawn code
-+ Split Editor mode for working with multiple files simultaneously
++ Split Code Editor mode for working with multiple files simultaneously
 + Project Tree optimized for large projects
 + Integrated build output and server console panels
 + Automatic project files monitoring and refresh
@@ -67,7 +67,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 
 ### Split Editor View
 
-### RGBA/HEX Color Highlighting
+### RGBA/HEX Color Preview
 
 ### Dependency Manager
 
