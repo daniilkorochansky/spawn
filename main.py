@@ -63,15 +63,6 @@ class SpawnIDE(SpawnFrame):
         super().__init__(parent)
 
         self.ide_cfg = ConfigManager()
-
-        lang = self.ide_cfg.get("system.language","en")
-        translation = gettext.translation("spawn",localedir="locale",languages=[lang],fallback=True)
-        translation.install()
-
-        if lang == "en":
-            self.item_english.Check(True)
-        else:
-            self.item_russian.Check(True)
         
         self.find_dialog_data = wx.FindReplaceData()
         self.find_dialog_data.SetFlags(wx.FR_DOWN)
@@ -89,9 +80,9 @@ class SpawnIDE(SpawnFrame):
         self.m_statusBar.SetStatusText(u"---", 1)
         self.m_statusBar.SetStatusText(u"---", 2)
         self.m_statusBar.SetStatusText(u"---", 3)
-
-        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_ENGLISH)
-        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_RUSSIAN)
+       
+##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_ENGLISH)
+##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_RUSSIAN)
 
         self.Bind(wx.EVT_CLOSE, self.on_ide_close_request)
         self.Bind(wx.EVT_SHOW, self.on_frame_first_show)
@@ -1147,7 +1138,7 @@ samp.ban
                                 self.m_statusBar.SetStatusText(_(u"[Git] Error overwriting open tabs after reset."),0)
                         else:
                             notebook.DeletePage(page_idx)
-            # <- Здесь в статус бар информацию о том что кодовая база успешно возвращена
+           
             self.m_statusBar.SetStatusText(_(u"[Git] The code base has been successfully returned."),0)
         else:
             self.m_statusBar.SetStatusText(_(u"[Git] Error rolling back changes."),0)
@@ -2405,15 +2396,16 @@ samp.ban
             self.open_file_in_tab(file_path)
 
     def on_tab_changed(self, event):
-        if self.git_enabled:
-            old_page_idx = event.GetOldSelection()
-            if old_page_idx != wx.NOT_FOUND:
-                old_tab = self.m_auinotebook_Main.GetPage(old_page_idx)
+##        if self.git_enabled:
+##            old_page_idx = event.GetOldSelection()
+##            if old_page_idx != wx.NOT_FOUND:
+##                old_tab = self.m_auinotebook_Main.GetPage(old_page_idx)
 ##                old_tab.m_scintilla_Editor.MarkerDeleteAll(12) #Remove all Git change markers
         
         page_idx = event.GetSelection()
         if page_idx != wx.NOT_FOUND:
             active_tab = self.m_auinotebook_Main.GetPage(page_idx)
+            active_tab.update_zoom_status()
 
             if hasattr(active_tab, "native_eol") and active_tab.native_eol:
                 current_eol = active_tab.native_eol
@@ -2589,6 +2581,7 @@ samp.ban
                 
 
 if __name__ == "__main__":
+        
     app = wx.App()
     app.instance_checker = wx.SingleInstanceChecker("Spawn")
     if app.instance_checker.IsAnotherRunning():

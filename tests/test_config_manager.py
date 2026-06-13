@@ -27,7 +27,7 @@ def test_default_values_are_loaded():
     manager = ConfigManager()
     manager.current_config = manager._extract_defaults(manager._schema)
 
-    assert manager.get("system.language") == "en"
+    assert manager.get("system.git.enable") == False
     assert manager.get("editor.font.size") == 11
     assert manager.get("editor.font.family") == "Consolas"
     assert manager.get("editor.features.color_preview") is True
@@ -95,7 +95,7 @@ def test_extract_defaults():
         manager._schema
     )
 
-    assert defaults["system"]["language"] == "en"
+    assert defaults["system"]["git"]["enable"] == False
     assert defaults["editor"]["font"]["size"] == 11
     assert defaults["editor"]["features"]["color_preview"] is True
 
@@ -105,7 +105,9 @@ def test_validate_level_restores_invalid_values():
     manager.current_config = manager._extract_defaults(manager._schema)
     user_data = {
         "system": {
-            "language": 123
+            "git": {
+                "enable": 123
+                }
         }
     }
 
@@ -114,4 +116,4 @@ def test_validate_level_restores_invalid_values():
         user_data
     )
 
-    assert validated["system"]["language"] == "en"
+    assert validated["system"]["git"]["enable"] == False

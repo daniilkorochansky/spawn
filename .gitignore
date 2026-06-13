@@ -22,6 +22,7 @@ dist/
 # === Spawn ===
 assets/
 system/
+locale/
 
 *.bat
 mapping.cfg

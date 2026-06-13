@@ -33,7 +33,6 @@ class ConfigManager:
 
         self._schema = {
             "system": {
-                "language": ("en", str),
                 "git": {
                     "enable": (False, bool),
                     "executable_path": ("", str)
@@ -51,9 +50,9 @@ class ConfigManager:
                 "features": {
                     "color_preview": (True, bool),
                     "line_numbers": (True, bool),
-                    "folding": (False, bool),
+                    "folding": (True, bool),
                     "show_change_history": {
-                        "enabled": (False, bool),
+                        "enabled": (True, bool),
                         "color_marker_modified": ("#FFD324", str),
                         "color_marker_saved": ("#228B22", str)
                         },

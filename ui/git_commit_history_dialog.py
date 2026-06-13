@@ -38,7 +38,7 @@ class GitCommitHistoryDialog(wx.Dialog):
         self.repo = repo_obj
         self.execute_reset = execute_reset_callback
         self.commits_list = []
-
+      
         main_sizer = wx.BoxSizer( wx.VERTICAL )
 
         self.m_splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE|wx.SP_3D)

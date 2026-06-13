@@ -125,7 +125,7 @@ class SpawnFrame ( wx.Frame ):
         self.m_auiToolBar = wx.aui.AuiToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.aui.AUI_TB_HORZ_LAYOUT|wx.aui.AUI_TB_PLAIN_BACKGROUND )
         
         self.m_tool_NewFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_NEW_FILE, _(u"New File"), wx.Bitmap(os.path.join(self.icons_folder,"tb_file_new.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"New File"), wx.EmptyString, None )
-
+        
         self.m_tool_OpenFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_OPEN_FILE, _(u"Open File..."), wx.Bitmap(os.path.join(self.icons_folder,"tb_project_open.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Open File..."), wx.EmptyString, None )
 
         self.m_tool_SaveAll = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_SAVE_ALL, _(u"Save All"), wx.Bitmap(os.path.join(self.icons_folder,"tb_project_saveall.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Save All"), wx.EmptyString, None )
@@ -305,12 +305,12 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_tools = wx.Menu()
 
-        language_submenu = wx.Menu()
-        self.item_english = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_ENGLISH, u"English")
-        self.item_russian = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_RUSSIAN, u"Русский")
-        self.m_tools.AppendSubMenu(language_submenu, _(u"Language"), wx.EmptyString)
+##        language_submenu = wx.Menu()
+##        self.item_english = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_ENGLISH, u"English")
+##        self.item_russian = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_RUSSIAN, u"Русский")
+##        self.m_tools.AppendSubMenu(language_submenu, _(u"Language"), wx.EmptyString)
 
-        self.m_tools.AppendSeparator()
+##        self.m_tools.AppendSeparator()
         
         self.m_menuItem_Settings = wx.MenuItem( self.m_tools, wx.ID_SETTINGS, _(u"Settings..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_tools.Append( self.m_menuItem_Settings )

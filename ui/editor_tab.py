@@ -485,7 +485,9 @@ class CustomEditorTab(gui.EditorTabPanel):
         editor.SetLexer(stc.STC_LEX_NULL)
         editor.StyleResetDefault()
 
-        font = wx.Font(11 if editor == self.m_scintilla_Editor else 2, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+        font_size = self.ide_cfg.get("editor.font.size", 11)
+        font_family = self.ide_cfg.get("editor.font.family", "Consolas")
+        font = wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family)
         editor.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
 
         editor.StyleClearAll()

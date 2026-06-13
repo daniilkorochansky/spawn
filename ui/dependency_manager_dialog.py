@@ -340,7 +340,7 @@ class DependencyManagerDialog ( wx.Dialog ):
         if res == wx.NO: return
 
         self.m_gaugeProgress.SetValue(0)
-        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Удаление зависимости {selection}").format(selection=selection))
+        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Removing a dependency {selection}").format(selection=selection))
 
         self.m_textCtrl_Dependency.Enable(False)
         self.m_button_DependencyInstall.Enable(False)

@@ -22,8 +22,6 @@
 import wx
 import wx.xrc
 
-from core.config_manager import ConfigManager
-
 import os
 import sys
 import webbrowser
@@ -46,15 +44,6 @@ class SupportDialog ( wx.Dialog ):
         wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"Donate"), pos = wx.DefaultPosition, size = wx.Size( 460,464 ), style = wx.DEFAULT_DIALOG_STYLE )
 
         self.SetSizeHints( wx.Size( 460,464 ), wx.Size( 460,464 ) )
-        
-        self.donate_link = ""
-        self.ide_cfg = ConfigManager()
-        
-        lang = self.ide_cfg.get("system.language","en")
-        if lang == "en":
-            self.donate_link = u"https://github.com/daniilkorochansky/spawn/tree/main#donations"
-        else:
-            self.donate_link = u"https://github.com/daniilkorochansky/spawn/blob/main/README_RU.md#пожертвования"
 
         bSizer19 = wx.BoxSizer( wx.VERTICAL )
 
@@ -118,7 +107,7 @@ class SupportDialog ( wx.Dialog ):
         self.EndModal(wx.CANCEL)
 
     def on_donate_button(self, event):
-        webbrowser.open(self.donate_link)
+        webbrowser.open(u"https://github.com/daniilkorochansky/spawn/tree/main#donations")
 
     def __del__( self ):
         pass
