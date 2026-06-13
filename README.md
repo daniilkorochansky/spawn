@@ -103,9 +103,9 @@ These tools can be configured later in Settings.
 If the repository is already on the server, Spawn will automatically detect it (provided Git is enabled in the settings)
 
 ### Build and Run Server
-1. Open the project.
-2. Build your server.
-3. Start the server.
+1. Open the root folder containing the server by selecting 'File' -> 'Open Server Folder...' (The server must contain the 'pawn.json' file generated via [SAMPCTL](https://github.com/Southclaws/sampctl))
+2. Go to 'Build' -> 'Build Server' or click the corresponding button on the toolbar.
+3. Start your server by going to 'Server' -> 'Run / Stop Server' or by clicking the corresponding button on the toolbar.
 4. Monitor output in the integrated console.
 
 You're ready to develop open.mp and SA-MP servers with Spawn.
