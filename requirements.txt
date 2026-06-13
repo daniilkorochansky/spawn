@@ -2,3 +2,4 @@ GitPython==3.1.50
 Markdown==3.10.2
 watchdog==6.0.0
 wxpython==4.2.5
+pytest
