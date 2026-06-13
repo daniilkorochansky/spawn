@@ -121,7 +121,7 @@ You're ready to develop open.mp and SA-MP servers with Spawn.
 ```python
 pip install -r requirements.txt
 ```
-### Run Spawn
+### Run
 ```python
 python main.py
 ```
@@ -148,6 +148,13 @@ Contributions of all sizes are welcome, including:
 + Testing and feedback
 
 Thank you for helping make Spawn better for everyone.
+
+### Bug Report
+If you encounter an error or bug while using Spawn, follow these steps:
+1. Select 'Help' -> 'Bug Report'
+2. Click the ‘Copy’ button (If 'Log Output' is empty, proceed immediately to the next step.)
+3. Click the ‘Open GitHub Issue’ button
+4. Paste the completed report into the description and enter a title (If the ‘Log Output’ field was empty, please describe the error or bug yourself.)
 
 ## Donations
 Spawn is developed in free time and will always remain free and open source.
