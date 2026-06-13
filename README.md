@@ -93,7 +93,7 @@ These tools can be configured later in Settings.
 3. Click 'Install'.
 
 + To uninstall a dependency, select the one you want from the list and click 'Uninstall'.
-+ To 'ensure', click the button with the same name.
++ To verify that all dependencies are in order, click the button labeled 'Ensure'.
 
 ### Use Git
 1. Right-click the root folder in the Project Tree → choose 'Initialize Repository'. (If the repository wasn't on the server)
