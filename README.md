@@ -15,7 +15,7 @@
 
 A fast and modern development environment (IDE), created specifically for creating open.mp and SA-MP servers, in the Pawn programming language.
 
-It combines Pawn editing, sampctl integration, dependency management, Git version control, and project navigation tools into a single development environment designed around the needs of multiplayer server developers.
+It combines Pawn editing, SAMPCTL integration, dependency management, Git version control, and project navigation tools into a single development environment designed around the needs of multiplayer server developers.
 
 Portable, extensible, and focused on productivity, Spawn helps you build, manage and maintain Pawn projects without relying on generic code editors.
 
