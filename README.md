@@ -58,7 +58,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 + Dependency Manager for easy installation and updating of server packages and components.
 + Integrated Git support with repository status indicators and commit history.
 + Change History markers for tracking modified and saved lines.
-+ Automatic brace matching and highlighting
++ Automatic brace matching and highlighting.
 + Color preview for RGBA and HEX values directly inside the editor.
 + Color Picker integration for quick color insertion into Pawn code.
 + Split Code Editor mode for working with multiple files simultaneously.
