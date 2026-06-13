@@ -153,6 +153,10 @@ Project-specific functionality such as the Project Tree, Git integration, Depend
 ```
 https://github.com/daniilkorochansky/spawn.git
 ```
+or
+```
+gh repo clone daniilkorochansky/spawn
+```
 
 ### Install Dependencies
 ```python
