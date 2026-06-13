@@ -38,6 +38,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
   - [Create a Project](#create-a-project)
   - [Manage Dependencies](#manage-dependencies)
   - [Build and Run Server](#build-and-run-server)
+  - [Working with Individual Files](#working-with-individual-files)
 - [Development](#development)
   - [Requirements](#requirements)
   - [Clone the Repository](#clone-the-repository)
@@ -119,6 +120,18 @@ If the repository is already on the server, Spawn will automatically detect it (
 4. Monitor output in the integrated console.
 
 You're ready to develop open.mp and SA-MP servers with Spawn.
+
+### Working with Individual Files
+Spawn can also be used without opening a project.
+
+To edit a single file:
+1. Select 'File' → 'Open File...'.
+2. Choose a Pawn source file, include file, or configuration file.
+3. Start editing immediately.
+
+When working with individual files, editor features such as syntax highlighting, color previews, brace matching, split view, and change history markers remain fully available.
+
+Project-specific functionality such as the Project Tree, Git integration, Dependency Manager, and sampctl tools requires an opened project.
 
 ## Development
 ### Requirements
