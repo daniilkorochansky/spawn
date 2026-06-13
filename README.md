@@ -69,16 +69,22 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 
 ## Screenshots
 ### Project Creation
+<img width="1920" height="1080" alt="Project Creation" src="https://github.com/user-attachments/assets/14b70c29-96b4-4d7d-94ff-6307cfa35cac" />
 
 ### Split Code Editor View
+<img width="1920" height="1080" alt="Split Code Editor" src="https://github.com/user-attachments/assets/f0caa6e9-607b-48f1-8b58-ae95ef12f7b1" />
 
 ### RGBA/HEX Color Preview
+<img width="1920" height="1080" alt="Color Preview" src="https://github.com/user-attachments/assets/ae6a367a-3b04-4a23-a6ad-71ae51b0edc8" />
 
 ### Dependency Manager
+<img width="1920" height="1080" alt="Dependency Manager" src="https://github.com/user-attachments/assets/e60a1bad-9a9d-43da-938d-fa94d43401b7" />
 
 ### Git and Source Control
+<img width="1920" height="1080" alt="Git and Source Control" src="https://github.com/user-attachments/assets/b6198ac3-97b4-4392-b29a-87ab6bdfc818" />
 
 ### Project Tree
+<img width="1920" height="1080" alt="Project Tree" src="https://github.com/user-attachments/assets/c942516b-6e18-406d-b9be-cb8e24d54a94" />
 
 ## Installation
 ### Download
