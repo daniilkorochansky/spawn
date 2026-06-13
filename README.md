@@ -157,6 +157,8 @@ Every contribution helps improve the IDE and keep the project moving forward.
 
 Thank you for your support ❤️
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y4L421BNPH)
+
 ## License
 Spawn is licensed under the GNU General Public License v3.0.
 
