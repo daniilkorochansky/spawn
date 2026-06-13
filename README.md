@@ -13,7 +13,7 @@
 # Spawn
 <img width="180" height="180" alt="spawn_new" src="https://github.com/user-attachments/assets/18435694-229c-468d-87af-11f9ed4d243e" />
 
-A fast and modern development environment (IDE), created specifically for creating open.mp and SA-MP servers, in the Pawn programming language.
+A fast and modern development environment (IDE), created specifically for developing open.mp and SA-MP servers, in the Pawn programming language.
 
 It combines Pawn editing, SAMPCTL integration, dependency management, Git version control, and project navigation tools into a single development environment designed around the needs of multiplayer server developers.
 
