@@ -19,11 +19,5 @@ dist/
 *.exe
 *.bat
 
-# === Spawn ===
-assets/
-system/
-locale/
-
-*.bat
 mapping.cfg
 pytest.ini
