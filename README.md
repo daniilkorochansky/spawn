@@ -7,7 +7,7 @@
 <div align="center">
   [English
   /
-  <a href="https://github.com/daniilkorochansky/spawn/blob/main/README_RU.md">Русский</a>]
+  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_ru.md">Русский</a>]
 </div>
 
 # Spawn
@@ -160,4 +160,4 @@ Thank you for your support ❤️
 ## License
 Spawn is licensed under the GNU General Public License v3.0.
 
-See the [LICENSE](https://github.com/daniilkorochansky/spawn/blob/main/LICENSE) file for details.
+See the [LICENSE](https://github.com/daniilkorochansky/spawn/blob/master/LICENSE) file for details.
