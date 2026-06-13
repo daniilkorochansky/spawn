@@ -40,6 +40,7 @@ A fast and modern development environment (IDE), created specifically for creati
   - [Run Spawn](#run-spawn)
 - [Stability](#stability)
 - [Contributors](#contributors)
+  - [Bug Report](#bug-report)
 - [Donations](#donations)
 - [License](#license)
 
