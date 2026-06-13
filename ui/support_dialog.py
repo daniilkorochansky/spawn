@@ -107,7 +107,7 @@ class SupportDialog ( wx.Dialog ):
         self.EndModal(wx.CANCEL)
 
     def on_donate_button(self, event):
-        webbrowser.open(u"https://github.com/daniilkorochansky/spawn/tree/main#donations")
+        webbrowser.open(u"https://github.com/daniilkorochansky/spawn/tree/master#donations")
 
     def __del__( self ):
         pass
