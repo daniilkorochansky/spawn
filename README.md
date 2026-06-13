@@ -26,7 +26,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 - [Features](#features)
 - [Screenshots](#screenshots)
   - [Project Creation](#project-creation)
-  - [Split Editor View](#split-editor-view)
+  - [Split Code Editor View](#split-code-editor-view)
   - [RGBA/HEX Color Preview](#rgbahex-color-preview)
   - [Dependency Manager](#dependency-manager)
   - [Git and Source Control](#git-and-source-control)
@@ -68,7 +68,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 ## Screenshots
 ### Project Creation
 
-### Split Editor View
+### Split Code Editor View
 
 ### RGBA/HEX Color Preview
 
