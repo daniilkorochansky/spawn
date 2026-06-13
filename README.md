@@ -158,6 +158,7 @@ Every contribution helps improve the IDE and keep the project moving forward.
 Thank you for your support ❤️
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y4L421BNPH)
+
 [Donate via Boosty (Россия / International)](https://boosty.to/daniilkorochansky)
 
 ## License
