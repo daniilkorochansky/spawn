@@ -50,17 +50,19 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 - [License](#license)
 
 ## Features
-+ Designed specifically for [open.mp](https://github.com/openmultiplayer) & SA-MP development
-+ Built-in [SAMPCTL](https://github.com/Southclaws/sampctl) integration for building, running and managing projects
-+ Dependency Manager for easy installation and updating of server packages and components
-+ Integrated Git support with repository status indicators and commit history
-+ Color preview for RGBA and HEX values directly inside the editor
-+ Color Picker integration for quick color insertion into Pawn code
-+ Split Code Editor mode for working with multiple files simultaneously
-+ Project Tree optimized for large projects
-+ Integrated build output and server console panels
-+ Automatic project files monitoring and refresh
-+ Portable distribution (no installation required)
++ Designed specifically for [open.mp](https://github.com/openmultiplayer) & SA-MP development.
++ Built-in [SAMPCTL](https://github.com/Southclaws/sampctl) integration for building, running and managing projects.
++ Dependency Manager for easy installation and updating of server packages and components.
++ Integrated Git support with repository status indicators and commit history.
++ Change History markers for tracking modified and saved lines.
++ Automatic brace matching and highlighting
++ Color preview for RGBA and HEX values directly inside the editor.
++ Color Picker integration for quick color insertion into Pawn code.
++ Split Code Editor mode for working with multiple files simultaneously.
++ Project Tree optimized for large projects.
++ Integrated build output and server console panels.
++ Automatic project files monitoring and refresh.
++ Portable distribution (no installation required).
 
 ## Screenshots
 ### Project Creation
