@@ -128,6 +128,9 @@ You're ready to develop open.mp and SA-MP servers with Spawn.
 + watchdog
 + pytest
 
+### Clone the Repository
+```https://github.com/daniilkorochansky/spawn.git```
+
 ### Install Dependencies
 ```python
 pip install -r requirements.txt
