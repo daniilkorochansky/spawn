@@ -72,7 +72,7 @@ A fast and modern development environment (IDE), created specifically for creati
 ### Download
 1. Download the latest release from the Releases page.
 2. Extract the archive to any folder.
-3. Run spawn.exe.
+3. Run 'Spawn.exe'.
 
 ### Optional Tools
 To use all features of Spawn, you may also install:
