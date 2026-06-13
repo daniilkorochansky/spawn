@@ -30,6 +30,7 @@ import re
 import markdown
 
 from core.dependency_worker import DependencyDownloadWorker
+from core.logger import SpawnLogger
 
 import gettext
 _ = gettext.gettext
@@ -271,7 +272,8 @@ class DependencyManagerDialog ( wx.Dialog ):
                     contributors = ", ".join(dep_data["contributors"])
                     self.m_staticText_ContributorsInfo.SetLabel(contributors)
             except Exception:
-                pass
+                SpawnLogger.error(f"Dependency Manager(Parsing Selected Item) Error: {e}")
+                
         readme_html_content = ""
         for name in ["README.md", "readme.md", "Readme.md", "ReadMe.md", "readMe.md"]:
             readme_path = os.path.join(dep_folder_path, name)
@@ -283,7 +285,7 @@ class DependencyManagerDialog ( wx.Dialog ):
                     readme_html_content = markdown.markdown(md_text, extensions=['tables', 'fenced_code'])
                     break
                 except Exception:
-                    pass
+                    SpawnLogger.error(f"Dependency Manager(Read README.md) Error: {e}")
 
         style = """
         <style>
@@ -467,7 +469,8 @@ class DependencyManagerDialog ( wx.Dialog ):
               
                 if is_installed:
                     deps_list.Append(raw_string)
-        except Exception: pass
+        except Exception as e:
+            SpawnLogger.error(f"Dependency Manager(Load Dependencies) Error: {e}")
         
     def __del__( self ):
         pass

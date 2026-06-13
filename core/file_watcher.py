@@ -22,6 +22,8 @@
 import os
 import wx
 
+from core.logger import SpawnLogger
+
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -67,6 +69,7 @@ class ProjectFileWatcher:
             self.observer.schedule(handler, path, recursive=True)
             self.observer.start()
         except Exception as e:
+            SpawnLogger.error(f"File Watcher Start Error: {e}")
             self.stop()
 
     def pause(self):
@@ -109,6 +112,7 @@ class ProjectFileWatcher:
             try:
                 self.observer.stop()
                 self.observer.join()
-            except Exception:
-                pass
+            except Exception as e:
+                SpawnLogger.error(f"File Watcher Stop Error: {e}")
+                
             self.observer = None

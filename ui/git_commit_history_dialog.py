@@ -29,6 +29,8 @@ import datetime
 import gettext
 _ = gettext.gettext
 
+from core.logger import SpawnLogger
+
 class GitCommitHistoryDialog(wx.Dialog):
 
     def __init__( self, parent, repo_obj, execute_reset_callback):
@@ -107,7 +109,7 @@ class GitCommitHistoryDialog(wx.Dialog):
                 self.hash_map[short_hash] = commit.hexsha
 
         except Exception as e:
-            pass
+            SpawnLogger.error(f"Commit History(Populate) Error: {e}")
 
     def on_history_item_selected(self, event):
         row_idx = event.GetIndex()
@@ -142,7 +144,8 @@ class GitCommitHistoryDialog(wx.Dialog):
                     self.m_listBox_Files.Append(display_string)
 
         except Exception as e:
-            self.m_listBox_Files.Append(_(u"Failed to get file list: {e}").format(e=e))
+            SpawnLogger.error(f"Commit History Get File List Error: {e}")
+            self.m_listBox_Files.Append(_(u"Failed to get file list"))
 
     def on_history_item_right_click(self, event):
         item_obj = event.GetItem()

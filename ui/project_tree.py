@@ -22,6 +22,8 @@
 import os
 import wx
 
+from core.logger import SpawnLogger
+
 class ProjectTreeManager:
     """
     Provides project tree population and file system traversal
@@ -134,4 +136,4 @@ class ProjectTreeManager:
 
                 
         except Exception:
-            pass
+            SpawnLogger.error(f"Scan Directory(Project Tree) Error: {e}")

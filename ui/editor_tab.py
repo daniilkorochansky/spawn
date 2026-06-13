@@ -27,6 +27,7 @@ import wx
 
 import ui.spawn_base as gui
 from core.config_manager import ConfigManager
+from core.logger import SpawnLogger
 
 import gettext
 _ = gettext.gettext
@@ -69,7 +70,7 @@ class CustomEditorTab(gui.EditorTabPanel):
             try:
                 self.m_scintilla_Editor.SetTechnology(stc.STC_TECHNOLOGY_DIRECTWRITE)
             except:
-                pass
+                SpawnLogger.error(f"Editor Set Technology Error: {e}")
 
         #Initialize Editor Settings
         self.color_preview = True
@@ -168,6 +169,9 @@ class CustomEditorTab(gui.EditorTabPanel):
                     new_saved_handle = editor.MarkerAdd(line_idx, self.MARKER_SAVED_ID)
                     self.saved_markers_handles.append(new_saved_handle)
             self.modified_markers_handles.clear()
+        except Exception as e:
+            SpawnLogger.error(f"Convert Modified Markers Error: {e}")
+            
         finally:
             editor.Thaw()
             editor.Refresh()
@@ -405,8 +409,8 @@ class CustomEditorTab(gui.EditorTabPanel):
                     editor.IndicatorSetForeground(self.COLOR_PREVIEW_INDICATOR_ID, wx.Colour(detected_html_color))
 
                     editor.IndicatorFillRange(highlight_start, highlight_length)
-                except Exception:
-                    pass
+                except Exception as e:
+                    SpawnLogger.error(f"Init Color Preview Indicator Error: {e}")
         event.Skip()
 
     def on_savepoint_left(self,event):
@@ -701,11 +705,15 @@ class CustomEditorTab(gui.EditorTabPanel):
                 self.m_scintilla_Editor.SetText(text_content)
                 self.m_scintilla_Editor.EmptyUndoBuffer()
                 self.m_scintilla_Editor.SetSavePoint()
+            except Exception as e:
+                SpawnLogger.error(f"Editor SetText(Load File) Error: {e}")
+                
             finally:
                 self.m_scintilla_Editor.Thaw()
 
             #self.current_encoding = "utf-8"
         except Exception as e:
-            self.m_scintilla_Editor.SetText(f"// Disk buffer error:\n// {e}")
+            SpawnLogger.error(f"Editor Load File Error: {e}")
+            self.m_scintilla_Editor.SetText(f"// Disk buffer error")
             
     

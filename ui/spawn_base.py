@@ -99,6 +99,8 @@ wx.ID_CONVERT_TO_CP1251 = 6071
 wx.ID_LANGUAGE_ENGLISH = 6072
 wx.ID_LANGUAGE_RUSSIAN = 6073
 
+wx.ID_BUG_REPORT = 6074
+
 def get_app_root_dir():
     if 'NUITKA_ONEFILE_PARENT' in os.environ or getattr(sys, 'frozen', False):
         return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
@@ -320,6 +322,11 @@ class SpawnFrame ( wx.Frame ):
         self.m_menubar.Append( self.m_tools, _(u"Tools") )
 
         self.m_help = wx.Menu()
+
+        self.m_menuItem_BugReport = wx.MenuItem( self.m_help, wx.ID_BUG_REPORT, _(u"Bug Report"), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_help.Append( self.m_menuItem_BugReport )
+
+        self.m_help.AppendSeparator()
 
         self.m_menuItem_Donate = wx.MenuItem( self.m_help, wx.ID_DONATE, _(u"Donate"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_help.Append( self.m_menuItem_Donate )

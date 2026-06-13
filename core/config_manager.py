@@ -22,6 +22,8 @@
 import os
 import json
 
+from core.logger import SpawnLogger
+
 class ConfigManager:
     def __init__(self):
         self.appdata_dir = os.path.join(os.environ['APPDATA'], 'Spawn')
@@ -97,8 +99,9 @@ class ConfigManager:
         try:
             with open(self.project_config_path, 'r', encoding='utf-8') as f:
                 raw_data = json.load(f)
-        except (json.JSONDecodeError, IOError):
+        except (json.JSONDecodeError, IOError) as e:
             raw_data = {}
+            SpawnLogger.error(f"Config Manager Load Project Config Error: {e}")
 
         self.project_config = {}
         for key, (default, expected_type) in self._project_schema.items():
@@ -134,8 +137,10 @@ class ConfigManager:
         try:
             with open(self.config_path, 'r', encoding="utf-8") as f:
                 raw_data = json.load(f)
-        except (json.JSONDecodeError, IOError):
+        except (json.JSONDecodeError, IOError)as e:
             raw_data = {}
+            SpawnLogger.error(f"Config Manager Load Config Error: {e}")
+            
         self.current_config = self._validate_level(self._schema, raw_data)
 
     def _extract_defaults(self, schema_level):
@@ -152,14 +157,15 @@ class ConfigManager:
         try:
             with open(self.project_config_path, 'w', encoding="utf-8") as f:
                 json.dump(self.project_config, f, indent=4, ensure_ascii=False)
-        except IOError: pass
+        except IOError as e:
+            SpawnLogger.error(f"Config Manager Save Project Config Error: {e}")
 
     def save(self):
         try:
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.current_config, f, indent=4, ensure_ascii=False)
-        except IOError:
-            pass
+        except IOError as e:
+            SpawnLogger.error(f"Config Manager Save Config Error: {e}")
 
     def get(self, path_str, default=None):
 ##        #Project config

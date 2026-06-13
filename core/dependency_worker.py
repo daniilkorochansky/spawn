@@ -24,6 +24,8 @@ import subprocess
 import threading
 import wx
 
+from core.logger import SpawnLogger
+
 import gettext
 _ = gettext.gettext
 
@@ -78,4 +80,5 @@ class DependencyDownloadWorker(threading.Thread):
                 
                 wx.CallAfter(self.ui_callback, -1, _(u"The process has been interrupted."))
         except Exception as e:
+            SpawnLogger.warning(f"Dependency Worker(Run) Warning: {e}")
             wx.CallAfter(self.ui_callback, -1, f"{e}")

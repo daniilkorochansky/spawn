@@ -26,6 +26,8 @@ import re
 import subprocess
 import shutil
 import traceback
+import logging
+import platform
 
 import gettext
 _ = gettext.gettext
@@ -37,6 +39,7 @@ from ui.editor_tab import CustomEditorTab
 from ui.support_dialog import SupportDialog
 from ui.about_dialog import SpawnAboutDialog
 from ui.project_tree import ProjectTreeManager
+from ui.bug_report_dialog import BugReportDialog
 from ui.new_project_dialog import NewProjectDialog
 from ui.git_commit_history_dialog import GitCommitHistoryDialog
 from ui.dependency_manager_dialog import DependencyManagerDialog
@@ -46,6 +49,7 @@ from core.file_watcher import ProjectFileWatcher
 from core.config_manager import ConfigManager
 from core.compiler import BackgroundCompiler
 from core.runner import BackgroundRunner
+from core.logger import SpawnLogger
 
 from git import Repo
 
@@ -58,9 +62,14 @@ from core.git_single_reset_worker import GitSingleResetWorker
 from core.git_single_stage_worker import GitSingleStageWorker
 from core.git_reset_commit_worker import GitResetCommitWorker
 
+def global_exception_handler(exc_type, exc_value, exc_traceback):
+    SpawnLogger.exception("".join(traceback.format_exception(exc_type,exc_value,exc_traceback)))
+
 class SpawnIDE(SpawnFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        SpawnLogger.initialize()
 
         self.ide_cfg = ConfigManager()
         
@@ -148,7 +157,8 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_toggle_project_panel_click, id=wx.ID_TOGGLE_PROJECT_PANEL)
         self.Bind(wx.EVT_MENU, self.on_toggle_output_panel_click, id=wx.ID_TOGGLE_OUTPUT_PANEL)
         self.Bind(wx.EVT_MENU, self.on_toggle_toolbar_panel_click, id=wx.ID_TOGGLE_TOOLBAR)
-
+        
+        self.Bind(wx.EVT_MENU, self.on_bug_report_click, id=wx.ID_BUG_REPORT)
         self.Bind(wx.EVT_MENU, self.on_donate_click, id=wx.ID_DONATE)
         self.Bind(wx.EVT_MENU, self.on_about_click, id=wx.ID_ABOUT)
 
@@ -219,16 +229,9 @@ class SpawnIDE(SpawnFrame):
         self.update_button_is_no_tabs()
         self.update_git_ui_controls_state()
 
-    def on_language_click(self, event):
-        language = "en"
-
-        if event.GetId() == self.item_russian.GetId():
-            language = "ru"
-
-        self.ide_cfg.set("system.language", language)
-        self.ide_cfg.save()
-
-        wx.MessageBox(_("Please restart Spawn to apply the new language."),_("Information"),wx.OK | wx.ICON_INFORMATION)
+    def on_bug_report_click(self, event):
+        dlg = BugReportDialog(self)
+        dlg.ShowModal()
 
     def on_donate_click(self, event):
         dlg = SupportDialog(self)
@@ -317,7 +320,8 @@ samp.ban
                 f.write(gitignore_content)
             return True
 
-        except Exception:
+        except Exception as e:
+            SpawnLogger.error(f"Creating .gitignore Error: {e}")
             return False
 
     def on_git_open_terminal_click(self, event):
@@ -385,6 +389,8 @@ samp.ban
                 tab.m_scintilla_Editor.EmptyUndoBuffer()
 
                 tab.m_scintilla_Editor.SetSavePoint()
+            except Exception as e:
+                SpawnLogger.error(f"Reopening File(SetText) Error: {e}")
 
             finally:
                 tab.m_scintilla_Editor.Thaw()
@@ -401,6 +407,7 @@ samp.ban
             self.m_statusBar.SetStatusText(_("Cannot reopen file using {encoding}. Decoding failed.").format(encoding=new_encoding.upper()),0)
 
         except Exception as e:
+            SpawnLogger.error(f"Reopening File Error: {e}")
             self.m_statusBar.SetStatusText(_("Error reopening file: {error}").format(error=str(e)),0)
             
 
@@ -452,6 +459,9 @@ samp.ban
 
                     if wx.TheClipboard.GetData(text_data):
                         tab.m_scintilla_Editor.ReplaceSelection(text_data.GetText())
+                except Exception as e:
+                    SpawnLogger.error(f"Paste Error: {e}")
+
                 finally:
                     wx.TheClipboard.Close()
 
@@ -528,7 +538,7 @@ samp.ban
                 editor.VerticalCentreCaret()
                 
         except Exception as e:
-            print(f"[Change History Sync Error] {e}")
+            SpawnLogger.error(f"Git History Sync Error: {e}")
 
     def on_git_view_history_click(self, event):
         if not self.git_enabled or not hasattr(self, 'git_manager') or self.git_manager is None or not self.git_manager.is_repo:
@@ -565,8 +575,6 @@ samp.ban
         self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_REFRESH, False)
         self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_STAGE_ALL, False)
         self.m_auiToolBar_Git.EnableTool(wx.ID_GIT_UNSTAGE_ALL, False)
-
-        print(commit_hash)
 
         reset_thread = GitResetCommitWorker(
             repo_obj=self.git_manager.repo,
@@ -611,7 +619,7 @@ samp.ban
                                 tab.m_scintilla_Editor.MarkerDeleteAll(14)
                                 tab.m_scintilla_Editor.SetSavePoint()
                             except Exception:
-                                pass
+                                SpawnLogger.error(f"Git Reset Commit(Finished) Error: {e}")
                         else:
                             notebook.DeletePage(page_idx)
            
@@ -1035,7 +1043,7 @@ samp.ban
                                 tab.m_scintilla_Editor.MarkerDeleteAll(14)
                                 tab.m_scintilla_Editor.SetSavePoint()
                             except Exception:
-                                pass
+                                SpawnLogger.error(f"Git Reset(Finished) Error: {e}")
                         else:
                             notebook.DeletePage(page_idx)
 
@@ -1163,7 +1171,8 @@ samp.ban
                 
             self.refresh_project_tree()
         except Exception as e:
-            self.m_statusBar.SetStatusText(_(u"[Git] Sync failed: {e}").format(e=e),0)
+            SpawnLogger.error(f"Git Sync Error: {e}")
+            self.m_statusBar.SetStatusText(_(u"[Git] Sync failed"),0)
         finally:
             self.m_treeCtrl_GitHistory.Thaw()
             self.m_treeCtrl_GitHistory.Refresh()
@@ -1464,6 +1473,9 @@ samp.ban
                 editor.BeginUndoAction()
                 try:
                     editor.ReplaceSelection(replace_query)
+                except Exception as e:
+                    SpawnLogger.error(f"Find / Replace Error: {e}")
+                    
                 finally:
                     editor.EndUndoAction()
             event.SetEventType(wx.wxEVT_COMMAND_FIND_NEXT)
@@ -1485,6 +1497,9 @@ samp.ban
                     editor.ReplaceTarget(replace_query)
                     current_pos = res + len(replace_query)
                     count += 1
+            except Exception as e:
+                SpawnLogger.error(f"Find / Replace Error: {e}")
+                
             finally:
                 editor.EndUndoAction()
                 editor.Thaw()
@@ -1707,7 +1722,7 @@ samp.ban
 
         if item_id == root_item_id:
             if not getattr(self, 'git_manager', None) and self.git_enabled:
-                menu.Append(ID_GIT_INIT, _(u"Initialize Git"))
+                menu.Append(ID_GIT_INIT, _(u"Initialize Repository"))
                 self.Bind(wx.EVT_MENU, self.on_git_init_repository_click, id=ID_GIT_INIT)
             
         if item_id != root_item_id:
@@ -1759,6 +1774,7 @@ samp.ban
 
             self.refresh_project_tree()
         except Exception as e:
+            SpawnLogger.error(f"Git Repository Initialization Error: {e}")
             wx.MessageBox(_(u"Failed to initialize repository: {e}").format(e=e), _(u"Git Error"), wx.ID_OK|wx.ICON_ERROR, self)
 
 
@@ -1806,7 +1822,8 @@ samp.ban
                         self.git_manager.update_statuses_cache()
                     self.refresh_project_tree()
                 except Exception as e:
-                    wx.MessageBox(_(u"Failed to create folder: {e}").format(e=e), _(u"Error"), wx.OK | wx.ICON_ERROR)
+                    SpawnLogger.error(f"Create Folder(Project Tree) Error: {e}")
+                    wx.MessageBox(_(u"Failed to create folder"), _(u"Error"), wx.OK | wx.ICON_ERROR)
         dlg.Destroy()
 
     def on_tree_rename_item(self, event):
@@ -1851,7 +1868,8 @@ samp.ban
                             
                 self.refresh_project_tree()
             except Exception as e:
-                wx.MessageBox(_(u"Failed to rename: {e}").format(e=e), _(u"Error"), wx.OK | wx.ICON_ERROR)
+                SpawnLogger.error(f"Rename(Project Tree) Error: {e}")
+                wx.MessageBox(_(u"Failed to rename"), _(u"Error"), wx.OK | wx.ICON_ERROR)
             finally:
                 if hasattr(self, 'file_watcher'): self.file_watcher.resume()
         dlg.Destroy()
@@ -1889,7 +1907,8 @@ samp.ban
                 self.update_button_is_no_tabs()
                 self.refresh_project_tree()
             except Exception as e:
-                wx.MessageBox(_(u"Error during deletion: {e}").format(e=e), _(u"Error"), wx.OK | wx.ICON_ERROR)
+                SpawnLogger.error(f"Delete(Project Tree) Error: {e}")
+                wx.MessageBox(_(u"Error during deletion"), _(u"Error"), wx.OK | wx.ICON_ERROR)
             finally:
                 if hasattr(self, 'file_watcher'): self.file_watcher.resume()
 
@@ -1924,7 +1943,8 @@ samp.ban
                             self.git_manager.update_statuses_cache()
                     self.refresh_project_tree()
                 except Exception as e:
-                    wx.MessageBox(_(u"Failed to create file: {e}").format(e=e), _(u"Error"), wx.OK | wx.ICON_ERROR)
+                    SpawnLogger.error(f"Create File(Project Tree) Error: {e}")
+                    wx.MessageBox(_(u"Failed to create file"), _(u"Error"), wx.OK | wx.ICON_ERROR)
         dlg.Destroy()
 
     def on_new_file(self,event):
@@ -2036,6 +2056,8 @@ samp.ban
             
             self.update_git_ui_controls_state()
             self.check_environment_on_startup()
+        except Exception as e:
+            SpawnLogger.error(f"Close Project Error: {e}")
 
         finally:
             self.Thaw()
@@ -2166,7 +2188,8 @@ samp.ban
         except Exception as e:
             self.Enable(True)
             self.Raise()
-            wx.MessageBox(u"{msg} {e}".format(msg=_('Failed to start server initialization process:'),e=e), _(u"Server initialization"), wx.OK|wx.ICON_ERROR, self)
+            SpawnLogger.error(f"Server Initialization Error: {e}")
+            wx.MessageBox(u"{msg}".format(msg=_('Failed to start server initialization process')), _(u"Server initialization"), wx.OK|wx.ICON_ERROR, self)
 
     def on_new_project_async_finished(self, success, target_path):
         self.Enable(True)
@@ -2181,7 +2204,8 @@ samp.ban
                     if not os.listdir(target_path):
                         os.rmdir(target_path)
                 except Exception:
-                    pass
+                    SpawnLogger.error(f"New Project(Finished) Error: {e}")
+                
             wx.MessageBox(_(u"Server initialization aborted: 'pawn.json' file not found."),
                           _(u"Server initialization"), wx.OK | wx.ICON_WARNING, self)
             return
@@ -2243,7 +2267,7 @@ samp.ban
             if new_root_id.IsOk():
                 restore_expanded_state(new_root_id)
         except Exception as e:
-            print(str(e))
+            SpawnLogger.error(f"Refresh Project Tree Error: {e}")
         finally:
             tree.Thaw()
             if self.git_enabled and self.git_manager:
@@ -2367,7 +2391,7 @@ samp.ban
             self.update_git_ui_controls_state()
             self.check_environment_on_startup()
         except Exception as e:
-            traceback.print_exc()
+            SpawnLogger.error(f"Load Project Error: {e}")
 
         #--------------------------
         
@@ -2543,7 +2567,7 @@ samp.ban
                     self.refresh_project_tree()
                     
         except Exception as f:
-            print(f)
+            SpawnLogger.error(f"Save Current File Error: {f}")
         finally:
             active_tab.convert_modified_markers_to_saved()
             #Apply saves IDE settings
@@ -2581,6 +2605,7 @@ samp.ban
                 
 
 if __name__ == "__main__":
+    sys.excepthook = global_exception_handler
         
     app = wx.App()
     app.instance_checker = wx.SingleInstanceChecker("Spawn")
