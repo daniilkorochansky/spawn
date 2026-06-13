@@ -132,8 +132,13 @@ python main.py
 ### Tests
 You can conduct tests to verify the functionality of new features or changes to key system components.
 To run the tests, follow these steps:
-1. Open a command prompt in the root folder
-2. Execute the following command: ```pytest -v```
+1. Create a file named ‘pytest.ini’ in the root folder with the following contents (if it doesn't already exist)
+```
+[pytest]
+pythonpath = .
+```
+3. Open a command prompt in the root folder
+4. Execute the following command: ```pytest -v```
 
 All tests must return a ‘PASSED’ result.
 Otherwise, you need to find and fix the error or bug in the code, and then run the tests again.
