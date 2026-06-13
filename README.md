@@ -37,7 +37,7 @@ A fast and modern development environment (IDE), created specifically for creati
 - [Development](#development)
   - [Requirements](#requirements)
   - [Install Dependencies](#install-dependencies)
-  - [Run Spawn](#run-spawn)
+  - [Run](#run)
 - [Stability](#stability)
 - [Contributors](#contributors)
   - [Bug Report](#bug-report)
