@@ -121,9 +121,9 @@ These tools can be configured later in Settings.
 If the repository is already on the server, Spawn will automatically detect it (provided Git is enabled in the settings)
 
 ### Build and Run Server
-1. Open the root folder containing the server by selecting 'File' -> 'Open Server Folder...' (The server must contain the 'pawn.json' file generated via [SAMPCTL](https://github.com/Southclaws/sampctl))
-2. Go to 'Build' -> 'Build Server' or click the corresponding button on the toolbar.
-3. Start your server by going to 'Server' -> 'Run / Stop Server' or by clicking the corresponding button on the toolbar.
+1. Open the root folder containing the server by selecting 'File' → 'Open Server Folder...' (The server must contain the 'pawn.json' file generated via [SAMPCTL](https://github.com/Southclaws/sampctl))
+2. Go to 'Build' → 'Build Server' or click the corresponding button on the toolbar.
+3. Start your server by going to 'Server' → 'Run / Stop Server' or by clicking the corresponding button on the toolbar.
 4. Monitor output in the integrated console.
 
 You're ready to develop open.mp and SA-MP servers with Spawn.
@@ -139,6 +139,20 @@ To edit a single file:
 When working with individual files, editor features such as syntax highlighting, color previews, brace matching, split view, and change history markers remain fully available.
 
 Project-specific functionality such as the Project Tree, Git integration, Dependency Manager, and SAMPCTL tools requires an opened project.
+
+### Encoding Detection
+Spawn automatically detects file encoding when opening files.
+
+In some cases, automatic detection of Windows-1251 (CP1251) may be inaccurate.
+
+If a file is displayed incorrectly, you can reopen it using a different encoding:
+Select in 'Edit' → 'Encoding' → 'Reopen'
+
+Supported encodings include:
++ UTF-8
++ Windows-1251 (CP1251)
+
+*This does not modify the file on disk and only affects how the file is displayed in the editor.*
 
 ## Development
 ### Requirements
@@ -235,7 +249,7 @@ Thank you for helping make Spawn better for everyone.
 
 ### Bug Report
 If you encounter an error or bug while using Spawn, follow these steps:
-1. Select 'Help' -> 'Bug Report'
+1. Select 'Help' → 'Bug Report'
 2. Click the ‘Copy’ button (If 'Log Output' is empty, proceed immediately to the next step.)
 3. Click the ‘Open GitHub Issue’ button
 4. Paste the completed report into the description and enter a title (If the ‘Log Output’ field was empty, please describe the error or bug yourself.)
