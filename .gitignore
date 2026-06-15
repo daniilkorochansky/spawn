@@ -21,3 +21,5 @@ dist/
 
 mapping.cfg
 pytest.ini
+
+*.svg
