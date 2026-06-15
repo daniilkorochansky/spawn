@@ -7,6 +7,9 @@ on:
        description: 'Input the program version (format X.X.X, example 1.0.4)'
        required: true
        default: '1.0.0'
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -19,11 +22,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Determine Version
+        id: get_version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_NAME="${{ github.ref_name }}"
+            VERSION_NUM="${TAG_NAME#v}"
+            echo "version=$VERSION_NUM" >> $GITHUB_OUTPUT
+            echo "release_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "release_name=v${{ github.event.inputs.version }}" >> $GITHUB_OUPUT
+          fi
+
+      - name: Update core/version.py file
+        shell: bash
+        run: |
+          echo "__version__ = '${{ steps.get_version.outputs.version }}'" > core/version.py
+          echo "Current value:"
+          cat core/version.py
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           architecture: ${{ matrix.architecture }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ matrix.architecture }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.architecture }}-
 
       - name: Install dependencies
         run: |
@@ -35,8 +67,26 @@ jobs:
         run: |
           python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version=${{ github.event.inputs.version }} --product-version=${{ github.event.inputs.version }} --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 
+      - name: Archive Executable to ZIP
+        shell: powershell
+        run: |
+          Compress-Archive -Path "dist/Spawn.exe" -DestinationPath "Spawn_${{ matrix.architecture }}" -Force
+          Write-Host "Created archive: Spawn_${{ matrix.architecture }}.zip"
+          
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Spawn_${{ matrix.architecture }}
-          path: dist/*.exe
+          path: Spawn_${{ matrix.architecture }}.zip
+
+      - name: Create and Upload to GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.get_version.outputs.release_name }}
+          draft: false
+          prerelease: false
+          files: Spawn_${{ matrix.architecture }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
