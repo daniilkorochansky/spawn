@@ -35,7 +35,7 @@ class BackgroundCompiler(threading.Thread):
     Runs a server build through sampctl in a background thread.
 
     This class is responsible for executing the build process, 
-    capturing compiler output in real time, forwarding messages
+    capturing compiler output in real time, forwarding messages  
     to the integrated Spawn build console, and notifying the IDE
     when compilation has finished.
 
