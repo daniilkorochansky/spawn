@@ -44,8 +44,39 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest
+          pip install pytest pytest-cov coverage-badge
 
       - name: Run tests
         run: |
-          pytest -v
+          pytest -v --cov=core --cov=ui --cov-report=xml --cov-report=term-missing > pytest-coverage.txt
+
+      - name: Pytest coverage comment
+        if: github.event_name == 'pull_request'
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          pytest-xml-coverage-path: ./coverage.xml
+          title: "Code coverage report"
+          badge-title: "Coverage"
+
+      - name: Generate Coverage Badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          coverage-badge -o coverage.svg -f
+          
+      - name: Commit and Push Badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        shell: powershell
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add coverage.svg
+          $status = git status --porcelain
+          
+          if ($status) {
+            Write-Host "The badge has changed, we're writing a commit..."
+            git commit -m "Update coverage badge [skip ci]"
+            git push
+          } else {
+            Write-Host "There are no changes in coverage, skipping the commit."
+          }
