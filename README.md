@@ -39,6 +39,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
   - [Manage Dependencies](#manage-dependencies)
   - [Build and Run Server](#build-and-run-server)
   - [Working with Individual Files](#working-with-individual-files)
+  - [Encoding Detection](#encoding-detection)
 - [Development](#development)
   - [Requirements](#requirements)
   - [Clone the Repository](#clone-the-repository)
