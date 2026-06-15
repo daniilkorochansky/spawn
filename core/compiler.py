@@ -46,7 +46,7 @@ class BackgroundCompiler(threading.Thread):
     Additional compiler flags may be passed to customize the  
     build process.
 
-    All stdout and stderr output is captured and streamed to the
+    All stdout and stderr output is captured and streamed to the  
     build output panel as it becomes available.
 
     Attributes:
