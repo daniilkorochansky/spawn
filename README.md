@@ -142,12 +142,11 @@ Project-specific functionality such as the Project Tree, Git integration, Depend
 
 ## Development
 ### Requirements
-+ Python 3.13+
++ Python 3.12+
 + wxPython
 + GitPython
 + Markdown
 + watchdog
-+ pytest
 
 ### Clone the Repository
 ```
@@ -160,12 +159,12 @@ gh repo clone daniilkorochansky/spawn
 
 ### Install Dependencies
 In the root folder, run:
-```python
+```
 pip install -r requirements.txt
 ```
 ### Run
 Also in the root folder, run:
-```python
+```
 python main.py
 ```
 
@@ -196,7 +195,11 @@ The order of actions is **important**!
 ### Tests
 You can conduct tests to verify the functionality of new features or changes to key system components.
 To run the tests, follow these steps:
-1. Create a file named ‘pytest.ini’ in the root folder with the following contents (if it doesn't already exist)
+1. Install pytest
+```
+pip install pytest
+```   
+2. Create a file named ‘pytest.ini’ in the root folder with the following contents (if it doesn't already exist)
 ```
 [pytest]
 pythonpath = .
