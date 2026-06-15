@@ -22,4 +22,4 @@ dist/
 mapping.cfg
 pytest.ini
 
-*.svg
+.github/badges/
