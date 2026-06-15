@@ -73,12 +73,11 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .github/badges/coverage.svg
-          $status = git status --porcelain
-          
-          if ($status) {
-            Write-Host "The badge has changed, we're writing a commit..."
-            git commit -m "Update coverage badge [skip ci]"
-            git push
-          } else {
-            Write-Host "There are no changes in coverage, skipping the commit."
+          try {
+              git commit -m "Update coverage badge [skip ci]"
+              Write-Host "The commit was created successfully, sending it to GitHub..."
+              git push
+              Write-Host "The file has been successfully pushed to the repository.!"
+          } catch {
+              Write-Host "No changes were found in the badge file, no push required."
           }
