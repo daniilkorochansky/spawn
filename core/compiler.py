@@ -43,7 +43,7 @@ class BackgroundCompiler(threading.Thread):
 
         sampctl build
 
-    Additional compiler flags may be passed to customize the
+    Additional compiler flags may be passed to customize the  
     build process.
 
     All stdout and stderr output is captured and streamed to the
