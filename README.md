@@ -1,7 +1,7 @@
-![GitHub License](https://img.shields.io/github/license/daniilkorochansky/spawn)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)
 ![Language](https://img.shields.io/badge/language-Python-yellow.svg)
 ![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
+![Coverage](https://githubusercontent.com)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
 <div align="center">
@@ -39,6 +39,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
   - [Manage Dependencies](#manage-dependencies)
   - [Build and Run Server](#build-and-run-server)
   - [Working with Individual Files](#working-with-individual-files)
+  - [Encoding Detection](#encoding-detection)
 - [Development](#development)
   - [Requirements](#requirements)
   - [Clone the Repository](#clone-the-repository)
@@ -89,7 +90,8 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 ## Installation
 ### Download
 1. Download the latest release from the Releases page.
-2. Run 'Spawn.exe'.
+2. Extract the archive to any location
+3. Run 'Spawn.exe'.
 
 ### Optional Tools
 To use all features of Spawn, you may also install:
@@ -121,9 +123,9 @@ These tools can be configured later in Settings.
 If the repository is already on the server, Spawn will automatically detect it (provided Git is enabled in the settings)
 
 ### Build and Run Server
-1. Open the root folder containing the server by selecting 'File' -> 'Open Server Folder...' (The server must contain the 'pawn.json' file generated via [SAMPCTL](https://github.com/Southclaws/sampctl))
-2. Go to 'Build' -> 'Build Server' or click the corresponding button on the toolbar.
-3. Start your server by going to 'Server' -> 'Run / Stop Server' or by clicking the corresponding button on the toolbar.
+1. Open the root folder containing the server by selecting 'File' → 'Open Server Folder...' (The server must contain the 'pawn.json' file generated via [SAMPCTL](https://github.com/Southclaws/sampctl))
+2. Go to 'Build' → 'Build Server' or click the corresponding button on the toolbar.
+3. Start your server by going to 'Server' → 'Run / Stop Server' or by clicking the corresponding button on the toolbar.
 4. Monitor output in the integrated console.
 
 You're ready to develop open.mp and SA-MP servers with Spawn.
@@ -140,14 +142,27 @@ When working with individual files, editor features such as syntax highlighting,
 
 Project-specific functionality such as the Project Tree, Git integration, Dependency Manager, and SAMPCTL tools requires an opened project.
 
+### Encoding Detection
+Spawn automatically detects file encoding when opening files.
+
+In some cases, automatic detection of Windows-1251 (CP1251) may be inaccurate.
+
+If a file is displayed incorrectly, you can reopen it using a different encoding:
+Select in 'Edit' → 'Encoding' → 'Reopen'
+
+Supported encodings include:
++ UTF-8
++ Windows-1251 (CP1251)
+
+*This does not modify the file on disk and only affects how the file is displayed in the editor.*
+
 ## Development
 ### Requirements
-+ Python 3.13+
++ Python 3.12+
 + wxPython
 + GitPython
 + Markdown
 + watchdog
-+ pytest
 
 ### Clone the Repository
 ```
@@ -159,36 +174,48 @@ gh repo clone daniilkorochansky/spawn
 ```
 
 ### Install Dependencies
-```python
+In the root folder, run:
+```
 pip install -r requirements.txt
 ```
 ### Run
-```python
+Also in the root folder, run:
+```
 python main.py
 ```
 
 ### Build Executable (Windows)
 Spawn uses Nuitka to create standalone executable builds.
 
-1. Install Microsoft Visual Studio Build Tools with the C++ workload:
+1. Install Microsoft Visual Studio Build Tools with the C++ workload and Windows SDK:
 https://visualstudio.microsoft.com/downloads/
+2. Restart your computer
 3. Install Nuitka:
 ```
 pip install nuitka
 ```
-3. Open a command prompt in the root folder and build the executable:
+4. Open a command prompt in the root folder and build the executable:
 ```
-nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
+or (Windows x86):
+```
+nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --target=x86 --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+```
+If you are unsuccessful on a 32-bit system, try adding the option: ```--msvc=latest``` (as a last resort, instead of this option, add: ```--mingw64```)
 
-The generated executable will be available in the dist directory.
+The order of actions is **important**!
 
-*Official releases are built and tested on Windows x64.*
+*The generated executable will be available in the dist directory.*
 
 ### Tests
 You can conduct tests to verify the functionality of new features or changes to key system components.
 To run the tests, follow these steps:
-1. Create a file named ‘pytest.ini’ in the root folder with the following contents (if it doesn't already exist)
+1. Install pytest
+```
+pip install pytest
+```   
+2. Create a file named ‘pytest.ini’ in the root folder with the following contents (if it doesn't already exist)
 ```
 [pytest]
 pythonpath = .
@@ -224,7 +251,7 @@ Thank you for helping make Spawn better for everyone.
 
 ### Bug Report
 If you encounter an error or bug while using Spawn, follow these steps:
-1. Select 'Help' -> 'Bug Report'
+1. Select 'Help' → 'Bug Report'
 2. Click the ‘Copy’ button (If 'Log Output' is empty, proceed immediately to the next step.)
 3. Click the ‘Open GitHub Issue’ button
 4. Paste the completed report into the description and enter a title (If the ‘Log Output’ field was empty, please describe the error or bug yourself.)
