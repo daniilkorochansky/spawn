@@ -1,0 +1,44 @@
+name: Clear Cache
+
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clear:
+    runs-on: ubuntu-latest
+    
+   
+    permissions:
+      actions: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Delete all caches
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Request cache list..."
+        
+  
+        caches=$(gh api /repos/${{ github.repository }}/actions/caches --jq '.actions_caches[].key')
+        
+        if [ -z "$caches" ]; then
+          echo "Cache is empty!"
+          exit 0
+        fi
+
+        echo "Found next caches:"
+        echo "$caches"
+        echo "-----------------------------------"
+
+        for cache_key in $caches; do
+          echo "Remove cache with key: $cache_key"
+          gh api --method DELETE /repos/${{ github.repository }}/actions/caches?key=$cache_key
+        done
+        
+        echo "-----------------------------------"
+        echo "All cache is clear!"
