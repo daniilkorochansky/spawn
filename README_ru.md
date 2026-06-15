@@ -174,7 +174,7 @@ python main.py
 Spawn использует Nuitka для создания автономных исполняемых сборок.
 
 1. Установите средства сборки Microsoft Visual Studio с набором инструментов для C++ и Windows SDK: https://visualstudio.microsoft.com/downloads/
-2. Перезагрузите ваш компъютер
+2. Перезагрузите ваш компьютер
 3. Установите Nuitka:
 ```
 pip install nuitka
