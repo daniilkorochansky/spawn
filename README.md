@@ -1,4 +1,3 @@
-![GitHub License](https://img.shields.io/github/license/daniilkorochansky/spawn)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)
 ![Language](https://img.shields.io/badge/language-Python-yellow.svg)
 ![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
