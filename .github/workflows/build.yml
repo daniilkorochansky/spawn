@@ -33,7 +33,7 @@ jobs:
             echo "release_name=$TAG_NAME" >> $GITHUB_OUTPUT
           else
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            echo "release_name=v${{ github.event.inputs.version }}" >> $GITHUB_OUPUT
+            echo "release_name=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Update core/version.py file
