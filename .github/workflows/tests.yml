@@ -63,7 +63,8 @@ jobs:
       - name: Generate Coverage Badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
-          coverage-badge -o coverage.svg -f
+          mkdir -p .github/badges
+          coverage-badge -o .github/badges/coverage.svg -f
           
       - name: Commit and Push Badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -71,7 +72,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add coverage.svg
+          git add .github/badges/coverage.svg
           $status = git status --porcelain
           
           if ($status) {
