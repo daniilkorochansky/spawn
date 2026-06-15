@@ -69,7 +69,7 @@ class BackgroundCompiler(threading.Thread):
 
         on_finished (callable | None):
             Optional callback invoked when the build process 
-            completes. Receives a boolean value indicating
+            completes. Receives a boolean value indicating  
             whether the build succeeded.
 
         process (subprocess.Popen | None):
