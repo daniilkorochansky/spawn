@@ -48,7 +48,6 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
   - [Build Executable (Windows)](#build-executable-windows)
   - [Tests](#tests)
   - [Code Coverage](#code-coverage)
-- [Stability](#stability)
 - [Contributors](#contributors)
   - [Bug Report](#bug-report)
 - [Donations](#donations)
@@ -231,18 +230,7 @@ Otherwise, you need to find and fix the error or bug in the code, and then run t
 Automated tools track how much of the `core` and `ui` logic is verified by tests. You can see the current percentage in the **coverage** badge at the top of this README.
 
 * **What it means:** The coverage percentage reflects the ratio of code lines executed during testing. A higher percentage means more logic has been double-checked for bugs.
-* **The focus:** Testing visual UI elements is intentionally avoided because graphical components change frequently. Instead, the focus is entirely on securing the stability of the `core` and `ui` logic.
-
-## Stability
-
-Spawn includes automated tests for:
-- Git integration
-- Project Tree management
-- Configuration system
-- Dependency management
-- File loading and encoding detection
-
-All tests are executed automatically on every commit through GitHub Actions.
+* **The focus:** The tests are aimed at ensuring the stability of the key logic in the `core` and `ui` folder.
 
 ## Contributors
 Spawn is an open-source project built for the open.mp and SA-MP community.
