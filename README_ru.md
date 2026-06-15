@@ -160,10 +160,12 @@ gh repo clone daniilkorochansky/spawn
 ```
 
 ### Установка зависимостей
+В корневой папке, выполните:
 ```python
 pip install -r requirements.txt
 ```
 ### Запуск
+Также в корневой папке, выполните:
 ```python
 python main.py
 ```
@@ -172,17 +174,24 @@ python main.py
 Spawn использует Nuitka для создания автономных исполняемых сборок.
 
 1. Установите средства сборки Microsoft Visual Studio с набором инструментов для C++ и Windows SDK: https://visualstudio.microsoft.com/downloads/
-2. Установите Nuitka:
+2. Перезагрузите ваш компъютер
+3. Установите Nuitka:
 ```
 pip install nuitka
 ```
-3. Откройте командную строку в корневой папке и скомпилируйте исполняемый файл:
+4. Откройте командную строку в корневой папке и скомпилируйте исполняемый файл:
 ```
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
-Полученный исполняемый файл будет доступен в папке 'dist'.
+или (Windows x86):
+```
+nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --target=x86 --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+```
+Если на 32-битной системе это не удается, попробуйте добавить опцию: ```--msvc=latest``` (в крайнем случае, вместо этой опции добавьте: ```--mingw64```)
 
-*Официальные версии собираются и тестируются в среде Windows x64.*
+Порядок действий **важен**!
+
+*Полученный исполняемый файл будет доступен в папке 'dist'.*
 
 ### Тесты
 Вы можете проводить тестирование для проверки работоспособности новых функций или изменений в ключевых компонентах системы.
