@@ -62,7 +62,7 @@ class BackgroundCompiler(threading.Thread):
             configurations.
 
         extra_flags (str):
-            Additional command-line flags passed to the compiler.
+            Additional command-line flags passed to the compiler.   
 
         console (wx.richtext.RichTextCtrl):
             Output console used to display build and compiler logs.
