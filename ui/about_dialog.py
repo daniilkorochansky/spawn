@@ -27,6 +27,8 @@ import os
 import sys
 import webbrowser
 
+from core.version import __version__
+
 import gettext
 _ = gettext.gettext
 
@@ -135,7 +137,7 @@ class SpawnAboutDialog ( wx.Dialog ):
 
         bSizer_Bottom.Add( bSizer_Social, 1, wx.EXPAND, 5 )
 
-        self.m_staticText_Version = wx.StaticText( self, wx.ID_ANY, "v1.0.0", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText_Version = wx.StaticText( self, wx.ID_ANY, f"v{__version__}", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_staticText_Version.Wrap( -1 )
 
         self.m_staticText_Version.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )

@@ -26,6 +26,7 @@ import webbrowser
 import os
 
 from core.logger import SpawnLogger
+from core.version import __version__
 
 import gettext
 _ = gettext.gettext
@@ -84,7 +85,7 @@ class BugReportDialog ( wx.Dialog ):
 
         self.Centre( wx.BOTH )
         
-        report = SpawnLogger.generate_bug_report("1.0.0")
+        report = SpawnLogger.generate_bug_report(f"v{__version__}")
         self.m_textCtrl_Logs.SetValue(report)
 
     def on_copy_logs(self, event):
