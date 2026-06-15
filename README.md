@@ -90,7 +90,8 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 ## Installation
 ### Download
 1. Download the latest release from the Releases page.
-2. Run 'Spawn.exe'.
+2. Extract the archive to any location
+3. Run 'Spawn.exe'.
 
 ### Optional Tools
 To use all features of Spawn, you may also install:
