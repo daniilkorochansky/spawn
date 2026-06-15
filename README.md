@@ -159,10 +159,12 @@ gh repo clone daniilkorochansky/spawn
 ```
 
 ### Install Dependencies
+In the root folder, run:
 ```python
 pip install -r requirements.txt
 ```
 ### Run
+Also in the root folder, run:
 ```python
 python main.py
 ```
@@ -177,11 +179,11 @@ https://visualstudio.microsoft.com/downloads/
 ```
 pip install nuitka
 ```
-3. Open a command prompt in the root folder and build the executable:
+4. Open a command prompt in the root folder and build the executable:
 ```
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
-or (Windows x32):
+or (Windows x86):
 ```
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --target=x86 --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
@@ -189,7 +191,7 @@ If you are unsuccessful on a 32-bit system, try adding the option: ```--msvc=lat
 
 The order of actions is **important**!
 
-The generated executable will be available in the dist directory.
+*The generated executable will be available in the dist directory.*
 
 ### Tests
 You can conduct tests to verify the functionality of new features or changes to key system components.
