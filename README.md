@@ -169,18 +169,18 @@ Supported encodings include:
 https://github.com/daniilkorochansky/spawn.git
 ```
 or
-```
+```bash
 gh repo clone daniilkorochansky/spawn
 ```
 
 ### Install Dependencies
 In the root folder, run:
-```
+```bash
 pip install -r requirements.txt
 ```
 ### Run
 Also in the root folder, run:
-```
+```bash
 python main.py
 ```
 
@@ -191,15 +191,15 @@ Spawn uses Nuitka to create standalone executable builds.
 https://visualstudio.microsoft.com/downloads/
 2. Restart your computer
 3. Install Nuitka:
-```
+```bash
 pip install nuitka
 ```
 4. Open a command prompt in the root folder and build the executable:
-```
+```bash
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
 or (Windows x86):
-```
+```bash
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --target=x86 --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
 If you are unsuccessful on a 32-bit system, try adding the option: ```--msvc=latest``` (as a last resort, instead of this option, add: ```--mingw64```)
@@ -212,10 +212,10 @@ The order of actions is **important**!
 You can conduct tests to verify the functionality of new features or changes to key system components.
 To run the tests, follow these steps:
 1. Install pytest
-```
+```bash
 pip install pytest
 ```   
-2. Create a file named ‘pytest.ini’ in the root folder with the following contents (if it doesn't already exist)
+2. Create a file named `pytest.ini` in the root folder with the following contents (if it doesn't already exist)
 ```
 [pytest]
 pythonpath = .
@@ -225,6 +225,12 @@ pythonpath = .
 
 All tests must return a ‘PASSED’ result.
 Otherwise, you need to find and fix the error or bug in the code, and then run the tests again.
+
+### Code Coverage
+Automated tools track how much of the `core` and `ui` logic is verified by tests. You can see the current percentage in the **Coverage** badge at the top of this README.
+
+* **What it means:** The coverage percentage reflects the ratio of code lines executed during testing. A higher percentage means more logic has been double-checked for bugs.
+* **The focus:** Testing visual UI elements is intentionally avoided because graphical components change frequently. Instead, the focus is entirely on securing the stability of the `core` and `ui` logic.
 
 ## Stability
 
