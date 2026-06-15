@@ -2,6 +2,11 @@ name: Manual Build (Nuitka x64 & x86)
 
 on:
   workflow_dispatch:
+   inputs:
+     version: 
+       description: 'Input the program version (format X.X.X, example 1.0.4)'
+       required: true
+       default: '1.0.0'
 
 jobs:
   build:
@@ -28,7 +33,7 @@ jobs:
 
       - name: Build with Nuitka
         run: |
-          python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+          python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version=${{ github.event.inputs.version }} --product-version=${{ github.event.inputs.version }} --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
