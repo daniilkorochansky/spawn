@@ -67,17 +67,11 @@ jobs:
         run: |
           python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version=${{ github.event.inputs.version }} --product-version=${{ github.event.inputs.version }} --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 
-      - name: Archive Executable to ZIP
-        shell: powershell
-        run: |
-          Compress-Archive -Path "dist/Spawn.exe" -DestinationPath "Spawn_${{ matrix.architecture }}" -Force
-          Write-Host "Created archive: Spawn_${{ matrix.architecture }}.zip"
-          
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Spawn_${{ matrix.architecture }}
-          path: Spawn_${{ matrix.architecture }}.zip
+          path: dist/*.exe
 
       - name: Create and Upload to GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
