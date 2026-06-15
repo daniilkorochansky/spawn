@@ -68,8 +68,8 @@ class BackgroundCompiler(threading.Thread):
             Output console used to display build and compiler logs.
 
         on_finished (callable | None):
-            Optional callback invoked when the build process
-            completes. Receives a boolean value indicating
+            Optional callback invoked when the build process 
+            completes. Receives a boolean value indicating  
             whether the build succeeded.
 
         process (subprocess.Popen | None):
