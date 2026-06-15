@@ -30,14 +30,48 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
 
       # Runs a set of commands using the runners shell
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest
+          pip install pytest pytest-cov
 
       - name: Run tests
         run: |
-          pytest -v
+          pytest -v --cov=core --cov=ui --cov-report=xml
+
+      - name: pytest coverage comment
+        if: github.event_name == 'pull_request'
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-xml-coverage-path: ./coverage.xml
+          title: "Code coverage report"
+          badge-title: "Coverage"
+
+      - name: Generate Coverage Badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          coverage-xml-path: coverage.xml
+          badge-label: coverage
+          badge-filename: coverage.svg
+
+      - name: Commit and Push Badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        shell: powershell
+        run: |
+          git config --local user.email "daniilkorochansky@gmail.com"
+          git config --local user.name "daniilkorochansky"
+
+          git add coverage.svg
+          $status = git status --porcelain
+
+          if ($status) {
+             Write-Host "Badge changed, commiting..."
+             git commit -m "Update coverage badge [skip ci]"
+             git push
+          } else {
+             Write-Host "No changes in coverage."
+          }
