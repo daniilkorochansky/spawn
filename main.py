@@ -28,6 +28,7 @@ import shutil
 import traceback
 import logging
 import platform
+from pathlib import Path
 
 import gettext
 _ = gettext.gettext
@@ -46,6 +47,7 @@ from ui.dependency_manager_dialog import DependencyManagerDialog
 
 from core.project_creator import ProjectCreateWorker
 from core.file_watcher import ProjectFileWatcher
+from core.platform_utils import PlatformUtils
 from core.config_manager import ConfigManager
 from core.compiler import BackgroundCompiler
 from core.runner import BackgroundRunner
@@ -2500,21 +2502,21 @@ samp.ban
             if hasattr(active_tab, "file_path") and active_tab.file_path and os.path.exists(active_tab.file_path):
                 
                 current_code_text = active_tab.m_scintilla_Editor.GetText()
-                file_eol = getattr(active_tab, "native_eol", "CRLF")
-                real_eol = "\r\n" if file_eol == "CRLF" else "\n"
+                file_eol = getattr(active_tab, "native_eol", PlatformUtils.default_eol())
+                real_eol = PlatformUtils.eol_string(file_eol)
 
                 disk_text = current_code_text.replace("\r\n", "\n")
                 disk_text = disk_text.replace("\r", "\n")
                 disk_text = disk_text.replace("\n", real_eol)
 
                 file_enc = getattr(active_tab, "current_encoding", "utf-8")
+
+                raw_bytes = PlatformUtils.encode_text(disk_text,file_enc)
                 
-                try:
-                    raw_bytes = disk_text.encode(file_enc, errors="strict")
-                    
+                if raw_bytes is not None:
                     with open(active_tab.file_path, "wb") as f:
                         f.write(raw_bytes)
-                except UnicodeEncodeError:
+                else:
                     confirm_enc = wx.MessageBox(_(u"The current file contains invalid characters that cannot be saved in CP1251.\n\nConvert to UTF-8?"), _(u"Warning"), wx.YES_NO|wx.ICON_WARNING,self)
                     if confirm_enc == wx.NO:
                         return
@@ -2554,23 +2556,30 @@ samp.ban
                     actual_path = saveDialog.GetPath()
 
                     chosen_encoding = "utf-8"
-                    active_tab.native_eol = "CRLF"
-                    active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_CRLF)
+                    active_tab.native_eol = (PlatformUtils.default_eol())
+                    if active_tab.native_eol == "CRLF":
+                        active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_CRLF)
+                    else:
+                        active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_LF)
+                        
                     disk_text = active_tab.m_scintilla_Editor.GetText()
 
                     active_tab.file_path = actual_path
                     active_tab.is_untitled = False
                     active_tab.current_encoding = chosen_encoding
+
+                    raw_bytes = PlatformUtils.encode_text(disk_text,chosen_encoding)
                     
-                    with open(actual_path, "w", encoding=active_tab.current_encoding, newline="") as f:
+                    with open(actual_path, "wb") as f:
                         f.write(disk_text)
 
                     enc_status = chosen_encoding.upper()
-                    self.m_statusBar.SetStatusText(f"{enc_status} | CRLF", 2)
+                    default_eol = (PlatformUtils.default_eol())
+                    self.m_statusBar.SetStatusText(f"{enc_status} | {default_eol}", 2)
 
 
                     page_idx = self.m_auinotebook_Main.GetPageIndex(active_tab)
-                    self.m_auinotebook_Main.SetPageText(page_idx, os.path.basename(actual_path))
+                    self.m_auinotebook_Main.SetPageText(page_idx, Path(actual_path).name)
                     self.m_auinotebook_Main.SetPageToolTip(page_idx, actual_path)
 
                     active_tab.apply_lexer_by_extension()

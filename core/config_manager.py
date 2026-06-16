@@ -23,10 +23,11 @@ import os
 import json
 
 from core.logger import SpawnLogger
+from core.platform_utils import PlatformUtils
 
 class ConfigManager:
     def __init__(self):
-        self.appdata_dir = os.path.join(os.environ['APPDATA'], 'Spawn')
+        self.appdata_dir = PlatformUtils.get_config_dir()
         os.makedirs(self.appdata_dir, exist_ok=True)
         self.config_path = os.path.join(self.appdata_dir, 'config.json')
 
@@ -47,7 +48,7 @@ class ConfigManager:
                 "font": {
                     "size": (11, int),
                     "line_spacing": (1, int),
-                    "family": ("Consolas", str)
+                    "family": (PlatformUtils.default_editor_font(), str)
                 },
                 "features": {
                     "color_preview": (True, bool),

@@ -26,8 +26,10 @@ import wx.stc as stc
 import wx
 
 import ui.spawn_base as gui
+
 from core.config_manager import ConfigManager
 from core.logger import SpawnLogger
+from core.platform_utils import PlatformUtils
 
 import gettext
 _ = gettext.gettext
@@ -680,22 +682,23 @@ class CustomEditorTab(gui.EditorTabPanel):
                     self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_CRLF)
                     return
 
-            try:
-                text_content = binary_data.decode("utf-8")
-                self.current_encoding = "utf-8"
-            except UnicodeDecodeError:
-                try:
-                    text_content = binary_data.decode("cp1251")
-                    self.current_encoding = "cp1251"
-                except UnicodeDecodeError:
-                    text_content = binary_data.decode("utf-8", errors="replace")
-                    self.current_encoding = "utf-8" #or cp1251
-                
-            if b"\r\n" in binary_data:
-                self.native_eol = "CRLF"
+##            try:
+##                text_content = binary_data.decode("utf-8")
+##                self.current_encoding = "utf-8"
+##            except UnicodeDecodeError:
+##                try:
+##                    text_content = binary_data.decode("cp1251")
+##                    self.current_encoding = "cp1251"
+##                except UnicodeDecodeError:
+##                    text_content = binary_data.decode("utf-8", errors="replace")
+##                    self.current_encoding = "utf-8" #or cp1251
+
+            text_content, self.current_encoding = (PlatformUtils.decode_text(binary_data))
+            
+            self.native_eol = (PlatformUtils.detect_eol(binary_data))   
+            if self.native_eol == "CRLF":
                 self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_CRLF)
             else:
-                self.native_eol = "LF"
                 self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_LF)
 
             text_content = text_content.replace("\r\n", "\n") #I need Scintila to not put spaces between lines. And when I save the file, everything goes back to normal using native_eol.
