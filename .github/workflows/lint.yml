@@ -1,0 +1,23 @@
+name: Code Linter
+
+on:
+  pull_request:
+    branches: [ master ] # Укажи свои основные ветки
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14' # Укажи версию Python, на которой работает Spawn
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Run Ruff Formatter Check
+        run: ruff format --check .
