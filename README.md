@@ -3,7 +3,6 @@
 ![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
 ![Coverage](https://raw.githubusercontent.com/daniilkorochansky/spawn/master/.github/badges/coverage.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
-![Downloads](https://badgen.net/github/assets-dl/daniilkorochansky/spawn/v1.0.0)
 
 <div align="center">
   [English
