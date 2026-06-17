@@ -25,6 +25,7 @@ import threading
 import wx
 
 from core.logger import SpawnLogger
+from core.platform_utils import PlatformUtils
 
 class BackgroundRunner(threading.Thread):
     """
@@ -80,10 +81,10 @@ class BackgroundRunner(threading.Thread):
         self._stop_requested = False
 
     def run(self):
-        startupinfo = None
-        if os.name =='nt':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo = (PlatformUtils.get_subprocess_startupinfo())
+
+        if not PlatformUtils.is_executable(self.sampctl_bin):
+            wx.CallAfter(self.append_to_rich_console,_("Invalid SAMPCTL executable.\n"))
 
         cmd = [self.sampctl_bin, "run"]
 
@@ -104,23 +105,20 @@ class BackgroundRunner(threading.Thread):
                 if char_byte:
                     buffer.extend(char_byte)
                     if char_byte == b"\n":
-                        try:
-                            decoded_line = buffer.decode('utf-8')
-                        except UnicodeDecodeError:
-                            decoded_line = buffer.decode('cp1251')
+                        decoded_line = (PlatformUtils.decode_process_output(buffer))
                         wx.CallAfter(self.append_to_rich_console, decoded_line)
                         buffer.clear()
                 else:
                     break
             if buffer:
-                try:
-                    decoded_line = buffer.decode('utf-8')
-                except UnicodeDecodeError:
-                    decoded_line = buffer.decode('cp1251')
+                decoded_line = (PlatformUtils.decode_process_output(buffer))
                 wx.CallAfter(self.append_to_rich_console, decoded_line)
                     
             if self.on_finished:
                 wx.CallAfter(self.on_finished, self._stop_requested)
+
+        except PermissionError:
+            wx.CallAfter(self.append_to_rich_console,_("Permission denied while launching SAMPCTL.\nLinux users may need to run:\nchmod +x <path-to-sampctl>\n"))
                 
         except Exception as e:
             SpawnLogger.error(f"Server Startup: {e}")
@@ -133,15 +131,7 @@ class BackgroundRunner(threading.Thread):
         if self.process and self.process.poll() is None:
             self._stop_requested = True
             try:
-                if os.name == 'nt':
-                    subprocess.run(
-                        ["taskkill", "/F", "/T", "/PID", str(self.process.pid)],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        creationflags=subprocess.CREATE_NO_WINDOW
-                        )
-                else:
-                    self.process.terminate()
+                PlatformUtils.terminate_process(self.process)
             except Exception as e:
                 SpawnLogger.error(f"Server Stop: {e}")
 

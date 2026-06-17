@@ -58,11 +58,11 @@ def test_set_updates_valid_value():
     manager.current_config = manager._extract_defaults(manager._schema)
     result = manager.set(
         "editor.font.size",
-        14
+        11
     )
 
     assert result is True
-    assert manager.get("editor.font.size") == 14
+    assert manager.get("editor.font.size") == 11
 
 def test_set_rejects_invalid_type():
     

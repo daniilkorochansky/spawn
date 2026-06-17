@@ -26,6 +26,7 @@ import threading
 import wx
 
 from core.logger import SpawnLogger
+from core.platform_utils import PlatformUtils
 
 import gettext
 _ = gettext.gettext
@@ -94,10 +95,10 @@ class BackgroundCompiler(threading.Thread):
         self.process = None
 
     def run(self):
-        startupinfo = None
-        if os.name == 'nt':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo = (PlatformUtils.get_subprocess_startupinfo())
+
+        if not PlatformUtils.is_executable(self.sampctl_bin):
+            wx.CallAfter(self.append_to_rich_console,_("Invalid SAMPCTL executable.\n"))
 
         cmd = [self.sampctl_bin, "build"]
         if self.extra_flags:
@@ -120,10 +121,7 @@ class BackgroundCompiler(threading.Thread):
                 if char_byte:
                     buffer.extend(char_byte)
                     if char_byte == b"\n":
-                        try:
-                            decoded_line = buffer.decode('utf-8')
-                        except UnicodeDecodeError:
-                            decoded_line = buffer.decode('cp1251', errors="replace")
+                        decoded_line = (PlatformUtils.decode_process_output(buffer))
                         wx.CallAfter(self.append_to_rich_console, decoded_line)
                         buffer.clear()
                     
@@ -134,15 +132,16 @@ class BackgroundCompiler(threading.Thread):
                         buffer.extend(remaining_data)
                         for line in buffer.split(b"\n"):
                             if line.strip():
-                                try:
-                                    decoded_line = line.decode('utf-8')
-                                except UnicodeDecodeError:
-                                    decoded_line = line.decode('cp1251', errors="replace")
+                                decoded_line = (PlatformUtils.decode_process_output(line))
                                 wx.CallAfter(self.append_to_rich_console, decoded_line)
                     break
             success = (return_code == 0)
             if self.on_finished:
                 wx.CallAfter(self.on_finished, success)
+
+        except PermissionError:
+            wx.CallAfter(self.append_to_rich_console,_("Permission denied while launching SAMPCTL.\nLinux users may need to run:\nchmod +x <path-to-sampctl>\n"))
+             
         except Exception as e:
             SpawnLogger.error(f"Compiler Call: {e}")
             wx.CallAfter(self.append_to_rich_console, _(u"Compiler call error: {e}\n").format(e=e))

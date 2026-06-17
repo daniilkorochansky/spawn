@@ -744,24 +744,44 @@ samp.ban
     def on_infobar_action_click(self, event):
         btn_id = event.GetId()
         if btn_id == self.ID_INFOBAR_SETUP_SAMPCTL:
-            with wx.FileDialog(self, _(u"Specify the path to the sampctl.exe executable file."),
-                               defaultFile="sampctl.exe", wildcard="SAMPCTL (*.exe)|sampctl.exe",
+            if PlatformUtils.is_windows():
+                wildcard = "SAMPCTL (*.exe)|sampctl.exe"
+            else:
+                wildcard = "All files (*)|*"
+                
+            exe_ext = PlatformUtils.executable_extension()
+            with wx.FileDialog(self, _(u"Specify the path to the sampctl executable file."),
+                               defaultFile=f"sampctl{exe_ext}", wildcard=wildcard,
                                style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
-                    self.ide_cfg.set("system.sampctl.executable_path", os.path.normpath(dlg.GetPath()).replace('\\','/'))
-                    self.ide_cfg.save()
+                    if PlatformUtils.is_executable(dlg.GetPath()):
+                        self.ide_cfg.set("system.sampctl.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
+                        self.ide_cfg.save()
 
-                    self.check_environment_on_startup()
+                        self.check_environment_on_startup()
+                    else:
+                        wx.MessageBox(_("The selected SAMPCTL executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
+                        return
                     
         elif btn_id == self.ID_INFOBAR_SETUP_GIT:
-            with wx.FileDialog(self, _(u"Specify the path to the git.exe executable file."),
-                               defaultFile="git.exe", wildcard="GIT (*.exe)|git.exe",
+            if PlatformUtils.is_windows():
+                wildcard = "Git (*.exe)|git.exe"
+            else:
+                wildcard = "All files (*)|*"
+                
+            exe_ext = PlatformUtils.executable_extension()
+            with wx.FileDialog(self, _(u"Specify the path to the git executable file."),
+                               defaultFile=f"git{exe_ext}", wildcard=wildcard,
                                style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
-                    self.ide_cfg.set("system.git.executable_path", os.path.normpath(dlg.GetPath()).replace('\\','/'))
-                    self.ide_cfg.save()
+                    if PlatformUtils.is_executable(dlg.GetPath()):
+                        self.ide_cfg.set("system.git.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
+                        self.ide_cfg.save()
 
-                    self.check_environment_on_startup()
+                        self.check_environment_on_startup()
+                    else:
+                        wx.MessageBox(_("The selected Git executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
+                        return
         
 
     def update_git_ui_controls_state(self):

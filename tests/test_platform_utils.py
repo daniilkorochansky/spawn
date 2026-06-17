@@ -21,6 +21,13 @@
 
 from core.platform_utils import PlatformUtils
 
+from pathlib import Path
+
+import time
+import subprocess
+import tempfile
+import os
+
 def test_decode_utf8():
     text, enc = (PlatformUtils.decode_text("Привет".encode("utf-8")))
     assert text == "Привет"
@@ -58,3 +65,92 @@ def test_get_config_dir():
     path = PlatformUtils.get_config_dir()
     assert path
     assert isinstance(path, str)
+
+def test_get_subprocess_startupinfo():
+    startupinfo = (PlatformUtils.get_subprocess_startupinfo())
+
+    if PlatformUtils.is_windows():
+        assert startupinfo is not None
+    else:
+        assert startupinfo is None
+
+def test_decode_process_output_utf8():
+    text = (PlatformUtils.decode_process_output("Привет".encode("utf-8")))
+    assert text == "Привет"
+
+def test_decode_process_output_cp1251():
+    text = (PlatformUtils.decode_process_output("Привет".encode("cp1251")))
+    assert text == "Привет"
+
+def test_terminate_process():
+    process = subprocess.Popen(
+        [
+            "python",
+            "-c",
+            "import time; time.sleep(10)"
+        ]
+    )
+
+    PlatformUtils.terminate_process(process)
+    process.wait(timeout=5)
+    assert process.poll() is not None
+
+def test_executable_extension():
+    ext = PlatformUtils.executable_extension()
+
+    if PlatformUtils.is_windows():
+        assert ext == ".exe"
+    else:
+        assert ext == ""
+
+def test_normalize_path():
+    path = PlatformUtils.normalize_path("folder/subfolder/file.txt")
+
+    assert isinstance(path, str)
+    assert len(path) > 0
+
+def test_normalize_path_matches_pathlib():
+    source = "folder/test.txt"
+
+    normalized = (PlatformUtils.normalize_path(source))
+
+    expected = str(Path(source))
+
+    assert normalized == expected
+
+def test_is_executable_missing():
+    assert (PlatformUtils.is_executable("file_that_does_not_exist") is False)
+
+def test_is_executable_existing_file():
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        path = f.name
+    try:
+        result = (PlatformUtils.is_executable(path))
+
+        if PlatformUtils.is_windows():
+            assert result is True
+        else:
+            assert result is False
+
+    finally:
+        os.unlink(path)
+
+def test_is_executable_linux():
+    if not PlatformUtils.is_linux():
+        return
+
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        path = f.name
+
+    try:
+        os.chmod(path, 0o755)
+        assert (PlatformUtils.is_executable(path)is True)
+
+    finally:
+        os.unlink(path)
+
+def test_is_windows_returns_bool():
+    assert isinstance(PlatformUtils.is_windows(),bool)
+
+def test_is_linux_returns_bool():
+    assert isinstance(PlatformUtils.is_linux(),bool)

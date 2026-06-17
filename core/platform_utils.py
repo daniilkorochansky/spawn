@@ -23,6 +23,8 @@ from platformdirs import user_config_dir
 
 from pathlib import Path
 import sys
+import subprocess
+import os
 
 class PlatformUtils:
 
@@ -95,5 +97,74 @@ class PlatformUtils:
 
         if sys.platform == "darwin":
             return "Menlo"
+
+        return ""
+
+    @staticmethod
+    def decode_process_output(data):
+        try:
+            return data.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                return data.decode("cp1251")
+            except UnicodeDecodeError:
+                return data.decode("utf-8",errors="replace")
+
+    @staticmethod
+    def is_windows():
+        return sys.platform.startswith("win")
+
+    @staticmethod
+    def get_subprocess_startupinfo():
+        if not PlatformUtils.is_windows():
+            return None
+
+        startupinfo = (subprocess.STARTUPINFO())
+        startupinfo.dwFlags |= (subprocess.STARTF_USESHOWWINDOW)
+        return startupinfo
+
+    @staticmethod
+    def terminate_process(process):
+        if process is None:
+            return
+
+        if process.poll() is not None:
+            return
+
+        if PlatformUtils.is_windows():
+
+            subprocess.run(
+                [
+                    "taskkill",
+                    "/F",
+                    "/T",
+                    "/PID",
+                    str(process.pid)
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                creationflags=subprocess.CREATE_NO_WINDOW
+                )
+        else:
+            process.terminate()
+
+    @staticmethod
+    def is_executable(path):
+        if not os.path.isfile(path):
+            return False
+
+        if PlatformUtils.is_windows():
+            return True
+
+        return os.access(path, os.X_OK)
+
+    @staticmethod
+    def is_linux():
+        return sys.platform.startswith("linux")
+
+    @staticmethod
+    def executable_extension():
+        if PlatformUtils.is_windows():
+            return ".exe"
 
         return ""
