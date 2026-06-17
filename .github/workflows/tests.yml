@@ -63,7 +63,6 @@ jobs:
       - name: Generate Coverage Badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
-          mkdir -p .github/badges
           coverage-badge -o .github/badges/coverage.svg -f
           
       - name: Commit and Push Badge

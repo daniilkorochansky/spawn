@@ -163,6 +163,7 @@ Supported encodings include:
 + GitPython
 + Markdown
 + watchdog
++ platformdirs
 
 ### Clone the Repository
 ```
