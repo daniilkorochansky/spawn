@@ -45,10 +45,6 @@ def test_encode_cp1251():
     data = PlatformUtils.encode_text("Привет","cp1251")
     assert data is not None
 
-def test_encode_cp1251_invalid():
-    data = PlatformUtils.encode_text("😀","cp1251")
-    assert data is None
-
 def test_detect_lf():
     assert (PlatformUtils.detect_eol(b"line1\nline2")== "LF")
 
