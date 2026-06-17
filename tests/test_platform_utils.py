@@ -104,19 +104,9 @@ def test_executable_extension():
         assert ext == ""
 
 def test_normalize_path():
-    path = PlatformUtils.normalize_path("folder/subfolder/file.txt")
+    normalized = PlatformUtils.normalize_path("folder\\test.txt")
+    assert normalized == "folder/test.txt"
 
-    assert isinstance(path, str)
-    assert len(path) > 0
-
-def test_normalize_path_matches_pathlib():
-    source = "folder/test.txt"
-
-    normalized = (PlatformUtils.normalize_path(source))
-
-    expected = str(Path(source))
-
-    assert normalized == expected
 
 def test_is_executable_missing():
     assert (PlatformUtils.is_executable("file_that_does_not_exist") is False)
@@ -154,3 +144,10 @@ def test_is_windows_returns_bool():
 
 def test_is_linux_returns_bool():
     assert isinstance(PlatformUtils.is_linux(),bool)
+
+def test_normalize_path_unix_style_output():
+    assert PlatformUtils.normalize_path("a\\b\\c") == "a/b/c"
+
+def test_open_directory_missing():
+    result = PlatformUtils.open_directory("directory_that_does_not_exist")
+    assert result is False

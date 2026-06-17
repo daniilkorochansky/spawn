@@ -34,7 +34,7 @@ class PlatformUtils:
 
     @staticmethod
     def normalize_path(path):
-        return str(Path(path))
+        return str(Path(path)).replace("\\", "/")
 
     @staticmethod
     def detect_eol(binary_data):
@@ -168,3 +168,21 @@ class PlatformUtils:
             return ".exe"
 
         return ""
+
+    @staticmethod
+    def open_directory(path):
+        if not os.path.exists(path):
+            return False
+
+        try:
+            if PlatformUtils.is_windows():
+                os.startfile(path)
+            else:
+                subprocess.Popen(
+                    ["xdg-open", path]
+                )
+
+            return True
+
+        except Exception:
+            return False

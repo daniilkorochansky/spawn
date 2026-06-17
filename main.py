@@ -1774,7 +1774,7 @@ samp.ban
                 #menu.Append(ID_SET_AS_ENTRY_POINT, u"Сделать главный файлом сервера")
             pass
         
-        menu.Append(ID_OPEN_IN_EXPLORER, _(u"Open in Explorer"))
+        menu.Append(ID_OPEN_IN_EXPLORER, _(u"Open Containing Folder"))
         if item_id != root_item_id:
             menu.Append(ID_DELETE_ITEM, _(u"Delete"))
 
@@ -1919,13 +1919,13 @@ samp.ban
         if not path: return
 
         target_dir = path if os.path.isdir(path) else os.path.dirname(path)
-        os.startfile(target_dir)
+        PlatformUtils.open_directory(target_dir)
 
     def on_tree_delete_item(self, event):
         path = getattr(self, "_context_selected_path", "")
         if not path: return
 
-        item_name = os.path.basename(path)
+        item_name = Path(path).name
         msg = _(u"Are you sure you want to permanently delete '{item_name}' from hard drive?").format(item_name=item_name)
 
         res = wx.MessageBox(msg, _(u"Deletion confirmation"), wx.YES_NO | wx.CANCEL | wx.ICON_WARNING)
