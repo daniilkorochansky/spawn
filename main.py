@@ -86,7 +86,7 @@ class SpawnIDE(SpawnFrame):
         self.last_picked_hex_color = "0xFFFFFFFF"
         
         self.m_statusBar.SetFieldsCount(4)
-        self.m_statusBar.SetStatusWidths([-1,40,80,140])
+        self.m_statusBar.SetStatusWidths([-1,60,120,160])
         self.m_statusBar.SetStatusText(u"---", 0)
         self.m_statusBar.SetStatusText(u"---", 1)
         self.m_statusBar.SetStatusText(u"---", 2)
@@ -195,35 +195,35 @@ class SpawnIDE(SpawnFrame):
             "pawn_inc": self.idx_pawn_inc
             }
         
-        #InfoBar
-        infobar = self.m_infoCtrl
-        if infobar:
-            self.ID_INFOBAR_SETUP_SAMPCTL = 9601
-            self.ID_INFOBAR_SETUP_GIT = 9602
-
-            infobar_sizer = infobar.GetSizer()
-            if infobar_sizer:
-                self.btn_sampctl = wx.Button(infobar, self.ID_INFOBAR_SETUP_SAMPCTL, _(u"Browse..."))
-                self.btn_git = wx.Button(infobar, self.ID_INFOBAR_SETUP_GIT, _(u"Browse..."))
-                self.btn_sampctl.Hide()
-                self.btn_git.Hide()
-
-                infobar_sizer.Add(self.btn_sampctl, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-                infobar_sizer.Add(self.btn_git, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-                
-            #Deleting close button in InfoBar
-            for child in infobar.GetChildren():
-                if isinstance(child, wx.BitmapButton):
-                    child.Hide()
-                    if infobar_sizer:
-                        infobar_sizer.Detach(child)
-                    break
-                
-            infobar.Layout()
-            
-            infobar.Bind(wx.EVT_BUTTON, self.on_infobar_action_click, id=self.ID_INFOBAR_SETUP_SAMPCTL)
-            infobar.Bind(wx.EVT_BUTTON, self.on_infobar_action_click, id=self.ID_INFOBAR_SETUP_GIT)
-        #-------
+##        #InfoBar
+##        infobar = self.m_infoCtrl
+##        if infobar:
+##            self.ID_INFOBAR_SETUP_SAMPCTL = 9601
+##            self.ID_INFOBAR_SETUP_GIT = 9602
+##
+##            infobar_sizer = infobar.GetSizer()
+##            if infobar_sizer:
+##                self.btn_sampctl = wx.Button(infobar, self.ID_INFOBAR_SETUP_SAMPCTL, _(u"Browse..."))
+##                self.btn_git = wx.Button(infobar, self.ID_INFOBAR_SETUP_GIT, _(u"Browse..."))
+##                self.btn_sampctl.Hide()
+##                self.btn_git.Hide()
+##
+##                infobar_sizer.Add(self.btn_sampctl, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+##                infobar_sizer.Add(self.btn_git, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+##                
+##            #Deleting close button in InfoBar
+##            for child in infobar.GetChildren():
+##                if isinstance(child, wx.BitmapButton):
+##                    child.Hide()
+##                    if infobar_sizer:
+##                        infobar_sizer.Detach(child)
+##                    break
+##                
+##            infobar.Layout()
+##            
+##            infobar.Bind(wx.EVT_BUTTON, self.on_infobar_action_click, id=self.ID_INFOBAR_SETUP_SAMPCTL)
+##            infobar.Bind(wx.EVT_BUTTON, self.on_infobar_action_click, id=self.ID_INFOBAR_SETUP_GIT)
+##        #-------
 
         self.Show()
         
@@ -636,12 +636,13 @@ samp.ban
         self.SendSizeEvent()
         self.Layout()
         
-        infobar = self.m_infoCtrl
-        if not infobar:
-            return
-
-        self.btn_sampctl.Hide()
-        self.btn_git.Hide()
+##        infobar = self.m_infoCtrl
+##        if not infobar:
+##            return
+##        if self.btn_sampctl:
+##            self.btn_sampctl.Hide()
+##        if self.btn_git:
+##            self.btn_git.Hide()
 
         sampctl_path = self.ide_cfg.get("system.sampctl.executable_path", "")
         sampctl_ready = bool(sampctl_path and os.path.exists(sampctl_path) and os.path.isfile(sampctl_path))
@@ -655,7 +656,6 @@ samp.ban
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, True)
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, True)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, True)
-            #self.m_menubar.Enable(wx.ID_CLEAN_PROJECT, True)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, True)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, True)
 
@@ -670,7 +670,6 @@ samp.ban
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, False)
-            #self.m_menubar.Enable(wx.ID_CLEAN_PROJECT, False)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, False)
 
@@ -685,7 +684,6 @@ samp.ban
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, False)
-            #self.m_menubar.Enable(wx.ID_CLEAN_PROJECT, False)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, False)
 
@@ -693,7 +691,6 @@ samp.ban
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, False)
-            #self.m_menubar.Enable(wx.ID_CLEAN_PROJECT, False)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, False)
             
@@ -716,73 +713,75 @@ samp.ban
         self.m_menubar.Enable(wx.ID_NEW_PROJECT, sampctl_ready)
 
         if not sampctl_ready:
-            msg = _(u"Please provide the path to the SAMPCTL executable.")
-            infobar.Hide()
-            self.btn_sampctl.Show()
-            
-            if infobar.GetParent():
-                infobar.GetParent().Layout()
-            infobar.ShowMessage(msg, wx.ICON_WARNING)
-            self.Layout()
-            self.m_mgr.Update()
-            return
+            pass
+##            msg = _(u"Please provide the path to the SAMPCTL executable.")
+##            infobar.Hide()
+##            self.btn_sampctl.Show()
+##            
+##            if infobar.GetParent():
+##                infobar.GetParent().Layout()
+##            infobar.ShowMessage(msg, wx.ICON_WARNING)
+##            self.Layout()
+##            self.m_mgr.Update()
+##            return
 
         if not git_ready:
-            msg = _(u"Please provide the path to the Git executable.")
-            infobar.Hide()
-            self.btn_git.Show()
-            
-            if infobar.GetParent():
-                infobar.GetParent().Layout()
-            infobar.ShowMessage(msg, wx.ICON_WARNING)
-            self.Layout()
-            self.m_mgr.Update()
-            return
-        infobar.Dismiss()
+            pass
+##            msg = _(u"Please provide the path to the Git executable.")
+##            infobar.Hide()
+##            self.btn_git.Show()
+##            
+##            if infobar.GetParent():
+##                infobar.GetParent().Layout()
+##            infobar.ShowMessage(msg, wx.ICON_WARNING)
+##            self.Layout()
+##            self.m_mgr.Update()
+##            return
+##        infobar.Dismiss()
         
 
-    def on_infobar_action_click(self, event):
-        btn_id = event.GetId()
-        if btn_id == self.ID_INFOBAR_SETUP_SAMPCTL:
-            if PlatformUtils.is_windows():
-                wildcard = "SAMPCTL (*.exe)|sampctl.exe"
-            else:
-                wildcard = "All files (*)|*"
-                
-            exe_ext = PlatformUtils.executable_extension()
-            with wx.FileDialog(self, _(u"Specify the path to the sampctl executable file."),
-                               defaultFile=f"sampctl{exe_ext}", wildcard=wildcard,
-                               style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
-                if dlg.ShowModal() == wx.ID_OK:
-                    if PlatformUtils.is_executable(dlg.GetPath()):
-                        self.ide_cfg.set("system.sampctl.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
-                        self.ide_cfg.save()
-
-                        self.check_environment_on_startup()
-                    else:
-                        wx.MessageBox(_("The selected SAMPCTL executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
-                        return
-                    
-        elif btn_id == self.ID_INFOBAR_SETUP_GIT:
-            if PlatformUtils.is_windows():
-                wildcard = "Git (*.exe)|git.exe"
-            else:
-                wildcard = "All files (*)|*"
-                
-            exe_ext = PlatformUtils.executable_extension()
-            with wx.FileDialog(self, _(u"Specify the path to the git executable file."),
-                               defaultFile=f"git{exe_ext}", wildcard=wildcard,
-                               style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
-                if dlg.ShowModal() == wx.ID_OK:
-                    if PlatformUtils.is_executable(dlg.GetPath()):
-                        self.ide_cfg.set("system.git.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
-                        self.ide_cfg.save()
-
-                        self.check_environment_on_startup()
-                    else:
-                        wx.MessageBox(_("The selected Git executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
-                        return
-        
+##    def on_infobar_action_click(self, event):
+##        btn_id = event.GetId()
+##        if btn_id == self.ID_INFOBAR_SETUP_SAMPCTL:
+##            if PlatformUtils.is_windows():
+##                wildcard = "SAMPCTL (*.exe)|sampctl.exe"
+##            else:
+##                wildcard = "All files (*)|*"
+##                
+##            exe_ext = PlatformUtils.executable_extension()
+##            with wx.FileDialog(self, _(u"Specify the path to the sampctl executable file."),
+##                               defaultFile=f"sampctl{exe_ext}", wildcard=wildcard,
+##                               style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
+##                if dlg.ShowModal() == wx.ID_OK:
+##                    if PlatformUtils.is_executable(dlg.GetPath()):
+##                        self.ide_cfg.set("system.sampctl.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
+##                        self.ide_cfg.save()
+##
+##                        self.check_environment_on_startup()
+##                    else:
+##                        wx.MessageBox(_("The selected SAMPCTL executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
+##                        return
+##                    
+##        elif btn_id == self.ID_INFOBAR_SETUP_GIT:
+##            if PlatformUtils.is_windows():
+##                wildcard = "Git (*.exe)|git.exe"
+##            else:
+##                wildcard = "All files (*)|*"
+##                
+##            exe_ext = PlatformUtils.executable_extension()
+##            with wx.FileDialog(self, _(u"Specify the path to the git executable file."),
+##                               defaultFile=f"git{exe_ext}", wildcard=wildcard,
+##                               style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
+##                if dlg.ShowModal() == wx.ID_OK:
+##                    if PlatformUtils.is_executable(dlg.GetPath()):
+##                        self.ide_cfg.set("system.git.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
+##                        self.ide_cfg.save()
+##
+##                        self.check_environment_on_startup()
+##                    else:
+##                        wx.MessageBox(_("The selected Git executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
+##                        return
+##        
 
     def update_git_ui_controls_state(self):
         toolbar = self.m_auiToolBar_Git
@@ -1650,6 +1649,7 @@ samp.ban
         self.on_save_all_files(None)
         self.toggle_project_ui_state(False)
         self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
+        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
         self.m_menuItem_Ensure.Enable(False)
         self.m_menuItem_ProjectClose.Enable(False)
         self.m_menuItem_CompileProject.Enable(False)
@@ -1692,6 +1692,7 @@ samp.ban
         self.toggle_project_ui_state(True)
 
         self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, True)
+        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, True)
         self.m_menuItem_Ensure.Enable(True)
         self.m_menuItem_ProjectClose.Enable(True)
         self.m_menuItem_CompileProject.Enable(True)
@@ -2543,7 +2544,7 @@ samp.ban
                     chosen_encoding = "utf-8"
                     active_tab.native_eol = file_eol
 
-                    raw_bytes = disk_text.encode("utf-8")
+                    raw_bytes = PlatformUtils.encode_text(disk_text,'utf-8')
 
                     with open(active_tab.file_path, "wb") as f:
                         f.write(raw_bytes)
@@ -2591,7 +2592,7 @@ samp.ban
                     raw_bytes = PlatformUtils.encode_text(disk_text,chosen_encoding)
                     
                     with open(actual_path, "wb") as f:
-                        f.write(disk_text)
+                        f.write(raw_bytes)
 
                     enc_status = chosen_encoding.upper()
                     default_eol = (PlatformUtils.default_eol())

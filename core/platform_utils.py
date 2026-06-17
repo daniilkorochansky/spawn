@@ -25,6 +25,7 @@ from pathlib import Path
 import sys
 import subprocess
 import os
+import shutil
 
 class PlatformUtils:
 
@@ -63,10 +64,13 @@ class PlatformUtils:
 
     @staticmethod
     def encode_text(text,encoding):
+        if not isinstance(text, str):
+            text = str(text)
         try:
             return text.encode(encoding,errors="strict")
+
         except UnicodeEncodeError:
-            return None
+            return text.encode("utf-8",errors="replace")
 
     @staticmethod
     def default_eol():
@@ -186,3 +190,37 @@ class PlatformUtils:
 
         except Exception:
             return False
+
+    @staticmethod
+    def get_terminal():
+        candidates = [
+            "gnome-terminal",
+            "konsole",
+            "xfce4-terminal",
+            "xterm"
+        ]
+
+        for term in candidates:
+            if shutil.which(term):
+                return term
+
+        return None
+
+    @staticmethod
+    def create_terminal_command(executable, args):
+        term = PlatformUtils.get_terminal()
+        if os.name == "nt":
+            return [
+                "cmd.exe",
+                "/K",
+                executable,
+                *args
+            ]
+
+        if not term:
+            return [executable, *args]
+
+        if term == "gnome-terminal":
+            return [term, "--", executable, *args]
+
+        return [term, "-e", executable, *args]

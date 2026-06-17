@@ -26,6 +26,7 @@ import webbrowser
 import os
 
 from core.logger import SpawnLogger
+from core.platform_utils import PlatformUtils
 from core.version import __version__
 
 import gettext
@@ -96,7 +97,7 @@ class BugReportDialog ( wx.Dialog ):
             wx.MessageBox(_("Bug report copied to clipboard."),_("Spawn"),wx.OK | wx.ICON_INFORMATION)
 
     def on_open_logs_folder(self, event):
-        log_dir = os.path.join(os.environ["APPDATA"],"Spawn","logs")
+        log_dir = os.path.join(PlatformUtils.get_config_dir(),"logs")
         os.startfile(log_dir)
 
     def on_issues(self, event):

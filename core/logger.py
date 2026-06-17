@@ -24,6 +24,8 @@ import os
 import sys
 import platform
 
+from core.platform_utils import PlatformUtils
+
 class SpawnLogger:
     _initialized = False
 
@@ -33,8 +35,7 @@ class SpawnLogger:
             return
 
         log_dir = os.path.join(
-            os.environ["APPDATA"],
-            "Spawn",
+            PlatformUtils.get_config_dir(),
             "logs"
         )
 
@@ -77,7 +78,7 @@ class SpawnLogger:
         
     @staticmethod
     def generate_bug_report(spawn_version):
-        log_dir = os.path.join(os.environ["APPDATA"],"Spawn","logs")
+        log_dir = os.path.join(PlatformUtils.get_config_dir(),"logs")
         log_file_path = os.path.join(log_dir,"spawn.log")
     
         report = []

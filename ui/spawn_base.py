@@ -147,12 +147,12 @@ class SpawnFrame ( wx.Frame ):
         self.m_tool_RunServer = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_RUN_STOP_SERVER, _(u"Run / Stop Server"), wx.Bitmap(os.path.join(self.icons_folder,"tb_server_run.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Run / Stop Server"), wx.EmptyString, None )
 
         #self.m_tool_RunLinter = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_LINTER_RUN, _(u"Verify code"), wx.Bitmap( u"assets/icons/tb_linter_run.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Verify code"), wx.EmptyString, None )
-        self.m_auiToolBar.AddStretchSpacer(1)
-        self.m_infoCtrl = wx.InfoBar( self.m_auiToolBar )
-        self.m_infoCtrl.SetMinSize(wx.Size(500, -1))
-        self.m_infoCtrl.SetShowHideEffects( wx.SHOW_EFFECT_SLIDE_TO_LEFT, wx.SHOW_EFFECT_SLIDE_TO_RIGHT )
-        self.m_infoCtrl.SetEffectDuration( 300 )
-        self.m_auiToolBar.AddControl( self.m_infoCtrl )
+##        self.m_auiToolBar.AddStretchSpacer(1)
+##        self.m_infoCtrl = wx.InfoBar( self.m_auiToolBar )
+##        self.m_infoCtrl.SetMinSize(wx.Size(500, -1))
+##        self.m_infoCtrl.SetShowHideEffects( wx.SHOW_EFFECT_SLIDE_TO_LEFT, wx.SHOW_EFFECT_SLIDE_TO_RIGHT )
+##        self.m_infoCtrl.SetEffectDuration( 300 )
+##        self.m_auiToolBar.AddControl( self.m_infoCtrl )
 
         self.m_auiToolBar.Realize()
         self.m_mgr.AddPane( self.m_auiToolBar, wx.aui.AuiPaneInfo() .Top() .CaptionVisible( False ).CloseButton( False ).PaneBorder( False ).Movable( False ).Dock().Resizable().FloatingSize( wx.Size( 43,219 ) ).DockFixed( True ).BottomDockable( False ).LeftDockable( False ).RightDockable( False ).Floatable( False ).Layer( 10 ) )

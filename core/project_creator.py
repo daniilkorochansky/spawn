@@ -24,6 +24,8 @@ import subprocess
 import os
 import wx
 
+from core.platform_utils import PlatformUtils
+
 class ProjectCreateWorker(threading.Thread):
     def __init__(self, target_path, sampctl_path, on_finished_callback):
         super().__init__()
@@ -36,11 +38,11 @@ class ProjectCreateWorker(threading.Thread):
             
             exec_command = os.path.normpath(self.sampctl_path)
             print(exec_command)
-            cmd = (f'cmd.exe /K "cls && echo. && "{exec_command}" init"')
+            
+            cmd = PlatformUtils.create_terminal_command(exec_command,["init"])
             process = subprocess.Popen(
                 cmd,
-                cwd=self.target_path,
-                creationflags=subprocess.CREATE_NEW_CONSOLE
+                cwd=self.target_path
                 )
             process.wait()
 
