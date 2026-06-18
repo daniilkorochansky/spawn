@@ -47,7 +47,6 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
   - [Run](#run)
   - [Build Executable (Windows)](#build-executable-windows)
   - [Tests](#tests)
-  - [Code Coverage](#code-coverage)
 - [Contributors](#contributors)
   - [Bug Report](#bug-report)
 - [Donations](#donations)
@@ -226,12 +225,6 @@ pythonpath = .
 
 All tests must return a ‘PASSED’ result.
 Otherwise, you need to find and fix the error or bug in the code, and then run the tests again.
-
-### Code Coverage
-Automated tools track how much of the `core` and `ui` logic is verified by tests. You can see the current percentage in the **coverage** badge at the top of this README.
-
-* **What it means:** The coverage percentage reflects the ratio of code lines executed during testing. A higher percentage means more logic has been double-checked for bugs.
-* **The focus:** The tests are aimed at ensuring the stability of the key logic in the `core` and `ui` folder.
 
 ## Contributors
 Spawn is an open-source project built for the open.mp and SA-MP community.
