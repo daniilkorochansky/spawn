@@ -21,3 +21,4 @@ dist/
 
 mapping.cfg
 pytest.ini
+cache/
