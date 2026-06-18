@@ -1,7 +1,6 @@
 ![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)
 ![Language](https://img.shields.io/badge/language-Python-yellow.svg)
 ![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
-![Coverage](https://raw.githubusercontent.com/daniilkorochansky/spawn/master/.github/badges/coverage.svg)
 [![build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
@@ -49,7 +48,6 @@
   - [Запуск](#запуск)
   - [Сборка исполняемого файла (Windows)](#сборка-исполняемого-файла-windows)
   - [Тесты](#тесты)
-  - [Покрытие кода тестами](#покрытие-кода-тестами)
 - [Участники](#участники)
   - [Отчёт об ошибках](#отчёт-об-ошибках)
 - [Пожертвования](#пожертвования)
@@ -226,12 +224,6 @@ pythonpath = .
 
 Все тесты должны завершиться с результатом 'PASSED'.
 В противном случае вам необходимо найти и исправить ошибку или баг в вашем коде, а затем запустить тесты снова.
-
-### Покрытие кода тестами
-Инструменты автоматизации отслеживают, какая часть основной логики проверена тестами. Текущий процент покрытия отображается на бейдже **coverage** в самом верху этого README.
-
-* **Что это значит:** Процент покрытия показывает отношение строк кода, выполненных во время тестов, к их общему количеству. Чем выше процент, тем больше логики проверено на наличие скрытых багов.
-* **Фокус проекта:** Тесты направлены на обеспечение стабильности ключевой логики в папке `core` и `ui`.
 
 ## Участники
 Spawn — это проект с открытым исходным кодом, созданный для разработчиков серверов open.mp и SA-MP.
