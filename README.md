@@ -1,7 +1,6 @@
 ![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)
 ![Language](https://img.shields.io/badge/language-Python-yellow.svg)
 ![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
-![Coverage](https://raw.githubusercontent.com/daniilkorochansky/spawn/master/.github/badges/coverage.svg)
 [![build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
