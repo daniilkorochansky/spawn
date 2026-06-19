@@ -7,7 +7,9 @@
 <div align="center">
   [<a href="https://github.com/daniilkorochansky/spawn">English</a>
   /
-  Русский]
+  Русский
+  /
+  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_pt.md">Português</a>]
 </div>
 
 # Spawn
