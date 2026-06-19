@@ -68,21 +68,23 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 + Automatic project files monitoring and refresh.
 + Portable distribution (no installation required).
 
-## Why Spawn IDE? (Comparison)
+### Why Spawn IDE? (Comparison)
 
 Spawn is built from scratch to deliver a modern, resource-efficient developer experience without the bloat of web-based editors or the rigid limitations of legacy tools.
 
 | Features & Capabilities | Pawno (Original) | Qawno (open.mp) | VS Code (with plugins) | Spawn IDE |
 | :--- | :---: | :---: | :---: | :---: |
-| **RAM Usage** | ~10-20 MB | ~40-60 MB | ~300-800+ MB (Electron) | **~30-50 MB (Native UI)** |
-| **Cross-Platform Support** | ❌ Windows Only | ❌ Windows Only |  Linux, Windows, macOS | **Linux & Windows (Native)** |
-| **Git / Source Control** | ❌ None | ❌ None |  Via Plugins (Heavy) | **Built-in (GitPython)** |
-| **SAMPCTL & pawn.json** | ❌ None | ❌ None |  Via Third-Party Plugins | **Deep Built-in Integration** |
-| **Package Manager (Pawndex)**| ❌ None | ❌ None | ❌ None | **In Roadmap (Native)** |
-| **IntelliSense / Auto-complete**| ❌ None |  Basic (Slow) |  Good (High CPU Usage) | **In Roadmap** |
-| **Split Code Editor View** | ❌ None | ❌ None |  | **Out of the Box (3+ tabs)** |
-| **Built-in Color Picker** | ❌ None | ❌ None | ❌ Requires Extension | **Out of the Box** |
-| **Setup & Installation** | Portable | Portable | ❌ Complex Manual Config | **Portable (No Installation)** |
+| **RAM Usage** | 🟢 ~10-20 MB | 🟢 ~40-60 MB | 🔴 ~300-800+ MB (Electron) | 🟢 **~30-50 MB (Native UI)** |
+| **Cross-Platform Support** | 🔴 Windows Only | 🔴 Windows Only | 🟢 Linux, Windows, macOS | 🟢 **Linux & Windows (Native)** |
+| **Git / Source Control** | 🔴 None | 🔴 None | 🟡 Via Plugins (Heavy) | 🟢 **Built-in (Lightweight)** |
+| **SAMPCTL & pawn.json** | 🔴 None | 🔴 None | 🟡 Via Third-Party Plugins | 🟢 **Built-in Integration** |
+| **EOL Conversion (LF/CRLF)** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Built-in** |
+| **Encoding Auto-Detection** | 🔴 None | 🔴 None | 🟡 Basic (Guesses) | 🟢 **Smart (via Comment Rule)** |
+| **Built-in Color Picker** | 🔴 None | 🔴 None | 🔴 Requires Extension | 🟢 **Out of the Box** |
+| **Package Manager (Pawndex)**| 🔴 None | 🔴 None | 🔴 None | 🟡 **In Roadmap (Native)** |
+| **IntelliSense & Go to Def** | 🔴 None | 🟡 Basic (Slow) | 🟢 Good (High CPU Usage) | 🟡 **In Roadmap** |
+| **Split Code Editor View** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Out of the Box (3+ tabs)** |
+| **Setup & Installation** | 🟢 Portable | 🟢 Portable | 🔴 Complex Manual Config | 🟢 **Portable (No Install)** |
 
 ## Screenshots
 ### Project Creation
