@@ -79,7 +79,7 @@ Spawn is built from scratch to deliver a modern, resource-efficient developer ex
 | **Git / Source Control** | 🔴 None | 🔴 None | 🟡 Via Plugins (Heavy) | 🟢 **Built-in (Lightweight)** |
 | **SAMPCTL & pawn.json** | 🔴 None | 🔴 None | 🟡 Via Third-Party Plugins | 🟢 **Built-in Integration** |
 | **EOL Conversion (LF/CRLF)** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Built-in** |
-| **Encoding Auto-Detection** | 🔴 None | 🔴 None | 🟡 Basic (Guesses) | 🟢 **Smart (via Comment Rule)** |
+| **Encoding Auto-Detection** | 🔴 None | 🔴 None | 🟡 Basic | 🟢 **Smart (via Comment Rule)** |
 | **Built-in Color Picker** | 🔴 None | 🔴 None | 🔴 Requires Extension | 🟢 **Out of the Box** |
 | **Package Manager (Pawndex)**| 🔴 None | 🔴 None | 🔴 None | 🟡 **In Roadmap (Native)** |
 | **IntelliSense & Go to Def** | 🔴 None | 🟡 Basic (Slow) | 🟢 Good (High CPU Usage) | 🟡 **In Roadmap** |
