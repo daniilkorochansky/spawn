@@ -77,7 +77,7 @@ Spawn is built from scratch to deliver a modern, resource-efficient developer ex
 | **RAM Usage** | 🟢 ~10-20 MB | 🟢 ~40-60 MB | 🔴 ~300-800+ MB (Electron) | 🟢 **~30-50 MB (Native UI)** |
 | **Cross-Platform Support** | 🔴 Windows Only | 🔴 Windows Only | 🟢 Linux, Windows, macOS | 🟢 **Linux & Windows (Native)** |
 | **Git / Source Control** | 🔴 None | 🔴 None | 🟡 Via Plugins (Heavy) | 🟢 **Built-in (Lightweight)** |
-| **SAMPCTL & pawn.json** | 🔴 None | 🔴 None | 🟡 Via Third-Party Plugins | 🟢 **Built-in Integration** |
+| **SAMPCTL** | 🔴 None | 🔴 None | 🟡 Via Third-Party Plugins | 🟢 **Built-in Integration** |
 | **EOL Conversion (LF/CRLF)** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Built-in** |
 | **Encoding Auto-Detection** | 🔴 None | 🔴 None | 🟡 Basic | 🟢 **Smart (via Comment Rule)** |
 | **Built-in Color Picker** | 🔴 None | 🔴 None | 🔴 Requires Extension | 🟢 **Out of the Box** |
