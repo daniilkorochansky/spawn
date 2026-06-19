@@ -72,7 +72,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 
 Spawn is built from scratch to deliver a modern, resource-efficient developer experience without the bloat of web-based editors or the rigid limitations of legacy tools.
 
-| Features & Capabilities | Pawno (Original) | Qawno (open.mp) | VS Code (with plugins) | Spawn IDE |
+| Features & Capabilities | Pawno | Qawno (open.mp) | VS Code (with plugins) | Spawn IDE |
 | :--- | :---: | :---: | :---: | :---: |
 | **RAM Usage** | 🟢 ~10-20 MB | 🟢 ~40-60 MB | 🔴 ~300-800+ MB (Electron) | 🟢 **~30-50 MB (Native UI)** |
 | **Cross-Platform Support** | 🔴 Windows Only | 🔴 Windows Only | 🟢 Linux, Windows, macOS | 🟢 **Linux & Windows (Native)** |
