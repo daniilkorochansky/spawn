@@ -15,18 +15,18 @@
 # Spawn
 <img width="180" height="180" alt="spawn_new" src="https://github.com/user-attachments/assets/18435694-229c-468d-87af-11f9ed4d243e" />
 
-Быстрая и современная среда разработки (IDE), созданная специально для разработки серверов open.mp и SA-MP на языке программирования Pawn.
+Um ambiente de desenvolvimento (IDE) rápido e moderno, criado especificamente para o desenvolvimento de servidores open.mp e SA-MP na linguagem de programação Pawn.
 
-Он объединяет средства редактирования Pawn, интеграцию с SAMPCTL, управление зависимостями, систему контроля версий Git и инструменты навигации по проекту в единую среду разработки, созданную с учетом потребностей разработчиков многопользовательских серверов.
+Ele reúne ferramentas de edição de Pawn, integração com o SAMPCTL, gerenciamento de dependências, o sistema de controle de versão Git e ferramentas de navegação pelo projeto em um único ambiente de desenvolvimento, criado levando em conta as necessidades dos desenvolvedores de servidores multijogador.
 
-Будучи переносимым, расширяемым и ориентированным на повышение производительности, Spawn помогает создавать, управлять и поддерживать проекты без использования универсальных редакторов кода.
+Por ser portátil, extensível e voltado para o aumento da produtividade, o Spawn ajuda a criar, gerenciar e manter projetos sem a necessidade de editores de código genéricos.
 
-## Общий вид
+## Visão geral
 <img width="1920" height="1049" alt="ui" src="https://github.com/user-attachments/assets/505d6a46-33cc-45ae-bed3-f011474a4dc7" />
 
-## Содержание
-- [Особенности](#особенности)
-- [Почему Spawn IDE? (Сравнение)](#почему-spawn-ide-сравнение)
+## Índice
+- [Características](#características)
+- [Por que o Spawn IDE? (Comparação)](#por-que-o-spawn-ide-comparação)
 - [Скриншоты](#скриншоты)
   - [Создание проекта](#создание-проекта)
   - [Разделение редактора кода](#разделение-редактора-кода)
@@ -56,24 +56,24 @@
 - [Пожертвования](#пожертвования)
 - [Лицензия](#лицензия)
 
-## Особенности
-+ Разработано специально для [open.mp](https://github.com/openmultiplayer) и SA-MP разработки.
-+ Встроенная интеграция с [SAMPCTL](https://github.com/Southclaws/sampctl) для создания, запуска и управления проектами.
-+ Менеджер зависимостей для удобной установки и обновления серверных пакетов и компонентов.
-+ Встроенная поддержка Git с индикаторами состояния репозитория и историей коммитов.
-+ Маркеры истории изменений для отслеживания измененных и сохраненных строк.
-+ Автоматическое сопоставление и выделение скобок
-+ Предварительный просмотр цвета для значений RGBA и HEX прямо в редакторе.
-+ Интеграция инструмента выбора цвета для быстрой вставки цветов в код Pawn.
-+ Режим 'Разделенный редактор кода' для одновременной работы с несколькими файлами.
-+ Дерево проекта, оптимизированное для крупных проектов.
-+ Интегрированные панели вывода результатов сборки и консоли сервера.
-+ Автоматический мониторинг и обновление файлов проектов.
-+ Портативная версия (установка не требуется).
+## Características
++ Desenvolvido especialmente para o [open.mp](https://github.com/openmultiplayer) e o desenvolvimento do SA-MP.
++ Integração embutida com o [SAMPCTL](https://github.com/Southclaws/sampctl) para criar, iniciar e gerenciar projetos.
++ Gerenciador de dependências para facilitar a instalação e atualização de pacotes e componentes de servidor.
++ Suporte integrado ao Git com indicadores de status do repositório e histórico de commits.
++ Marcadores do histórico de alterações para rastrear linhas alteradas e salvas.
++ Correspondência e destaque automáticos de chaves
++ Visualização prévia de cores para valores RGBA e HEX diretamente no editor.
++ Integração da ferramenta de seleção de cores para inserir rapidamente cores no código Pawn.
++ Modo “Editor de código dividido” para trabalhar simultaneamente com vários arquivos.
++ Árvore de projeto otimizada para projetos de grande porte.
++ Painéis integrados de saída de resultados de compilação e do console do servidor.
++ Monitoramento e atualização automáticos dos arquivos do projeto.
++ Versão portátil (não requer instalação).
 
-## Почему Spawn IDE? (Сравнение)
+## Por que o Spawn IDE? (Comparação)
 
-Spawn создан с нуля, чтобы обеспечить современный, ресурсоэффективный интерфейс для разработчиков, без излишней громоздкости веб-редакторов и жестких ограничений устаревших инструментов.
+O Spawn foi criado do zero para oferecer uma interface moderna e eficiente em termos de recursos aos desenvolvedores, sem a complexidade excessiva dos editores web e as restrições rígidas das ferramentas ultrapassadas.
 
 | Характеристики и возможности | Pawno | Qawno (open.mp) | VS Code (с плагинами) | Spawn IDE |
 | :--- | :---: | :---: | :---: | :---: |
