@@ -1,14 +1,15 @@
 ![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)
 ![Language](https://img.shields.io/badge/language-Python-yellow.svg)
 ![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
-![Coverage](https://raw.githubusercontent.com/daniilkorochansky/spawn/master/.github/badges/coverage.svg)
 [![build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
 <div align="center">
   [English
   /
-  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_ru.md">Русский</a>]
+  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_ru.md">Русский</a>
+  /
+  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_pt.md">Português</a>]
 </div>
 
 # Spawn
@@ -25,6 +26,7 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 
 ## Table of Contents
 - [Features](#features)
+- [Why Spawn IDE? (Comparison)](#why-spawn-ide-comparison)
 - [Screenshots](#screenshots)
   - [Project Creation](#project-creation)
   - [Split Code Editor View](#split-code-editor-view)
@@ -48,7 +50,6 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
   - [Run](#run)
   - [Build Executable (Windows)](#build-executable-windows)
   - [Tests](#tests)
-  - [Code Coverage](#code-coverage)
 - [Contributors](#contributors)
   - [Bug Report](#bug-report)
 - [Donations](#donations)
@@ -68,6 +69,24 @@ Portable, extensible, and focused on productivity, Spawn helps you build, manage
 + Integrated build output and server console panels.
 + Automatic project files monitoring and refresh.
 + Portable distribution (no installation required).
+
+### Why Spawn IDE? (Comparison)
+
+Spawn is built from scratch to deliver a modern, resource-efficient developer experience without the bloat of web-based editors or the rigid limitations of legacy tools.
+
+| Features & Capabilities | Pawno | Qawno (open.mp) | VS Code (with plugins) | Spawn IDE |
+| :--- | :---: | :---: | :---: | :---: |
+| **RAM Usage** | 🟢 ~10-20 MB | 🟢 ~40-60 MB | 🔴 ~300-800+ MB (Electron) | 🟢 **~30-50 MB (Native UI)** |
+| **Cross-Platform Support** | 🔴 Windows Only | 🔴 Windows Only | 🟢 Linux, Windows, macOS | 🟢 **Linux & Windows (Native)** |
+| **Git / Source Control** | 🔴 None | 🔴 None | 🟡 Via Plugins (Heavy) | 🟢 **Built-in (Lightweight)** |
+| **SAMPCTL** | 🔴 None | 🔴 None | 🟡 Via Third-Party Plugins | 🟢 **Built-in Integration** |
+| **EOL Conversion (LF/CRLF)** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Built-in** |
+| **Encoding Detection** | 🔴 None | 🔴 None | 🟡 Basic | 🟢 **Smart (via Comment Rule)** |
+| **Built-in Color Picker** | 🔴 None | 🟢 Out of the Box | 🔴 Requires Extension | 🟢 **Out of the Box** |
+| **Package Manager (Pawndex)**| 🔴 None | 🔴 None | 🔴 None | 🟡 **In Roadmap (Native)** |
+| **IntelliSense & Autocomplete** | 🔴 None | 🟡 Basic (Slow) | 🟢 Good (High CPU Usage) | 🟡 **In Roadmap (Fast / Low CPU Usage)** |
+| **Split Code Editor View** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Out of the Box (3+ tabs)** |
+| **Setup & Installation** | 🟢 Portable | 🟢 Portable | 🔴 Complex Manual Config | 🟢 **Portable** |
 
 ## Screenshots
 ### Project Creation
@@ -227,12 +246,6 @@ pythonpath = .
 
 All tests must return a ‘PASSED’ result.
 Otherwise, you need to find and fix the error or bug in the code, and then run the tests again.
-
-### Code Coverage
-Automated tools track how much of the `core` and `ui` logic is verified by tests. You can see the current percentage in the **coverage** badge at the top of this README.
-
-* **What it means:** The coverage percentage reflects the ratio of code lines executed during testing. A higher percentage means more logic has been double-checked for bugs.
-* **The focus:** The tests are aimed at ensuring the stability of the key logic in the `core` and `ui` folder.
 
 ## Contributors
 Spawn is an open-source project built for the open.mp and SA-MP community.

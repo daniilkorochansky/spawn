@@ -7,33 +7,33 @@
 <div align="center">
   [<a href="https://github.com/daniilkorochansky/spawn">English</a>
   /
-  Русский
+  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_ru.md">Русский</a>
   /
-  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_pt.md">Português</a>]
+  Português]
 </div>
 
 # Spawn
 <img width="180" height="180" alt="spawn_new" src="https://github.com/user-attachments/assets/18435694-229c-468d-87af-11f9ed4d243e" />
 
-Быстрая и современная среда разработки (IDE), созданная специально для разработки серверов open.mp и SA-MP на языке программирования Pawn.
+Um ambiente de desenvolvimento (IDE) rápido e moderno, criado especificamente para o desenvolvimento de servidores open.mp e SA-MP na linguagem de programação Pawn.
 
-Он объединяет средства редактирования Pawn, интеграцию с SAMPCTL, управление зависимостями, систему контроля версий Git и инструменты навигации по проекту в единую среду разработки, созданную с учетом потребностей разработчиков многопользовательских серверов.
+Ele reúne ferramentas de edição de Pawn, integração com o SAMPCTL, gerenciamento de dependências, o sistema de controle de versão Git e ferramentas de navegação pelo projeto em um único ambiente de desenvolvimento, criado levando em conta as necessidades dos desenvolvedores de servidores multijogador.
 
-Будучи переносимым, расширяемым и ориентированным на повышение производительности, Spawn помогает создавать, управлять и поддерживать проекты без использования универсальных редакторов кода.
+Por ser portátil, extensível e voltado para o aumento da produtividade, o Spawn ajuda a criar, gerenciar e manter projetos sem a necessidade de editores de código genéricos.
 
-## Общий вид
+## Visão geral
 <img width="1920" height="1049" alt="ui" src="https://github.com/user-attachments/assets/505d6a46-33cc-45ae-bed3-f011474a4dc7" />
 
-## Содержание
-- [Особенности](#особенности)
-- [Почему Spawn IDE? (Сравнение)](#почему-spawn-ide-сравнение)
-- [Скриншоты](#скриншоты)
-  - [Создание проекта](#создание-проекта)
-  - [Разделение редактора кода](#разделение-редактора-кода)
-  - [Предварительный просмотр цвета в формате RGBA/HEX](#предварительный-просмотр-цвета-в-формате-rgbahex)
-  - [Менеджер зависимостей](#менеджер-зависимостей)
-  - [Git и Контроль версий (Source Control)](#git-и-source-control)
-  - [Дерево проекта](#дерево-проекта)
+## Índice
+- [Características](#características)
+- [Por que o Spawn IDE? (Comparação)](#por-que-o-spawn-ide-comparação)
+- [Capturas de tela](#capturas-de-tela)
+  - [Criação do projeto](#criação-do-projeto)
+  - [Divisão do editor de código](#divisão-do-editor-de-código)
+  - [Pré-visualização da cor no formato RGBA/HEX](#pré-visualização-da-cor-no-formato-rgbahex)
+  - [Gerenciador de dependências](#gerenciador-de-dependências)
+  - [Git e Controle de Versões (Source Control)](#git-e-controle-de-versões)
+  - [Árvore do projeto](#árvore-do-projeto)
 - [Установка](#установка)
   - [Скачивание](#скачивание)
   - [Дополнительные инструменты](#дополнительные-инструменты)
@@ -56,56 +56,56 @@
 - [Пожертвования](#пожертвования)
 - [Лицензия](#лицензия)
 
-## Особенности
-+ Разработано специально для [open.mp](https://github.com/openmultiplayer) и SA-MP разработки.
-+ Встроенная интеграция с [SAMPCTL](https://github.com/Southclaws/sampctl) для создания, запуска и управления проектами.
-+ Менеджер зависимостей для удобной установки и обновления серверных пакетов и компонентов.
-+ Встроенная поддержка Git с индикаторами состояния репозитория и историей коммитов.
-+ Маркеры истории изменений для отслеживания измененных и сохраненных строк.
-+ Автоматическое сопоставление и выделение скобок
-+ Предварительный просмотр цвета для значений RGBA и HEX прямо в редакторе.
-+ Интеграция инструмента выбора цвета для быстрой вставки цветов в код Pawn.
-+ Режим 'Разделенный редактор кода' для одновременной работы с несколькими файлами.
-+ Дерево проекта, оптимизированное для крупных проектов.
-+ Интегрированные панели вывода результатов сборки и консоли сервера.
-+ Автоматический мониторинг и обновление файлов проектов.
-+ Портативная версия (установка не требуется).
+## Características
++ Desenvolvido especialmente para o [open.mp](https://github.com/openmultiplayer) e o desenvolvimento do SA-MP.
++ Integração embutida com o [SAMPCTL](https://github.com/Southclaws/sampctl) para criar, iniciar e gerenciar projetos.
++ Gerenciador de dependências para facilitar a instalação e atualização de pacotes e componentes de servidor.
++ Suporte integrado ao Git com indicadores de status do repositório e histórico de commits.
++ Marcadores do histórico de alterações para rastrear linhas alteradas e salvas.
++ Correspondência e destaque automáticos de chaves
++ Visualização prévia de cores para valores RGBA e HEX diretamente no editor.
++ Integração da ferramenta de seleção de cores para inserir rapidamente cores no código Pawn.
++ Modo “Editor de código dividido” para trabalhar simultaneamente com vários arquivos.
++ Árvore de projeto otimizada para projetos de grande porte.
++ Painéis integrados de saída de resultados de compilação e do console do servidor.
++ Monitoramento e atualização automáticos dos arquivos do projeto.
++ Versão portátil (não requer instalação).
 
-## Почему Spawn IDE? (Сравнение)
+## Por que o Spawn IDE? (Comparação)
 
-Spawn создан с нуля, чтобы обеспечить современный, ресурсоэффективный интерфейс для разработчиков, без излишней громоздкости веб-редакторов и жестких ограничений устаревших инструментов.
+O Spawn foi criado do zero para oferecer uma interface moderna e eficiente em termos de recursos aos desenvolvedores, sem a complexidade excessiva dos editores web e as restrições rígidas das ferramentas ultrapassadas.
 
-| Характеристики и возможности | Pawno | Qawno (open.mp) | VS Code (с плагинами) | Spawn IDE |
+| Características e funcionalidades | Pawno | Qawno (open.mp) | VS Code (com plug-ins) | Spawn IDE |
 | :--- | :---: | :---: | :---: | :---: |
-| **Использование ОЗУ** | 🟢 ~10-20 MB | 🟢 ~40-60 MB | 🔴 ~300-800+ MB (Electron) | 🟢 **~30-50 MB (Нативный UI)** |
-| **Кроссплатформенная поддержка** | 🔴 Только Windows | 🔴 Только Windows | 🟢 Linux, Windows и macOS | 🟢 **Linux и Windows (Нативно)** |
-| **Git / Контроль версий** | 🔴 Отсутствует | 🔴 Отсутствует | 🟡 Через плагины (ресурсоёмкий) | 🟢 **Встроенный (легкий)** |
-| **SAMPCTL** | 🔴 Отсутствует | 🔴 Отсутствует | 🟡 С помощью сторонних плагинов | 🟢 **Встроенная интеграция** |
-| **Конвертация EOL (LF/CRLF)** | 🔴 Отсутствует | 🔴 Отсутствует | 🟢 Встроенное | 🟢 **Встроенное** |
-| **Определение кодировки** | 🔴 Отсутствует | 🔴 Отсутствует | 🟡 Обычное | 🟢 **Умное (по правилу комментария)** |
-| **Встроенная палитра цветов** | 🔴 Отсутствует | 🟢 Из коробки | 🔴 Требуется расширение | 🟢 **Из коробки** |
-| **Менеджер пакетов (Pawndex)**| 🔴 Отсутствует | 🔴 Отсутствует | 🔴 Отсутствует | 🟡 **В карте разработки (Нативно)** |
-| **IntelliSense и автодополнение** | 🔴 None | 🟡 Основной (Медленный) | 🟢 Хорошее (высокая загрузка ЦП) | 🟡 **В карте разработки (быстрое / низкая загрузка ЦП)** |
-| **Разделение редактора кода** | 🔴 Отсутствует | 🔴 Отсутствует | 🟢 Встроенный | 🟢 **Из коробки (3+ вкладки)** |
-| **Настройка и установка** | 🟢 Портативная | 🟢 Портативная | 🔴 Сложная ручная конфигурация | 🟢 **Портативная** |
+| **Uso da memória RAM** | 🟢 ~10-20 MB | 🟢 ~40-60 MB | 🔴 ~300-800+ MB (Electron) | 🟢 **~30-50 MB (Interface de usuário nativa)** |
+| **Suporte multiplataforma** | 🔴 Apenas Windows | 🔴 Apenas Windows | 🟢 Linux, Windows и macOS | 🟢 **Linux и Windows (Nativo)** |
+| **Git / Controle de versões** | 🔴 Ausente | 🔴 Ausente | 🟡 Por meio de plug-ins (consome muitos recursos) | 🟢 **Embutido (leve)** |
+| **SAMPCTL** | 🔴 Ausente | 🔴 Ausente | 🟡 Com o auxílio de plug-ins de terceiros | 🟢 **Integração embutida** |
+| **Conversão de EOL (LF/CRLF)** | 🔴 Ausente | 🔴 Ausente | 🟢 Integrado | 🟢 **Integrado** |
+| **Determinação da codificação** | 🔴 Ausente | 🔴 Ausente | 🟡 Normais | 🟢 **Inteligente (conforme a regra do comentário)** |
+| **Paleta de cores integrada** | 🔴 Ausente | 🟢 Direto da caixa | 🔴 É necessária uma ampliação | 🟢 **Direto da caixa** |
+| **Gerenciador de pacotes (Pawndex)**| 🔴 Ausente | 🔴 Ausente | 🔴 Ausente | 🟡 **No mapa de desenvolvimento (Nativo)** |
+| **IntelliSense e autocompletar** | 🔴 Ausente | 🟡 Principal (Lento) | 🟢 Bom (alta carga na CPU) | 🟡 **No mapa de desenvolvimento (rápido / baixa carga na CPU)** |
+| **Divisão do editor de código** | 🔴 Ausente | 🔴 Ausente | 🟢 Integrado | 🟢 **Direto da caixa (3 ou mais abas)** |
+| **Configuração e instalação** | 🟢 Portátil | 🟢 Portátil | 🔴 Configuração manual complexa | 🟢 **Portátil** |
 
-## Скриншоты
-### Создание проекта
+## Capturas de tela
+### Criação do projeto
 <img width="1920" height="1080" alt="Project Creation" src="https://github.com/user-attachments/assets/14b70c29-96b4-4d7d-94ff-6307cfa35cac" />
 
-### Разделение редактора кода
+### Divisão do editor de código
 <img width="1920" height="1080" alt="Split Code Editor" src="https://github.com/user-attachments/assets/f0caa6e9-607b-48f1-8b58-ae95ef12f7b1" />
 
-### Предварительный просмотр цвета в формате RGBA/HEX
+### Pré-visualização da cor no formato RGBA/HEX
 <img width="1920" height="1080" alt="Color Preview" src="https://github.com/user-attachments/assets/ae6a367a-3b04-4a23-a6ad-71ae51b0edc8" />
 
-### Менеджер зависимостей
+### Gerenciador de dependências
 <img width="1920" height="1080" alt="Dependency Manager" src="https://github.com/user-attachments/assets/e60a1bad-9a9d-43da-938d-fa94d43401b7" />
 
-### Git и Source Control
+### Git e Controle de Versões
 <img width="1920" height="1080" alt="Git and Source Control" src="https://github.com/user-attachments/assets/b6198ac3-97b4-4392-b29a-87ab6bdfc818" />
 
-### Дерево проекта
+### Árvore do projeto
 <img width="1920" height="1080" alt="Project Tree" src="https://github.com/user-attachments/assets/c942516b-6e18-406d-b9be-cb8e24d54a94" />
 
 ## Установка
