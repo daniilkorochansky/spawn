@@ -5,11 +5,11 @@
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
 <div align="center">
-  [<a href="https://github.com/daniilkorochansky/spawn">English</a>
-  /
+  <a href="https://github.com/daniilkorochansky/spawn">English</a>
+  |
   <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_ru.md">Русский</a>
-  /
-  Português]
+  |
+  Português
 </div>
 
 # Spawn
