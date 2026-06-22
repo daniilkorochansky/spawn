@@ -153,9 +153,9 @@ You're ready to develop open.mp and SA-MP servers with Spawn.
 ### Working with Individual Files
 Spawn can also be used without opening a project.
 
-To edit a single file:
+To edit a multiple file:
 1. Select 'File' → 'Open File...'.
-2. Choose a Pawn source file, include file, or configuration file.
+2. Choose a files.
 3. Start editing immediately.
 
 When working with individual files, editor features such as syntax highlighting, color previews, brace matching, split view, and change history markers remain fully available.
@@ -163,18 +163,46 @@ When working with individual files, editor features such as syntax highlighting,
 Project-specific functionality such as the Project Tree, Git integration, Dependency Manager, and SAMPCTL tools requires an opened project.
 
 ### Encoding Detection
-Spawn automatically detects file encoding when opening files.
 
-In some cases, automatic detection of Windows-1251 (CP1251) may be inaccurate.
+Spawn automatically detects file encodings when opening files.
+
+For Pawn source files (`.pwn` and `.inc`), you can explicitly specify the encoding using an encoding directive at the beginning of the file:
+
+```pawn
+// -*- coding: cp1251 -*-
+```
+
+When present, Spawn will use the specified encoding when opening and saving the file.
+
+If no encoding directive is found, Spawn will attempt to detect the file encoding automatically.
+
+#### Reopening Files with a Different Encoding
+
+In some cases, automatic detection may not correctly identify the file encoding.
 
 If a file is displayed incorrectly, you can reopen it using a different encoding:
-Select in 'Edit' → 'Encoding' → 'Reopen'
 
-Supported encodings include:
-+ UTF-8
-+ Windows-1251 (CP1251)
+`Edit → Encoding → Reopen`
 
-*This does not modify the file on disk and only affects how the file is displayed in the editor.*
+This operation does not modify the file on disk and only affects how the file is displayed in the editor.
+
+#### Supported Encodings
+
+* UTF-8 (Unicode)
+* Windows-1250 (Central European)
+* Windows-1251 (Cyrillic)
+* Windows-1252 (Western European)
+* Windows-1253 (Greek)
+* Windows-1254 (Turkish)
+* Windows-1255 (Hebrew)
+* Windows-1256 (Arabic)
+* Windows-1257 (Baltic)
+
+#### Default Pawn Encoding
+
+You can configure the default encoding used for newly created Pawn source files.
+
+When a new `.pwn` or `.inc` file is created, Spawn can automatically insert an encoding directive based on the selected default encoding.
 
 ## Development
 ### Requirements
