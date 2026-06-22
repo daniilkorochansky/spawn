@@ -677,21 +677,20 @@ class CustomEditorTab(gui.EditorTabPanel):
                 if not binary_data:
                     self.m_scintilla_Editor.SetCodePage(wx.stc.STC_CP_UTF8)
                     self.m_scintilla_Editor.SetText("")
-                    self.current_encoding = "utf-8"
-                    self.native_eol = "CRLF"
-                    self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_CRLF)
-                    return
+                    
+                    if PlatformUtils.is_pawn_file(path):
+                        self.current_encoding = self.ide_cfg.get("system.pawn.default_encoding","cp1251")
+                    else:
+                        self.current_encoding = "utf-8"
 
-##            try:
-##                text_content = binary_data.decode("utf-8")
-##                self.current_encoding = "utf-8"
-##            except UnicodeDecodeError:
-##                try:
-##                    text_content = binary_data.decode("cp1251")
-##                    self.current_encoding = "cp1251"
-##                except UnicodeDecodeError:
-##                    text_content = binary_data.decode("utf-8", errors="replace")
-##                    self.current_encoding = "utf-8" #or cp1251
+                        
+                    self.native_eol = PlatformUtils.default_eol()
+                    if self.native_eol == "CRLF":
+                        self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_CRLF)
+                    else:
+                        self.m_scintilla_Editor.SetEOLMode(stc.STC_EOL_LF)
+                        
+                    return
 
             text_content, self.current_encoding = (PlatformUtils.decode_text(binary_data))
             

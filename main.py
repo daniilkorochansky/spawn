@@ -67,6 +67,26 @@ from core.git_reset_commit_worker import GitResetCommitWorker
 def global_exception_handler(exc_type, exc_value, exc_traceback):
     SpawnLogger.exception("".join(traceback.format_exception(exc_type,exc_value,exc_traceback)))
 
+class SpawnFileDropTarget(wx.FileDropTarget):
+    def __init__(self, main_frame):
+        super().__init__()
+        self.main_frame = main_frame
+
+    def OnDropFiles(self, x, y, filenames):
+        for file_path in filenames:
+            if not os.path.isfile(file_path):
+                continue
+            
+            if os.path.isfile(file_path):
+                if self.main_frame.try_register_tool(file_path):
+                    continue
+                elif Path(file_path).suffix.lower() in (".exe", ".jpg", ".png", ".mp4", ".mp3", ".ogg", ".avi", ".wav", ".bin", ".iso", ".md"):
+                    continue
+                
+                self.main_frame.open_file_in_tab(file_path)
+
+        return True
+
 class SpawnIDE(SpawnFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -109,6 +129,7 @@ class SpawnIDE(SpawnFrame):
         self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSED, self.on_tab_closed)
         
         self.Bind(wx.EVT_MENU, self.on_save_current_file, id=wx.ID_SAVE)
+        self.Bind(wx.EVT_TOOL, self.on_save_current_file, id=wx.ID_TOOLBAR_SAVE)
         self.Bind(wx.EVT_MENU, self.on_save_all_files, id=wx.ID_SAVE_ALL)
         self.Bind(wx.EVT_TOOL, self.on_save_all_files, id=wx.ID_TOOLBAR_SAVE_ALL)
         self.Bind(wx.EVT_MENU, self.on_open_single_file, id=wx.ID_OPEN_FILE)
@@ -137,7 +158,24 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_menu_convert_eol_lf, id=wx.ID_EOL_LF)
 
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_utf8, id=wx.ID_REOPEN_TO_UTF8)
+        self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1250, id=wx.ID_REOPEN_TO_CP1250)
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1251, id=wx.ID_REOPEN_TO_CP1251)
+        self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1252, id=wx.ID_REOPEN_TO_CP1252)
+        self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1253, id=wx.ID_REOPEN_TO_CP1253)
+        self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1254, id=wx.ID_REOPEN_TO_CP1254)
+        self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1255, id=wx.ID_REOPEN_TO_CP1255)
+        self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1256, id=wx.ID_REOPEN_TO_CP1256)
+        self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1257, id=wx.ID_REOPEN_TO_CP1257)
+
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_utf8, id=wx.ID_SET_TO_UTF8)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1250, id=wx.ID_SET_TO_CP1250)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1251, id=wx.ID_SET_TO_CP1251)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1252, id=wx.ID_SET_TO_CP1252)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1253, id=wx.ID_SET_TO_CP1253)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1254, id=wx.ID_SET_TO_CP1254)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1255, id=wx.ID_SET_TO_CP1255)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1256, id=wx.ID_SET_TO_CP1256)
+        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1257, id=wx.ID_SET_TO_CP1257)
         
         self.Bind(wx.EVT_TOOL, self.on_build_project_execute, id=wx.ID_TOOLBAR_BUILD_PROJECT)
         self.Bind(wx.EVT_MENU, self.on_build_project_execute, id=wx.ID_BUILD_PROJECT)
@@ -195,41 +233,84 @@ class SpawnIDE(SpawnFrame):
             "pawn_inc": self.idx_pawn_inc
             }
         
-##        #InfoBar
-##        infobar = self.m_infoCtrl
-##        if infobar:
-##            self.ID_INFOBAR_SETUP_SAMPCTL = 9601
-##            self.ID_INFOBAR_SETUP_GIT = 9602
-##
-##            infobar_sizer = infobar.GetSizer()
-##            if infobar_sizer:
-##                self.btn_sampctl = wx.Button(infobar, self.ID_INFOBAR_SETUP_SAMPCTL, _(u"Browse..."))
-##                self.btn_git = wx.Button(infobar, self.ID_INFOBAR_SETUP_GIT, _(u"Browse..."))
-##                self.btn_sampctl.Hide()
-##                self.btn_git.Hide()
-##
-##                infobar_sizer.Add(self.btn_sampctl, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-##                infobar_sizer.Add(self.btn_git, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-##                
-##            #Deleting close button in InfoBar
-##            for child in infobar.GetChildren():
-##                if isinstance(child, wx.BitmapButton):
-##                    child.Hide()
-##                    if infobar_sizer:
-##                        infobar_sizer.Detach(child)
-##                    break
-##                
-##            infobar.Layout()
-##            
-##            infobar.Bind(wx.EVT_BUTTON, self.on_infobar_action_click, id=self.ID_INFOBAR_SETUP_SAMPCTL)
-##            infobar.Bind(wx.EVT_BUTTON, self.on_infobar_action_click, id=self.ID_INFOBAR_SETUP_GIT)
-##        #-------
 
         self.Show()
+
+        self.SetDropTarget(SpawnFileDropTarget(self))
         
         self.toggle_project_ui_state(False)
         self.update_button_is_no_tabs()
         self.update_git_ui_controls_state()
+
+    def try_register_tool(self, file_path):
+        file_name = Path(file_path).name.lower()
+        
+        if file_name in ("git.exe", "git"):
+            result = wx.MessageBox(
+                _("Git executable detected.\n\nUse this executable as the default Git path?"),
+                _("Git Detected"),
+                wx.YES_NO | wx.ICON_QUESTION,
+                self
+            )
+
+            if result == wx.YES:
+                self.ide_cfg.set("system.git.executable_path",PlatformUtils.normalize_path(file_path))
+                self.check_environment_on_startup()
+
+            return True
+
+        if file_name in ("sampctl.exe", "sampctl"):
+
+            result = wx.MessageBox(
+                _("SAMPCTL executable detected.\n\nUse this executable as the default SAMPCTL path?"),
+                _("SAMPCTL Detected"),
+                wx.YES_NO | wx.ICON_QUESTION,
+                self
+            )
+
+            if result == wx.YES:
+                self.ide_cfg.set("system.sampctl.executable_path",PlatformUtils.normalize_path(file_path))
+                self.check_environment_on_startup()
+                
+            return True
+
+        return False
+
+    def on_menu_set_enc_utf8(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "utf-8")
+        self.item_set_to_utf8.Check(True)
+
+    def on_menu_set_enc_cp1250(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1250")
+        self.item_set_to_cp1250.Check(True)
+
+    def on_menu_set_enc_cp1251(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1251")
+        self.item_set_to_cp1251.Check(True)
+
+    def on_menu_set_enc_cp1252(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1252")
+        self.item_set_to_cp1252.Check(True)
+
+    def on_menu_set_enc_cp1253(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1253")
+        self.item_set_to_cp1253.Check(True)
+
+    def on_menu_set_enc_cp1254(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1254")
+        self.item_set_to_cp1254.Check(True)
+
+    def on_menu_set_enc_cp1255(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1255")
+        self.item_set_to_cp1255.Check(True)
+
+    def on_menu_set_enc_cp1256(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1256")
+        self.item_set_to_cp1256.Check(True)
+
+    def on_menu_set_enc_cp1257(self, event):
+        self.ide_cfg.set("system.pawn.default_encoding", "cp1257")
+        self.item_set_to_cp1257.Check(True)
 
     def on_bug_report_click(self, event):
         dlg = BugReportDialog(self)
@@ -423,6 +504,41 @@ samp.ban
         tab = self.m_auinotebook_Main.GetCurrentPage()
         if tab:
             self.reopen_with_encoding(tab, "cp1251")
+
+    def on_menu_reopen_enc_cp1252(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            self.reopen_with_encoding(tab, "cp1252")
+
+    def on_menu_reopen_enc_cp1253(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            self.reopen_with_encoding(tab, "cp1253")
+
+    def on_menu_reopen_enc_cp1254(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            self.reopen_with_encoding(tab, "cp1254")
+
+    def on_menu_reopen_enc_cp1255(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            self.reopen_with_encoding(tab, "cp1255")
+
+    def on_menu_reopen_enc_cp1256(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            self.reopen_with_encoding(tab, "cp1256")
+
+    def on_menu_reopen_enc_cp1257(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            self.reopen_with_encoding(tab, "cp1257")
+
+    def on_menu_reopen_enc_cp1250(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            self.reopen_with_encoding(tab, "cp1250")
             
 
     def on_set_reset_settings_click(self, event):
@@ -635,14 +751,34 @@ samp.ban
     def check_environment_on_startup(self):
         self.SendSizeEvent()
         self.Layout()
-        
-##        infobar = self.m_infoCtrl
-##        if not infobar:
-##            return
-##        if self.btn_sampctl:
-##            self.btn_sampctl.Hide()
-##        if self.btn_git:
-##            self.btn_git.Hide()
+
+        current_default_enc = self.ide_cfg.get("system.pawn.default_encoding","cp1251")
+        if current_default_enc == "utf-8":
+            self.item_set_to_utf8.Check(True)
+
+        elif current_default_enc == "cp1250":
+            self.item_set_to_cp1250.Check(True)
+
+        elif current_default_enc == "cp1251":
+            self.item_set_to_cp1251.Check(True)
+
+        elif current_default_enc == "cp1252":
+            self.item_set_to_cp1252.Check(True)
+
+        elif current_default_enc == "cp1253":
+            self.item_set_to_cp1253.Check(True)
+
+        elif current_default_enc == "cp1254":
+            self.item_set_to_cp1254.Check(True)
+
+        elif current_default_enc == "cp1255":
+            self.item_set_to_cp1255.Check(True)
+
+        elif current_default_enc == "cp1256":
+            self.item_set_to_cp1256.Check(True)
+
+        elif current_default_enc == "cp1257":
+            self.item_set_to_cp1257.Check(True)
 
         sampctl_path = self.ide_cfg.get("system.sampctl.executable_path", "")
         sampctl_ready = bool(sampctl_path and os.path.exists(sampctl_path) and os.path.isfile(sampctl_path))
@@ -1965,11 +2101,15 @@ samp.ban
                 full_new_path = os.path.join(parent_dir, new_file_name)
                 ext = os.path.splitext(new_file_name)[-1].lower()
 
-                file_encoding = "utf-8"
-                
+                if PlatformUtils.is_pawn_file(full_new_path):
+                    file_encoding = self.ide_cfg.get("system.pawn.default_encoding","cp1251")
+                else:
+                    file_encoding = "utf-8"
 
                 if ext in ['.pwn', '.inc']:
-                    default_content = ""
+                    file_eol = PlatformUtils.default_eol()
+                    real_eol = PlatformUtils.eol_string(file_eol)
+                    default_content = (f"// -*- coding: {file_encoding} -*-{real_eol}{real_eol}")
                 elif ext == '.json':
                     default_content = ""
                 else:
@@ -1998,12 +2138,13 @@ samp.ban
     def on_open_single_file(self, event):
         with wx.FileDialog(self, _(u"Open file..."),
                            wildcard="All Files (*.pwn;*.inc;*.json;*.ini;*.cfg;*.yaml;*.txt)|*.pwn;*.inc;*.json;*.ini;*.cfg;*.yaml;*.txt|Pawn Files (*.pwn;*.inc)|*.pwn;*.inc|JSON File (*.json)|*.json|INI File (*.ini)|*.ini|Configuration File (*.cfg)|*.cfg|Configuration File (*.yaml)|*.yaml|Text File (*.txt)|*.txt",
-                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
 
-            chosen_file_path = fileDialog.GetPath()
-            self.open_file_in_tab(chosen_file_path)
+            chosen_file_path = fileDialog.GetPaths()
+            for path in chosen_file_path:
+                self.open_file_in_tab(path)
 
     def on_close_project_click(self, event):
         if not self.current_project_path:
@@ -2377,7 +2518,10 @@ samp.ban
         has_pages = (self.m_auinotebook_Main.GetPageCount() > 0)
         button_ids = [wx.ID_RESET_ZOOM, wx.ID_GO_TO_LINE, wx.ID_SAVE_ALL, wx.ID_TOOLBAR_SAVE_ALL, wx.ID_FIND_REPLACE,
                       wx.ID_SAVE, wx.ID_EOL_CRLF, wx.ID_REOPEN_TO_UTF8, wx.ID_REOPEN_TO_CP1251,
-                      wx.ID_EOL_LF, wx.ID_ZOOM_IN, wx.ID_ZOOM_OUT, wx.ID_CUT, wx.ID_COPY, wx.ID_PASTE, wx.ID_UNDO, wx.ID_REDO
+                      wx.ID_EOL_LF, wx.ID_ZOOM_IN, wx.ID_ZOOM_OUT, wx.ID_CUT, wx.ID_COPY,
+                      wx.ID_PASTE, wx.ID_UNDO, wx.ID_REDO, wx.ID_REOPEN_TO_CP1252, wx.ID_REOPEN_TO_CP1253,
+                      wx.ID_REOPEN_TO_CP1254, wx.ID_REOPEN_TO_CP1255, wx.ID_REOPEN_TO_CP1256, wx.ID_REOPEN_TO_CP1257,
+                      wx.ID_REOPEN_TO_CP1250, wx.ID_TOOLBAR_SAVE
                       ]
         for element_id in button_ids:
             menu_item = self.GetMenuBar().FindItemById(element_id)
@@ -2530,15 +2674,28 @@ samp.ban
                 disk_text = disk_text.replace("\r", "\n")
                 disk_text = disk_text.replace("\n", real_eol)
 
-                file_enc = getattr(active_tab, "current_encoding", "utf-8")
+                declared_enc = None
+
+                if PlatformUtils.is_pawn_file(active_tab.file_path):
+                    declared_enc = (PlatformUtils.detect_declared_encoding_from_text(disk_text))
+
+                file_enc = (declared_enc or getattr(active_tab,"current_encoding","utf-8"))
+                active_tab.current_encoding = file_enc
+
+                
 
                 raw_bytes = PlatformUtils.encode_text(disk_text,file_enc)
                 
                 if raw_bytes is not None:
                     with open(active_tab.file_path, "wb") as f:
                         f.write(raw_bytes)
+
+                    enc_status = file_enc.upper()
+                    eol_status = file_eol.upper()
+                    self.m_statusBar.SetStatusText(f"{enc_status} | {eol_status}", 2)
+
                 else:
-                    confirm_enc = wx.MessageBox(_(u"The current file contains invalid characters that cannot be saved in CP1251.\n\nConvert to UTF-8?"), _(u"Warning"), wx.YES_NO|wx.ICON_WARNING,self)
+                    confirm_enc = wx.MessageBox(_(u"The current file contains invalid characters that cannot be saved in {enc}.\n\nConvert to UTF-8?").format(enc=file_enc.upper()), _(u"Warning"), wx.YES_NO|wx.ICON_WARNING,self)
                     if confirm_enc == wx.NO:
                         return
                     chosen_encoding = "utf-8"
@@ -2576,7 +2733,11 @@ samp.ban
                         return
                     actual_path = saveDialog.GetPath()
 
-                    chosen_encoding = "utf-8"
+                    if PlatformUtils.is_pawn_file(actual_path):
+                        chosen_encoding = self.ide_cfg.get("system.pawn.default_encoding","cp1251")
+                    else:
+                        chosen_encoding = "utf-8"
+                        
                     active_tab.native_eol = (PlatformUtils.default_eol())
                     if active_tab.native_eol == "CRLF":
                         active_tab.m_scintilla_Editor.SetEOLMode(wx.stc.STC_EOL_CRLF)
@@ -2624,7 +2785,7 @@ samp.ban
 
                 for i in range(self.m_auinotebook_Main.GetPageCount()):
                     loop_tab = self.m_auinotebook_Main.GetPage(i)
-                    if hasattr(loop_tab, "apply_pawn_styles") and loop_tab.file_path.endswith((".pwn", ".inc")):
+                    if hasattr(loop_tab, "apply_pawn_styles") and PlatformUtils.is_pawn_file(loop_tab.file_path):
                         loop_tab.apply_pawn_styles()
                     elif hasattr(loop_tab, "apply_json_styles") and loop_tab.file_path.endswith(".json"):
                         loop_tab.apply_json_styles()

@@ -28,6 +28,60 @@ import subprocess
 import tempfile
 import os
 
+def test_detect_declared_encoding_cp1251():
+    data = b"// coding: cp1251\nmain(){}"
+    assert (PlatformUtils.detect_declared_encoding(data) == "cp1251")
+
+def test_detect_declared_encoding_utf8():
+    data = b"// coding: utf-8\nmain(){}"
+    assert (PlatformUtils.detect_declared_encoding(data) == "utf-8")
+
+def test_detect_declared_encoding_none():
+    data = b"main(){}"
+    assert (PlatformUtils.detect_declared_encoding(data) is None)
+
+def test_detect_declared_encoding_invalid():
+    data = b"// coding: abracadabra\n"
+    assert (PlatformUtils.detect_declared_encoding(data) is None)
+
+def test_detect_declared_encoding_not_comment():
+    data = b'printf("coding: cp1251");'
+    assert (PlatformUtils.detect_declared_encoding(data) is None)
+
+def test_detect_declared_encoding_from_text():
+    text = "// coding: cp1251\nmain(){}"
+    assert (PlatformUtils.detect_declared_encoding_from_text(text) == "cp1251")
+
+def test_detect_declared_encoding_from_text_invalid():
+    assert (PlatformUtils.detect_declared_encoding_from_text(None) is None)
+
+def test_is_supported_encoding():
+    assert PlatformUtils.is_supported_encoding("utf-8")
+
+def test_is_supported_encoding_invalid():
+    assert not PlatformUtils.is_supported_encoding("utf-16")
+
+def test_is_supported_encoding_none():
+    assert not PlatformUtils.is_supported_encoding(None)
+
+def test_is_pawn_file_inc():
+    assert PlatformUtils.is_pawn_file("core.inc")
+
+def test_is_pawn_file_json():
+    assert not PlatformUtils.is_pawn_file("pawn.json")
+
+def test_encode_text_utf8():
+    data = PlatformUtils.encode_text("Привет","utf-8")
+    assert isinstance(data,bytes)
+
+def test_is_supported_encoding_case():
+    assert PlatformUtils.is_supported_encoding("UTF-8")
+    assert PlatformUtils.is_supported_encoding("Cp1251")
+
+def test_encode_text_cp1251():
+    data = PlatformUtils.encode_text("Привет","cp1251")
+    assert isinstance(data,bytes)
+    
 def test_decode_utf8():
     text, enc = (PlatformUtils.decode_text("Привет".encode("utf-8")))
     assert text == "Привет"

@@ -26,8 +26,82 @@ import sys
 import subprocess
 import os
 import shutil
+import re
+import codecs
+
+CODING_RE = re.compile(rb'^\s*//.*?coding\s*:\s*([a-zA-Z0-9_\-]+)',re.IGNORECASE | re.MULTILINE)
 
 class PlatformUtils:
+    SUPPORTED_ENCODINGS = (
+    "utf-8",
+    "cp1251",
+    "cp1252",
+    "cp1254",
+    "cp1250",
+    "cp1257",
+    "cp1253",
+    "cp1255",
+    "cp1256",
+    )
+    
+    @staticmethod
+    def detect_declared_encoding_from_text(text):
+        if not isinstance(text, str):
+            return None
+
+        lines = text.splitlines()[:5]
+        for line in lines:
+            if not line.lstrip().startswith("//"):
+                continue
+
+            match = re.search(r'^\s*//.*?coding\s*:\s*([a-zA-Z0-9_\-]+)',line,re.IGNORECASE)
+
+            if not match:
+                continue
+
+            try:
+                encoding = codecs.lookup(match.group(1).strip()).name
+
+            except LookupError:
+                return None
+
+            if not PlatformUtils.is_supported_encoding(encoding):
+                return None
+
+            return encoding
+
+        return None
+
+    @staticmethod
+    def is_pawn_file(path):
+        return Path(path).suffix.lower() in (".pwn",".inc")
+
+    @staticmethod
+    def is_supported_encoding(encoding):
+        if not isinstance(encoding, str):
+            return False
+
+        return (encoding.lower() in PlatformUtils.SUPPORTED_ENCODINGS)
+
+    @staticmethod
+    def detect_declared_encoding(binary_data):
+
+        head = b"\n".join(binary_data.splitlines()[:5])
+        match = CODING_RE.search(head)
+        if not match:
+            return None
+        
+        encoding = (match.group(1).decode("ascii").strip().lower())
+        if not PlatformUtils.is_supported_encoding(encoding):
+            return None
+
+        try:
+            encoding = (match.group(1).decode("ascii").strip().lower())
+
+            return codecs.lookup(encoding).name
+
+        except (LookupError,UnicodeDecodeError):
+            return None
 
     @staticmethod
     def get_config_dir():
@@ -52,25 +126,34 @@ class PlatformUtils:
 
     @staticmethod
     def decode_text(binary_data):
-        try:
-            return (binary_data.decode("utf-8"),"utf-8")
+        declared = (PlatformUtils.detect_declared_encoding(binary_data))
+        if declared:
 
-        except UnicodeDecodeError:
             try:
-                return (binary_data.decode("cp1251"),"cp1251")
+                return (binary_data.decode(declared),declared)
+
+            except (LookupError,UnicodeDecodeError):
+                pass
+
+        for encoding in PlatformUtils.SUPPORTED_ENCODINGS:
+            try:
+                return (binary_data.decode(encoding),encoding)
 
             except UnicodeDecodeError:
-                return (binary_data.decode("utf-8",errors="replace"),"utf-8")
+                continue
+
+        return (binary_data.decode("utf-8",errors="replace"),"utf-8")
 
     @staticmethod
-    def encode_text(text,encoding):
+    def encode_text(text, encoding):
         if not isinstance(text, str):
             text = str(text)
+
         try:
             return text.encode(encoding,errors="strict")
 
-        except UnicodeEncodeError:
-            return text.encode("utf-8",errors="replace")
+        except (LookupError,UnicodeEncodeError):
+            return None
 
     @staticmethod
     def default_eol():

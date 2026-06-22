@@ -36,6 +36,9 @@ class ConfigManager:
 
         self._schema = {
             "system": {
+                "pawn": {
+                    "default_encoding": ("cp1251", str)
+                    },
                 "git": {
                     "enable": (False, bool),
                     "executable_path": ("", str)

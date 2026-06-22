@@ -91,13 +91,30 @@ wx.ID_RUN_STOP_SERVER = 6063
 wx.ID_SELECT_ALL = 6066
 wx.ID_RESET_SETTINGS = 6067
 
-wx.ID_REOPEN_TO_UTF8 = 6068
-wx.ID_REOPEN_TO_CP1251 = 6069
-wx.ID_CONVERT_TO_UTF8 = 6070
-wx.ID_CONVERT_TO_CP1251 = 6071
-
 wx.ID_LANGUAGE_ENGLISH = 6072
 wx.ID_LANGUAGE_RUSSIAN = 6073
+
+wx.ID_REOPEN_TO_UTF8 = 6068
+wx.ID_REOPEN_TO_CP1251 = 6069
+wx.ID_REOPEN_TO_CP1250 = 6070
+wx.ID_REOPEN_TO_CP1252 = 6071
+wx.ID_REOPEN_TO_CP1253 = 6079
+wx.ID_REOPEN_TO_CP1254 = 6075
+wx.ID_REOPEN_TO_CP1255 = 6076
+wx.ID_REOPEN_TO_CP1256 = 6077
+wx.ID_REOPEN_TO_CP1257 = 6078
+
+wx.ID_SET_TO_UTF8 = 6080
+wx.ID_SET_TO_CP1251 = 6081
+wx.ID_SET_TO_CP1250 = 6082
+wx.ID_SET_TO_CP1252 = 6083
+wx.ID_SET_TO_CP1253 = 6084
+wx.ID_SET_TO_CP1254 = 6085
+wx.ID_SET_TO_CP1255 = 6086
+wx.ID_SET_TO_CP1256 = 6087
+wx.ID_SET_TO_CP1257 = 6088
+
+wx.ID_TOOLBAR_SAVE = 6089
 
 wx.ID_BUG_REPORT = 6074
 
@@ -128,9 +145,11 @@ class SpawnFrame ( wx.Frame ):
         
         self.m_tool_NewFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_NEW_FILE, _(u"New File"), wx.Bitmap(os.path.join(self.icons_folder,"tb_file_new.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"New File"), wx.EmptyString, None )
         
-        self.m_tool_OpenFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_OPEN_FILE, _(u"Open File..."), wx.Bitmap(os.path.join(self.icons_folder,"tb_project_open.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Open File..."), wx.EmptyString, None )
+        self.m_tool_OpenFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_OPEN_FILE, _(u"Open File..."), wx.Bitmap(os.path.join(self.icons_folder,"tb_open.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Open File..."), wx.EmptyString, None )
 
-        self.m_tool_SaveAll = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_SAVE_ALL, _(u"Save All"), wx.Bitmap(os.path.join(self.icons_folder,"tb_project_saveall.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Save All"), wx.EmptyString, None )
+        self.m_tool_Save = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_SAVE, _(u"Save"), wx.Bitmap(os.path.join(self.icons_folder,"tb_save.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Save"), wx.EmptyString, None )
+
+        self.m_tool_SaveAll = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_SAVE_ALL, _(u"Save All"), wx.Bitmap(os.path.join(self.icons_folder,"tb_saveall.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Save All"), wx.EmptyString, None )
 
         self.m_auiToolBar.AddSeparator()
 
@@ -219,8 +238,15 @@ class SpawnFrame ( wx.Frame ):
         encoding_submenu = wx.Menu()
         self.m_edit.AppendSubMenu(encoding_submenu, _(u"Encoding"), wx.EmptyString)
         encoding_reopen_submenu = wx.Menu()
-        self.item_reopen_to_utf8 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_UTF8, u"UTF-8")
-        self.item_reopen_to_cp1251 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1251, u"Windows-1251 (CP1251)")
+        self.item_reopen_to_utf8 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_UTF8, u"UTF-8 (Unicode)")
+        self.item_reopen_to_cp1250 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1250, u"Windows-1250 (Central European)")
+        self.item_reopen_to_cp1251 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1251, u"Windows-1251 (Cyrillic)")
+        self.item_reopen_to_cp1252 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1252, u"Windows-1252 (Western European)")
+        self.item_reopen_to_cp1253 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1253, u"Windows-1253 (Greek)")
+        self.item_reopen_to_cp1254 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1254, u"Windows-1254 (Turkish)")
+        self.item_reopen_to_cp1255 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1255, u"Windows-1255 (Hebrew)")
+        self.item_reopen_to_cp1256 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1256, u"Windows-1256 (Arabic)")
+        self.item_reopen_to_cp1257 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1257, u"Windows-1257 (Baltic)")
         encoding_submenu.AppendSubMenu(encoding_reopen_submenu, _(u"Reopen"), wx.EmptyString)
         
 ##        encoding_convert_submenu = wx.Menu()
@@ -313,6 +339,22 @@ class SpawnFrame ( wx.Frame ):
 ##        self.m_tools.AppendSubMenu(language_submenu, _(u"Language"), wx.EmptyString)
 
 ##        self.m_tools.AppendSeparator()
+
+        def_encoding_submenu = wx.Menu()
+        self.m_tools.AppendSubMenu(def_encoding_submenu, _(u"Default Encoding"), wx.EmptyString)
+        def_encoding_set_submenu = wx.Menu()
+        self.item_set_to_utf8 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_UTF8, u"UTF-8 (Unicode)")
+        self.item_set_to_cp1250 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1250, u"Windows-1250 (Central European)")
+        self.item_set_to_cp1251 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1251, u"Windows-1251 (Cyrillic)")
+        self.item_set_to_cp1252 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1252, u"Windows-1252 (Western European)")
+        self.item_set_to_cp1253 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1253, u"Windows-1253 (Greek)")
+        self.item_set_to_cp1254 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1254, u"Windows-1254 (Turkish)")
+        self.item_set_to_cp1255 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1255, u"Windows-1255 (Hebrew)")
+        self.item_set_to_cp1256 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1256, u"Windows-1256 (Arabic)")
+        self.item_set_to_cp1257 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1257, u"Windows-1257 (Baltic)")
+        def_encoding_submenu.AppendSubMenu(def_encoding_set_submenu, u"Pawn", wx.EmptyString)
+
+        self.m_tools.AppendSeparator()
         
         self.m_menuItem_Settings = wx.MenuItem( self.m_tools, wx.ID_SETTINGS, _(u"Settings..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_tools.Append( self.m_menuItem_Settings )
