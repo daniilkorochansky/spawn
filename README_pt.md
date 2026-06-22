@@ -34,16 +34,16 @@ Por ser portátil, extensível e voltado para o aumento da produtividade, o Spaw
   - [Gerenciador de dependências](#gerenciador-de-dependências)
   - [Git e Controle de Versões (Source Control)](#git-e-controle-de-versões)
   - [Árvore do projeto](#árvore-do-projeto)
-- [Установка](#установка)
-  - [Скачивание](#скачивание)
-  - [Дополнительные инструменты](#дополнительные-инструменты)
-- [Быстрый старт](#быстрый-старт)
-  - [Создание проекта](#создание-проекта)
-  - [Управление зависимостями](#управление-зависимостями)
-  - [Использование Git](#использование-git)
-  - [Сборка и запуск сервера](#сборка-и-запуск-сервера)
-  - [Работа с отдельными файлами](#работа-с-отдельными-файлами)
-  - [Определение кодировки](#определение-кодировки)
+- [Instalação](#instalação)
+  - [Download](#download)
+  - [Ferramentas adicionais](#ferramentas-adicionais)
+- [Introdução rápida](#introdução-rápida)
+  - [Criação do projeto](#criação-do-projeto)
+  - [Gerenciamento de dependências](#gerenciamento-de-dependências)
+  - [Como usar o Git](#como-usar-o-git)
+  - [Compilação e inicialização do servidor](#compilação-e-inicialização-do-servidor)
+  - [Trabalho com arquivos individuais](#trabalho-com-arquivos-individuais)
+  - [Determinação da codificação](#determinação-da-codificação)
 - [Разработка](#разработка)
   - [Требования](#требования)
   - [Клонирование репозитория](#клонирование-репозитория)
@@ -108,62 +108,62 @@ O Spawn foi criado do zero para oferecer uma interface moderna e eficiente em te
 ### Árvore do projeto
 <img width="1920" height="1080" alt="Project Tree" src="https://github.com/user-attachments/assets/c942516b-6e18-406d-b9be-cb8e24d54a94" />
 
-## Установка
-### Скачивание
-1. Скачайте последнюю версию на странице 'Release'.
-2. Распакуйте архив в любое место.
-3. Запустите 'Spawn.exe'.
+## Instalação
+### Download
+1. Baixe a versão mais recente na página “Release”.
+2. Descompacte o arquivo em qualquer local.
+3. Execute o ‘Spawn.exe’.
 
-### Дополнительные инструменты
-Чтобы воспользоваться всеми функциями Spawn, вы также можете установить:
+### Ferramentas adicionais
+Para aproveitar todos os recursos do Spawn, você também pode instalar:
 + Git
 + [SAMPCTL](https://github.com/Southclaws/sampctl)
 
-Эти инструменты можно настроить позже в настройках.
+Essas ferramentas podem ser configuradas posteriormente nas configurações.
 
-## Быстрый старт
-### Создание проекта
-1. Выберите 'File' → 'New Project...'.
-2. Введите название проекта и выберите его местоположение.
-3. После нажатия кнопки 'Create' запустится инструмент командной строки SAMPCTL. Для завершения создания проекта следуйте инструкциям на экране.
-4. По завершении процесса закройте утилиту командной строки SAMPCTL. Spawn автоматически откроет новый проект.
+## Introdução rápida
+### Criação do projeto
+1. Selecione 'File' → 'New project...'.
+2. Digite o nome do projeto e selecione sua localização.
+3. Ao clicar no botão “Create”, a ferramenta de linha de comando SAMPCTL será iniciada. Para concluir a criação do projeto, siga as instruções exibidas na tela.
+4. Ao concluir o processo, feche o utilitário de linha de comando SAMPCTL. O Spawn abrirá automaticamente um novo projeto.
 
-### Управление зависимостями
-1. Выберите 'Project' → 'Dependency Manager...'.
-2. Введите имя пакета в поле 'Dependency'.
-3. Нажмите 'Install'.
+### Gerenciamento de dependências
+1. Selecione 'Project' → 'Dependency Manager...'.
+2. Digite o nome do pacote no campo “Dependency”.
+3. Clique em 'Install'.
 
-+ Чтобы удалить зависимость, выберите нужную из списка и нажмите 'Uninstall'.
-+ Чтобы проверить что все зависимости в порядке, нажмите кнопку под названием "Ensure'.
++ Para remover uma dependência, selecione a desejada na lista e clique em 'Uninstall'.
++ Para verificar se todas as dependências estão corretas, clique no botão chamado 'Ensure'.
 
-### Использование Git
-1. Щелкните правой кнопкой мыши по корневой папке в дереве проекта → выберите 'Initialize Repository'. (Если репозиторий еще не был на сервере)
-2. Создайте свой первый коммит.
-3. Отслеживайте изменения прямо из Spawn.
+### Como usar o Git
+1. Clique com o botão direito do mouse na pasta raiz na árvore do projeto → selecione “Initialize Repository”. (Caso o repositório ainda não esteja no servidor)
+2. Crie seu primeiro commit.
+3. Acompanhe as alterações diretamente no Spawn.
 
-Если репозиторий уже находится на сервере, Spawn автоматически его обнаружит (при условии, что в настройках включена поддержка Git)
+Se o repositório já estiver no servidor, o Spawn o detectará automaticamente (desde que o suporte ao Git esteja ativado nas configurações).
 
-### Сборка и запуск сервера
-1. Откройте корневую папку с сервером 'File' → 'Open Server Folder...' (Cервер обязательно должен содержать файл 'pawn.json' сгенерированный через [SAMPCTL](https://github.com/Southclaws/sampctl))
-2. Соберите ваш сервер 'Build' → 'Build Server' или нажмите на соотвествующую кнопку в панели инструментов.
-3. Запустите ваш сервер 'Server' → 'Run / Stop Server' или нажмите на соотвествующую кнопку в панели инструментов.
-4. Следите за выводом данных во встроеной консоли.
+### Compilação e inicialização do servidor
+1. Abra a pasta raiz do servidor em “File” → “Open Server Folder...” (O servidor deve conter obrigatoriamente o arquivo ‘pawn.json’ gerado por meio do [SAMPCTL](https://github.com/Southclaws/sampctl))
+2. Acesse seu servidor em ‘Build’ → ‘Build Server’ ou clique no botão correspondente na barra de ferramentas.
+3. Inicie seu servidor em ‘Server’ → ‘Run / Stop Server’ ou clique no botão correspondente na barra de ferramentas.
+4. Acompanhe a exibição dos dados no console integrado.
 
-Вы готовы к разработке серверов open.mp и SA-MP с помощью Spawn.
+Você está pronto para desenvolver servidores open.mp e SA-MP usando o Spawn.
 
-### Работа с отдельными файлами
-Spawn можно использовать и без открытия проекта.
+### Trabalho com arquivos individuais
+É possível usar o Spawn mesmo sem abrir o projeto.
 
-Чтобы отредактировать один файл:
-1. Выберите 'File' → 'Open File...'.
-2. Выберите исходный файл Pawn, файл включения или файл конфигурации.
-3. Начните редактировать сразу
+Para editar os arquivos:
+1. Selecione 'File' → 'Open File...'.
+2. Selecione os arquivos.
+3. Comece a editar agora mesmo.
 
-При работе с отдельными файлами такие функции редактора, как подсветка синтаксиса, предпросмотр цветов, сопоставление фигурных скобок, разделенный вид редактора кода и метки истории изменений, остаются полностью доступными.
+Ao trabalhar com arquivos individuais, recursos do editor como destaque de sintaxe, visualização de cores, correspondência de chaves, visualização dividida do editor de código e marcações do histórico de alterações permanecem totalmente disponíveis.
 
-Для работы с функциональными возможностями, специфичными для проекта, такими как дерево проекта, интеграция с Git, менеджер зависимостей и инструменты SAMPCTL, необходимо, чтобы проект был открыт.
+Para utilizar os recursos específicos do projeto, como a árvore do projeto, a integração com o Git, o gerenciador de dependências e as ferramentas SAMPCTL, é necessário que o projeto esteja aberto.
 
-### Определение кодировки
+### Determinação da codificação
 Spawn автоматически определяет кодировку файла при его открытии.
 
 В некоторых случаях автоматическое определение кодировки Windows-1251 (CP1251) может быть неточным.
