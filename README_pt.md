@@ -44,17 +44,17 @@ Por ser portátil, extensível e voltado para o aumento da produtividade, o Spaw
   - [Compilação e inicialização do servidor](#compilação-e-inicialização-do-servidor)
   - [Trabalho com arquivos individuais](#trabalho-com-arquivos-individuais)
   - [Determinação da codificação](#determinação-da-codificação)
-- [Разработка](#разработка)
-  - [Требования](#требования)
-  - [Клонирование репозитория](#клонирование-репозитория)
-  - [Установка зависимостей](#установка-зависимостей)
-  - [Запуск](#запуск)
-  - [Сборка исполняемого файла (Windows)](#сборка-исполняемого-файла-windows)
-  - [Тесты](#тесты)
-- [Участники](#участники)
-  - [Отчёт об ошибках](#отчёт-об-ошибках)
-- [Пожертвования](#пожертвования)
-- [Лицензия](#лицензия)
+- [Desenvolvimento](#desenvolvimento)
+  - [Requisitos](#requisitos)
+  - [Clonagem do repositório](#clonagem-do-repositório)
+  - [Instalação de dependências](#instalação-de-dependências)
+  - [Lançamento](#lançamento)
+  - [Compilação do arquivo executável (Windows)](#compilação-do-arquivo-executável-windows)
+  - [Testes](#testes)
+- [Colaboradores](#colaboradores)
+  - [Relatório de erros](#relatório-de-erros)
+- [Doações](#doações)
+- [Licença](#licença)
 
 ## Características
 + Desenvolvido especialmente para o [open.mp](https://github.com/openmultiplayer) e o desenvolvimento do SA-MP.
@@ -164,120 +164,144 @@ Ao trabalhar com arquivos individuais, recursos do editor como destaque de sinta
 Para utilizar os recursos específicos do projeto, como a árvore do projeto, a integração com o Git, o gerenciador de dependências e as ferramentas SAMPCTL, é necessário que o projeto esteja aberto.
 
 ### Determinação da codificação
-Spawn автоматически определяет кодировку файла при его открытии.
+O Spawn identifica automaticamente a codificação dos arquivos ao abri-los.
 
-В некоторых случаях автоматическое определение кодировки Windows-1251 (CP1251) может быть неточным.
+Para os arquivos de origem do Pawn (`.pwn` e `.inc`), é possível especificar explicitamente a codificação por meio da diretiva `coding` no início do arquivo:
 
-Если файл отображается некорректно, его можно открыть заново с использованием другой кодировки: выберите 'Edit' → 'Encoding' → 'Reopen'.
+```pawn
+// -*- coding: cp1251 -*-
+```
 
-Поддерживаемые кодировки:
-+ UTF-8
-+ Windows-1251 (CP1251)
+Se essa diretiva estiver presente, o Spawn utilizará a codificação especificada ao abrir e salvar o arquivo.
 
-*Это не приводит к изменению файла на диске и влияет только на то, как файл отображается в редакторе.*
+Se não houver uma diretiva de codificação, o Spawn tentará determinar a codificação do arquivo automaticamente.
 
-## Разработка
-### Требования
+#### Reabrir arquivos com outra codificação
+Em alguns casos, a detecção automática pode identificar incorretamente a codificação do arquivo.
+
+Se o arquivo não for exibido corretamente, é possível abri-lo novamente usando outra codificação:
+
+`Edit → Encoding → Reopen`
+
+*Essa operação não altera o arquivo no disco e afeta apenas a forma como o arquivo é exibido no editor.*
+
+#### Codificações compatíveis
+* UTF-8 (Unicode)
+* Windows-1250 (da Europa Central)
+* Windows-1251 (Alfabeto cirílico)
+* Windows-1252 (da Europa Ocidental)
+* Windows-1253 (Grega)
+* Windows-1254 (Turco)
+* Windows-1255 (Hebraico)
+* Windows-1256 (Árabe)
+* Windows-1257 (Báltico)
+
+#### Codificação padrão do Pawn
+Você pode definir a codificação padrão usada para os arquivos-fonte Pawn recém-criados.
+
+Ao criar um novo arquivo com a extensão `.pwn` ou `.inc`, o Spawn pode inserir automaticamente uma diretiva de codificação de acordo com a codificação padrão selecionada.
+
+## Desenvolvimento
+### Requisitos
 + Python 3.13+
 + wxPython
 + GitPython
 + Markdown
 + watchdog
 + platformdirs
++ requests
 
-### Клонирование репозитория
+### Clonagem do repositório
 ```
 https://github.com/daniilkorochansky/spawn.git
 ```
-или
+ou
 ```
 gh repo clone daniilkorochansky/spawn
 ```
 
-### Установка зависимостей
-В корневой папке, выполните:
+### Instalação de dependências
+Na pasta raiz, execute:
 ```
 pip install -r requirements.txt
 ```
-### Запуск
-Также в корневой папке, выполните:
+### Lançamento
+Além disso, na pasta raiz, execute:
 ```
 python main.py
 ```
 
-### Сборка исполняемого файла (Windows)
-Spawn использует Nuitka для создания автономных исполняемых сборок.
+### Compilação do arquivo executável (Windows)
+O Spawn utiliza o Nuitka para criar compilações executáveis autônomas.
 
-1. Установите средства сборки Microsoft Visual Studio с набором инструментов для C++ и Windows SDK: https://visualstudio.microsoft.com/downloads/
-2. Перезагрузите ваш компьютер
-3. Установите Nuitka:
+1. Instale o Microsoft Visual Studio com o conjunto de ferramentas para C++ e o Windows SDK: https://visualstudio.microsoft.com/downloads/
+2. Reinicie o seu computador
+3. Instale o Nuitka:
 ```
 pip install nuitka
 ```
-4. Откройте командную строку в корневой папке и скомпилируйте исполняемый файл:
+4. Abra o prompt de comando na pasta raiz e compile o arquivo executável:
 ```
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
-или (Windows x86):
+ou (Windows x86):
 ```
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --target=x86 --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
-Если на 32-битной системе это не удается, попробуйте добавить опцию: ```--msvc=latest``` (в крайнем случае, вместо этой опции добавьте: ```--mingw64```)
+Se isso não funcionar em um sistema de 32 bits, tente adicionar a opção: ```--msvc=latest``` (como último recurso, em vez dessa opção, adicione: ```--mingw64```)
 
-Порядок действий **важен**!
+A ordem das etapas é **importante**!
 
-*Полученный исполняемый файл будет доступен в папке 'dist'.*
+*O arquivo executável gerado estará disponível na pasta ‘dist’.*
 
-### Тесты
-Вы можете проводить тестирование для проверки работоспособности новых функций или изменений в ключевых компонентах системы.
-Чтобы запустить тесты, выполните следующие действия:
-1. Установите pytest
+### Testes
+Você pode realizar testes para verificar o funcionamento de novos recursos ou alterações em componentes-chave do sistema.
+Para executar os testes, siga estas etapas:
+1. Instale o pytest
 ```
 pip install pytest
 ```
-2. Создайте в корневой папке файл с именем 'pytest.ini' со следующим содержанием (если он не существует)
+2. Crie na pasta raiz um arquivo chamado ‘pytest.ini’ com o seguinte conteúdo (caso ele não exista)
 ```
 [pytest]
 pythonpath = .
 ```
-3. Откройте командную строку в корневой папке
-4. Выполните следующую команду: ```pytest -v```
+3. Abra o prompt de comando na pasta raiz
+4. Execute o seguinte comando: ```pytest -v```
 
-Все тесты должны завершиться с результатом 'PASSED'.
-В противном случае вам необходимо найти и исправить ошибку или баг в вашем коде, а затем запустить тесты снова.
+Todos os testes devem ser concluídos com o resultado ‘PASSED’.
+Caso contrário, você precisará localizar e corrigir o erro ou bug no seu código e, em seguida, executar os testes novamente.
 
-## Участники
-Spawn — это проект с открытым исходным кодом, созданный для разработчиков серверов open.mp и SA-MP.
+## Colaboradores
+O Spawn é um projeto de código aberto criado para desenvolvedores de servidores open.mp e SA-MP.
 
-Приветствуются любые вклады, в том числе:
-+ Сообщения об ошибках
-+ Предложения по новым функциям
-+ Предложения по UI/UX
-+ Вклад в разработку кода
-+ Тестирование и отзывы
+São bem-vindas todas as contribuições, incluindo:
++ Mensagens de erro
++ Sugestões sobre novas funcionalidades
++ Sugestões sobre UI/UX
++ Contribuição para o desenvolvimento do código
++ Testes e avaliações
 
-Спасибо, что помогаете сделать Spawn лучше для всех.
+Obrigado por ajudar a tornar o Spawn melhor para todos.
 
-### Отчёт об ошибках
-Если при использовании Spawn у вас возникла ошибка или сбой, выполните следующие действия:
-1. Выберите 'Help' -> 'Bug Report'.
-2. Нажмите кнопку 'Copy' (если поле 'Log Output' пустое, сразу переходите к следующему шагу).
-3. Нажмите кнопку 'Open GitHub Issue'.
-4. Вставьте готовый отчет в описание и введите заголовок (если поле 'Log Output' пусто, пожалуйста, опишите ошибку или баг самостоятельно).
+### Relatório de erros
+Se você tiver encontrado um erro ou uma falha ao usar o Spawn, siga estas etapas:
+1. Selecione 'Help' -> 'Bug Report'.
+2. Clique no botão “Copy” (se o campo “Log Output” estiver vazio, passe diretamente para a próxima etapa).
+3. Clique no botão 'Open GitHub Issue'.
+4. Cole o relatório pronto na descrição e insira um título (se o campo “Log Output” estiver vazio, por favor, descreva o erro ou a falha por conta própria).
 
-## Пожертвования
-Spawn разрабатывается в свободное время и всегда будет оставаться бесплатным и открытым.
+## Doações
+O Spawn está sendo desenvolvido no tempo livre e sempre permanecerá gratuito e de código aberto.
 
-Если вам нравится Spawn и вы хотите поддержать его дальнейшее развитие, вы можете сделать пожертвование.
-Каждый вклад помогает улучшить IDE и обеспечить дальнейшее развитие проекта.
+Se você gosta do Spawn e deseja apoiar seu desenvolvimento futuro, pode fazer uma doação.
+Cada contribuição ajuda a melhorar o IDE e a garantir o desenvolvimento contínuo do projeto.
 
-Спасибо за вашу поддержку ❤️
+Obrigado pelo seu apoio ❤️
 
-[Пожертвовать с VK Donut](https://vk.com/spawn_ide)
+[Fazer uma doação pelo Boosty](https://boosty.to/daniilkorochansky)
 
-[Пожертвовать с Boosty](https://boosty.to/daniilkorochansky)
+## Licença
+O programa Spawn é distribuído sob a licença GNU General Public License v3.0.
 
-## Лицензия
-Программа Spawn распространяется по лицензии GNU General Public License v3.0.
-
-Смотрите [LICENSE](https://github.com/daniilkorochansky/spawn/blob/master/LICENSE) для подробностей.
+Consulte [LICENSE](https://github.com/daniilkorochansky/spawn/blob/master/LICENSE) para mais detalhes.
