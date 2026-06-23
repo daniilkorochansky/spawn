@@ -5,11 +5,11 @@
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
 <div align="center">
-  [<a href="https://github.com/daniilkorochansky/spawn">English</a>
-  /
+  <a href="https://github.com/daniilkorochansky/spawn">English</a>
+  |
   <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_ru.md">Русский</a>
-  /
-  Português]
+  |
+  Português
 </div>
 
 # Spawn
@@ -34,27 +34,27 @@ Por ser portátil, extensível e voltado para o aumento da produtividade, o Spaw
   - [Gerenciador de dependências](#gerenciador-de-dependências)
   - [Git e Controle de Versões (Source Control)](#git-e-controle-de-versões)
   - [Árvore do projeto](#árvore-do-projeto)
-- [Установка](#установка)
-  - [Скачивание](#скачивание)
-  - [Дополнительные инструменты](#дополнительные-инструменты)
-- [Быстрый старт](#быстрый-старт)
-  - [Создание проекта](#создание-проекта)
-  - [Управление зависимостями](#управление-зависимостями)
-  - [Использование Git](#использование-git)
-  - [Сборка и запуск сервера](#сборка-и-запуск-сервера)
-  - [Работа с отдельными файлами](#работа-с-отдельными-файлами)
-  - [Определение кодировки](#определение-кодировки)
-- [Разработка](#разработка)
-  - [Требования](#требования)
-  - [Клонирование репозитория](#клонирование-репозитория)
-  - [Установка зависимостей](#установка-зависимостей)
-  - [Запуск](#запуск)
-  - [Сборка исполняемого файла (Windows)](#сборка-исполняемого-файла-windows)
-  - [Тесты](#тесты)
-- [Участники](#участники)
-  - [Отчёт об ошибках](#отчёт-об-ошибках)
-- [Пожертвования](#пожертвования)
-- [Лицензия](#лицензия)
+- [Instalação](#instalação)
+  - [Download](#download)
+  - [Ferramentas adicionais](#ferramentas-adicionais)
+- [Introdução rápida](#introdução-rápida)
+  - [Criação do projeto](#criação-do-projeto)
+  - [Gerenciamento de dependências](#gerenciamento-de-dependências)
+  - [Como usar o Git](#como-usar-o-git)
+  - [Compilação e inicialização do servidor](#compilação-e-inicialização-do-servidor)
+  - [Trabalho com arquivos individuais](#trabalho-com-arquivos-individuais)
+  - [Determinação da codificação](#determinação-da-codificação)
+- [Desenvolvimento](#desenvolvimento)
+  - [Requisitos](#requisitos)
+  - [Clonagem do repositório](#clonagem-do-repositório)
+  - [Instalação de dependências](#instalação-de-dependências)
+  - [Lançamento](#lançamento)
+  - [Compilação do arquivo executável (Windows)](#compilação-do-arquivo-executável-windows)
+  - [Testes](#testes)
+- [Colaboradores](#colaboradores)
+  - [Relatório de erros](#relatório-de-erros)
+- [Doações](#doações)
+- [Licença](#licença)
 
 ## Características
 + Desenvolvido especialmente para o [open.mp](https://github.com/openmultiplayer) e o desenvolvimento do SA-MP.
@@ -108,176 +108,202 @@ O Spawn foi criado do zero para oferecer uma interface moderna e eficiente em te
 ### Árvore do projeto
 <img width="1920" height="1080" alt="Project Tree" src="https://github.com/user-attachments/assets/c942516b-6e18-406d-b9be-cb8e24d54a94" />
 
-## Установка
-### Скачивание
-1. Скачайте последнюю версию на странице 'Release'.
-2. Распакуйте архив в любое место.
-3. Запустите 'Spawn.exe'.
+## Instalação
+### Download
+1. Baixe a versão mais recente na página “Release”.
+2. Descompacte o arquivo em qualquer local.
+3. Execute o ‘Spawn.exe’.
 
-### Дополнительные инструменты
-Чтобы воспользоваться всеми функциями Spawn, вы также можете установить:
+### Ferramentas adicionais
+Para aproveitar todos os recursos do Spawn, você também pode instalar:
 + Git
 + [SAMPCTL](https://github.com/Southclaws/sampctl)
 
-Эти инструменты можно настроить позже в настройках.
+Essas ferramentas podem ser configuradas posteriormente nas configurações.
 
-## Быстрый старт
-### Создание проекта
-1. Выберите 'File' → 'New Project...'.
-2. Введите название проекта и выберите его местоположение.
-3. После нажатия кнопки 'Create' запустится инструмент командной строки SAMPCTL. Для завершения создания проекта следуйте инструкциям на экране.
-4. По завершении процесса закройте утилиту командной строки SAMPCTL. Spawn автоматически откроет новый проект.
+## Introdução rápida
+### Criação do projeto
+1. Selecione 'File' → 'New project...'.
+2. Digite o nome do projeto e selecione sua localização.
+3. Ao clicar no botão “Create”, a ferramenta de linha de comando SAMPCTL será iniciada. Para concluir a criação do projeto, siga as instruções exibidas na tela.
+4. Ao concluir o processo, feche o utilitário de linha de comando SAMPCTL. O Spawn abrirá automaticamente um novo projeto.
 
-### Управление зависимостями
-1. Выберите 'Project' → 'Dependency Manager...'.
-2. Введите имя пакета в поле 'Dependency'.
-3. Нажмите 'Install'.
+### Gerenciamento de dependências
+1. Selecione 'Project' → 'Dependency Manager...'.
+2. Digite o nome do pacote no campo “Dependency”.
+3. Clique em 'Install'.
 
-+ Чтобы удалить зависимость, выберите нужную из списка и нажмите 'Uninstall'.
-+ Чтобы проверить что все зависимости в порядке, нажмите кнопку под названием "Ensure'.
++ Para remover uma dependência, selecione a desejada na lista e clique em 'Uninstall'.
++ Para verificar se todas as dependências estão corretas, clique no botão chamado 'Ensure'.
 
-### Использование Git
-1. Щелкните правой кнопкой мыши по корневой папке в дереве проекта → выберите 'Initialize Repository'. (Если репозиторий еще не был на сервере)
-2. Создайте свой первый коммит.
-3. Отслеживайте изменения прямо из Spawn.
+### Como usar o Git
+1. Clique com o botão direito do mouse na pasta raiz na árvore do projeto → selecione “Initialize Repository”. (Caso o repositório ainda não esteja no servidor)
+2. Crie seu primeiro commit.
+3. Acompanhe as alterações diretamente no Spawn.
 
-Если репозиторий уже находится на сервере, Spawn автоматически его обнаружит (при условии, что в настройках включена поддержка Git)
+Se o repositório já estiver no servidor, o Spawn o detectará automaticamente (desde que o suporte ao Git esteja ativado nas configurações).
 
-### Сборка и запуск сервера
-1. Откройте корневую папку с сервером 'File' → 'Open Server Folder...' (Cервер обязательно должен содержать файл 'pawn.json' сгенерированный через [SAMPCTL](https://github.com/Southclaws/sampctl))
-2. Соберите ваш сервер 'Build' → 'Build Server' или нажмите на соотвествующую кнопку в панели инструментов.
-3. Запустите ваш сервер 'Server' → 'Run / Stop Server' или нажмите на соотвествующую кнопку в панели инструментов.
-4. Следите за выводом данных во встроеной консоли.
+### Compilação e inicialização do servidor
+1. Abra a pasta raiz do servidor em “File” → “Open Server Folder...” (O servidor deve conter obrigatoriamente o arquivo ‘pawn.json’ gerado por meio do [SAMPCTL](https://github.com/Southclaws/sampctl))
+2. Acesse seu servidor em ‘Build’ → ‘Build Server’ ou clique no botão correspondente na barra de ferramentas.
+3. Inicie seu servidor em ‘Server’ → ‘Run / Stop Server’ ou clique no botão correspondente na barra de ferramentas.
+4. Acompanhe a exibição dos dados no console integrado.
 
-Вы готовы к разработке серверов open.mp и SA-MP с помощью Spawn.
+Você está pronto para desenvolver servidores open.mp e SA-MP usando o Spawn.
 
-### Работа с отдельными файлами
-Spawn можно использовать и без открытия проекта.
+### Trabalho com arquivos individuais
+É possível usar o Spawn mesmo sem abrir o projeto.
 
-Чтобы отредактировать один файл:
-1. Выберите 'File' → 'Open File...'.
-2. Выберите исходный файл Pawn, файл включения или файл конфигурации.
-3. Начните редактировать сразу
+Para editar os arquivos:
+1. Selecione 'File' → 'Open File...'.
+2. Selecione os arquivos.
+3. Comece a editar agora mesmo.
 
-При работе с отдельными файлами такие функции редактора, как подсветка синтаксиса, предпросмотр цветов, сопоставление фигурных скобок, разделенный вид редактора кода и метки истории изменений, остаются полностью доступными.
+Ao trabalhar com arquivos individuais, recursos do editor como destaque de sintaxe, visualização de cores, correspondência de chaves, visualização dividida do editor de código e marcações do histórico de alterações permanecem totalmente disponíveis.
 
-Для работы с функциональными возможностями, специфичными для проекта, такими как дерево проекта, интеграция с Git, менеджер зависимостей и инструменты SAMPCTL, необходимо, чтобы проект был открыт.
+Para utilizar os recursos específicos do projeto, como a árvore do projeto, a integração com o Git, o gerenciador de dependências e as ferramentas SAMPCTL, é necessário que o projeto esteja aberto.
 
-### Определение кодировки
-Spawn автоматически определяет кодировку файла при его открытии.
+### Determinação da codificação
+O Spawn identifica automaticamente a codificação dos arquivos ao abri-los.
 
-В некоторых случаях автоматическое определение кодировки Windows-1251 (CP1251) может быть неточным.
+Para os arquivos de origem do Pawn (`.pwn` e `.inc`), é possível especificar explicitamente a codificação por meio da diretiva `coding` no início do arquivo:
 
-Если файл отображается некорректно, его можно открыть заново с использованием другой кодировки: выберите 'Edit' → 'Encoding' → 'Reopen'.
+```pawn
+// -*- coding: cp1251 -*-
+```
 
-Поддерживаемые кодировки:
-+ UTF-8
-+ Windows-1251 (CP1251)
+Se essa diretiva estiver presente, o Spawn utilizará a codificação especificada ao abrir e salvar o arquivo.
 
-*Это не приводит к изменению файла на диске и влияет только на то, как файл отображается в редакторе.*
+Se não houver uma diretiva de codificação, o Spawn tentará determinar a codificação do arquivo automaticamente.
 
-## Разработка
-### Требования
+#### Reabrir arquivos com outra codificação
+Em alguns casos, a detecção automática pode identificar incorretamente a codificação do arquivo.
+
+Se o arquivo não for exibido corretamente, é possível abri-lo novamente usando outra codificação:
+
+`Edit → Encoding → Reopen`
+
+*Essa operação não altera o arquivo no disco e afeta apenas a forma como o arquivo é exibido no editor.*
+
+#### Codificações compatíveis
+* UTF-8 (Unicode)
+* Windows-1250 (da Europa Central)
+* Windows-1251 (Alfabeto cirílico)
+* Windows-1252 (da Europa Ocidental)
+* Windows-1253 (Grega)
+* Windows-1254 (Turco)
+* Windows-1255 (Hebraico)
+* Windows-1256 (Árabe)
+* Windows-1257 (Báltico)
+
+#### Codificação padrão do Pawn
+Você pode definir a codificação padrão usada para os arquivos-fonte Pawn recém-criados.
+
+Ao criar um novo arquivo com a extensão `.pwn` ou `.inc`, o Spawn pode inserir automaticamente uma diretiva de codificação de acordo com a codificação padrão selecionada.
+
+## Desenvolvimento
+### Requisitos
 + Python 3.13+
 + wxPython
 + GitPython
 + Markdown
 + watchdog
 + platformdirs
++ requests
 
-### Клонирование репозитория
+### Clonagem do repositório
 ```
 https://github.com/daniilkorochansky/spawn.git
 ```
-или
+ou
 ```
 gh repo clone daniilkorochansky/spawn
 ```
 
-### Установка зависимостей
-В корневой папке, выполните:
+### Instalação de dependências
+Na pasta raiz, execute:
 ```
 pip install -r requirements.txt
 ```
-### Запуск
-Также в корневой папке, выполните:
+### Lançamento
+Além disso, na pasta raiz, execute:
 ```
 python main.py
 ```
 
-### Сборка исполняемого файла (Windows)
-Spawn использует Nuitka для создания автономных исполняемых сборок.
+### Compilação do arquivo executável (Windows)
+O Spawn utiliza o Nuitka para criar compilações executáveis autônomas.
 
-1. Установите средства сборки Microsoft Visual Studio с набором инструментов для C++ и Windows SDK: https://visualstudio.microsoft.com/downloads/
-2. Перезагрузите ваш компьютер
-3. Установите Nuitka:
+1. Instale o Microsoft Visual Studio com o conjunto de ferramentas para C++ e o Windows SDK: https://visualstudio.microsoft.com/downloads/
+2. Reinicie o seu computador
+3. Instale o Nuitka:
 ```
 pip install nuitka
 ```
-4. Откройте командную строку в корневой папке и скомпилируйте исполняемый файл:
+4. Abra o prompt de comando na pasta raiz e compile o arquivo executável:
 ```
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
-или (Windows x86):
+ou (Windows x86):
 ```
 nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --target=x86 --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
-Если на 32-битной системе это не удается, попробуйте добавить опцию: ```--msvc=latest``` (в крайнем случае, вместо этой опции добавьте: ```--mingw64```)
+Se isso não funcionar em um sistema de 32 bits, tente adicionar a opção: ```--msvc=latest``` (como último recurso, em vez dessa opção, adicione: ```--mingw64```)
 
-Порядок действий **важен**!
+A ordem das etapas é **importante**!
 
-*Полученный исполняемый файл будет доступен в папке 'dist'.*
+*O arquivo executável gerado estará disponível na pasta ‘dist’.*
 
-### Тесты
-Вы можете проводить тестирование для проверки работоспособности новых функций или изменений в ключевых компонентах системы.
-Чтобы запустить тесты, выполните следующие действия:
-1. Установите pytest
+### Testes
+Você pode realizar testes para verificar o funcionamento de novos recursos ou alterações em componentes-chave do sistema.
+Para executar os testes, siga estas etapas:
+1. Instale o pytest
 ```
 pip install pytest
 ```
-2. Создайте в корневой папке файл с именем 'pytest.ini' со следующим содержанием (если он не существует)
+2. Crie na pasta raiz um arquivo chamado ‘pytest.ini’ com o seguinte conteúdo (caso ele não exista)
 ```
 [pytest]
 pythonpath = .
 ```
-3. Откройте командную строку в корневой папке
-4. Выполните следующую команду: ```pytest -v```
+3. Abra o prompt de comando na pasta raiz
+4. Execute o seguinte comando: ```pytest -v```
 
-Все тесты должны завершиться с результатом 'PASSED'.
-В противном случае вам необходимо найти и исправить ошибку или баг в вашем коде, а затем запустить тесты снова.
+Todos os testes devem ser concluídos com o resultado ‘PASSED’.
+Caso contrário, você precisará localizar e corrigir o erro ou bug no seu código e, em seguida, executar os testes novamente.
 
-## Участники
-Spawn — это проект с открытым исходным кодом, созданный для разработчиков серверов open.mp и SA-MP.
+## Colaboradores
+O Spawn é um projeto de código aberto criado para desenvolvedores de servidores open.mp e SA-MP.
 
-Приветствуются любые вклады, в том числе:
-+ Сообщения об ошибках
-+ Предложения по новым функциям
-+ Предложения по UI/UX
-+ Вклад в разработку кода
-+ Тестирование и отзывы
+São bem-vindas todas as contribuições, incluindo:
++ Mensagens de erro
++ Sugestões sobre novas funcionalidades
++ Sugestões sobre UI/UX
++ Contribuição para o desenvolvimento do código
++ Testes e avaliações
 
-Спасибо, что помогаете сделать Spawn лучше для всех.
+Obrigado por ajudar a tornar o Spawn melhor para todos.
 
-### Отчёт об ошибках
-Если при использовании Spawn у вас возникла ошибка или сбой, выполните следующие действия:
-1. Выберите 'Help' -> 'Bug Report'.
-2. Нажмите кнопку 'Copy' (если поле 'Log Output' пустое, сразу переходите к следующему шагу).
-3. Нажмите кнопку 'Open GitHub Issue'.
-4. Вставьте готовый отчет в описание и введите заголовок (если поле 'Log Output' пусто, пожалуйста, опишите ошибку или баг самостоятельно).
+### Relatório de erros
+Se você tiver encontrado um erro ou uma falha ao usar o Spawn, siga estas etapas:
+1. Selecione 'Help' -> 'Bug Report'.
+2. Clique no botão “Copy” (se o campo “Log Output” estiver vazio, passe diretamente para a próxima etapa).
+3. Clique no botão 'Open GitHub Issue'.
+4. Cole o relatório pronto na descrição e insira um título (se o campo “Log Output” estiver vazio, por favor, descreva o erro ou a falha por conta própria).
 
-## Пожертвования
-Spawn разрабатывается в свободное время и всегда будет оставаться бесплатным и открытым.
+## Doações
+O Spawn está sendo desenvolvido no tempo livre e sempre permanecerá gratuito e de código aberto.
 
-Если вам нравится Spawn и вы хотите поддержать его дальнейшее развитие, вы можете сделать пожертвование.
-Каждый вклад помогает улучшить IDE и обеспечить дальнейшее развитие проекта.
+Se você gosta do Spawn e deseja apoiar seu desenvolvimento futuro, pode fazer uma doação.
+Cada contribuição ajuda a melhorar o IDE e a garantir o desenvolvimento contínuo do projeto.
 
-Спасибо за вашу поддержку ❤️
+Obrigado pelo seu apoio ❤️
 
-[Пожертвовать с VK Donut](https://vk.com/spawn_ide)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y4L421BNPH)
 
-[Пожертвовать с Boosty](https://boosty.to/daniilkorochansky)
+[Fazer uma doação pelo Boosty](https://boosty.to/daniilkorochansky)
 
-## Лицензия
-Программа Spawn распространяется по лицензии GNU General Public License v3.0.
+## Licença
+O programa Spawn é distribuído sob a licença GNU General Public License v3.0.
 
-Смотрите [LICENSE](https://github.com/daniilkorochansky/spawn/blob/master/LICENSE) для подробностей.
+Consulte [LICENSE](https://github.com/daniilkorochansky/spawn/blob/master/LICENSE) para mais detalhes.
