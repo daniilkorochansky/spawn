@@ -116,6 +116,17 @@ wx.ID_SET_TO_CP1257 = 6088
 
 wx.ID_TOOLBAR_SAVE = 6089
 
+wx.ID_TOGGLE_COMMENT = 6090
+wx.ID_TOGGLE_BLOCK_COMMENT = 6091
+
+wx.ID_MOVE_LINE_UP = 6092
+wx.ID_MOVE_LINE_DOWN = 6093
+
+wx.ID_SELECT_ALL = 6094
+
+wx.ID_DUPLICATE_LINE = 6095
+wx.ID_DELETE_LINE = 6096
+
 wx.ID_BUG_REPORT = 6074
 
 def get_app_root_dir():
@@ -225,11 +236,38 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_edit.AppendSeparator()
 
+        self.m_menuItem_SelectAll = wx.MenuItem( self.m_edit, wx.ID_SELECT_ALL, _(u"Select All")+ u"\t" + u"Ctrl+A", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_edit.Append( self.m_menuItem_SelectAll )
+
+        self.m_edit.AppendSeparator()
+
         self.m_menuItem_FindReplace = wx.MenuItem( self.m_edit, wx.ID_FIND_REPLACE, _(u"Find / Replace...")+ u"\t" + u"Ctrl+F", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_FindReplace )
 
         self.m_menuItem_GoToLine = wx.MenuItem( self.m_edit, wx.ID_GO_TO_LINE, _(u"Go to Line...")+ u"\t" + u"Ctrl+G", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_GoToLine )
+
+        self.m_edit.AppendSeparator()
+
+        self.m_menuItem_ToggleComment = wx.MenuItem( self.m_edit, wx.ID_TOGGLE_COMMENT, _(u"Toggle Line Comment")+ u"\t" + u"Ctrl+/", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_edit.Append( self.m_menuItem_ToggleComment )
+
+        self.m_menuItem_ToggleBlockComment = wx.MenuItem( self.m_edit, wx.ID_TOGGLE_BLOCK_COMMENT, _(u"Toggle Block Comment")+ u"\t" + u"Ctrl+Alt+A", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_edit.Append( self.m_menuItem_ToggleBlockComment )
+
+        self.m_edit.AppendSeparator()
+
+        self.m_menuItem_MoveLineUp = wx.MenuItem( self.m_edit, wx.ID_MOVE_LINE_UP, _(u"Move Line Up")+ u"\t" + u"Alt+Up", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_edit.Append( self.m_menuItem_MoveLineUp)
+
+        self.m_menuItem_MoveLineDown = wx.MenuItem( self.m_edit, wx.ID_MOVE_LINE_DOWN, _(u"Move Line Down")+ u"\t" + u"Alt+Down", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_edit.Append( self.m_menuItem_MoveLineDown)
+
+        self.m_menuItem_DuplicateLine = wx.MenuItem( self.m_edit, wx.ID_DUPLICATE_LINE, _(u"Duplicate Line")+ u"\t" + u"Ctrl+D", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_edit.Append( self.m_menuItem_DuplicateLine)
+
+        self.m_menuItem_DeleteLine = wx.MenuItem( self.m_edit, wx.ID_DELETE_LINE, _(u"Delete Line")+ u"\t" + u"Ctrl+Shift+K", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_edit.Append( self.m_menuItem_DeleteLine)
 
         #self.m_menuItem_QuickOutline = wx.MenuItem( self.m_edit, wx.ID_QUICK_OUTLINE, _(u"Quick Outline...")+ u"\t" + u"Ctrl+P", wx.EmptyString, wx.ITEM_NORMAL )
         #self.m_edit.Append( self.m_menuItem_QuickOutline )
@@ -261,20 +299,23 @@ class SpawnFrame ( wx.Frame ):
         self.m_menubar.Append( self.m_edit, _(u"Edit") )
 
         self.m_view = wx.Menu()
-        #self.m_menuItem_FullScreen = wx.MenuItem( self.m_view, wx.ID_FULLSCREEN, _(u"Full Screen")+ u"\t" + u"F11", wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_view.Append( self.m_menuItem_FullScreen )
+        self.m_menuItem_FullScreen = wx.MenuItem( self.m_view, wx.ID_FULLSCREEN, _(u"Full Screen")+ u"\t" + u"F11", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_view.Append( self.m_menuItem_FullScreen )
 
-        #self.m_menuItem_ZenMode = wx.MenuItem( self.m_view, wx.ID_TOGGLE_ZEN_MODE, _(u"Toggle Zen Mode")+ u"\t" + u"Ctrl+K", wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_view.Append( self.m_menuItem_ZenMode )
+        self.m_menuItem_ZenMode = wx.MenuItem( self.m_view, wx.ID_TOGGLE_ZEN_MODE, _(u"Toggle Zen Mode")+ u"\t" + u"Ctrl+K", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_view.Append( self.m_menuItem_ZenMode )
 
-        #self.m_view.AppendSeparator()
-        self.m_menuItem_ToggleToolbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_TOOLBAR, _(u"Toggle Tool Bar")+ u"\t" + u"Ctrl+1", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_view.AppendSeparator()
+        self.m_menuItem_ToggleToolbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_TOOLBAR, _(u"Toggle Toolbar")+ u"\t" + u"Ctrl+1", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleToolbar )
 
-        self.m_menuItem_ToggleProjectPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_PROJECT_PANEL, _(u"Toggle Project Panel")+ u"\t" + u"Ctrl+2", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleStatusbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_STATUSBAR, _(u"Toggle StatusBar")+ u"\t" + u"Ctrl+2", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_view.Append( self.m_menuItem_ToggleStatusbar )
+
+        self.m_menuItem_ToggleProjectPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_PROJECT_PANEL, _(u"Toggle Project Panel")+ u"\t" + u"Ctrl+3", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleProjectPanel )
 
-        self.m_menuItem_ToggleOutputPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_OUTPUT_PANEL, _(u"Toggle Output Panel")+ u"\t" + u"Ctrl+3", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleOutputPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_OUTPUT_PANEL, _(u"Toggle Output Panel")+ u"\t" + u"Ctrl+4", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleOutputPanel )
 
         #self.m_menuItem_ToggleMinimap = wx.MenuItem( self.m_view, wx.ID_TOGGLE_MINIMAP, _(u"Toggle Minimap"), wx.EmptyString, wx.ITEM_NORMAL )
@@ -380,6 +421,7 @@ class SpawnFrame ( wx.Frame ):
 
         self.SetMenuBar( self.m_menubar )
 
+        #Status Bar
         self.m_statusBar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
         self.SetStatusBarPane(-1)
         

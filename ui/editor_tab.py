@@ -47,6 +47,11 @@ class CustomEditorTab(gui.EditorTabPanel):
 
         self.COLOR_PREVIEW_INDICATOR_ID = 16
 
+        self.COLOR_PREVIEW_MARKER_ID = 4
+
+        self.m_scintilla_Editor.RGBAImageSetWidth(12)
+        self.m_scintilla_Editor.RGBAImageSetHeight(12)
+
         self.ide_cfg = ConfigManager()
 
         self.base_win = wx.GetTopLevelParent(self)
@@ -58,6 +63,8 @@ class CustomEditorTab(gui.EditorTabPanel):
 
         doc_pointer = self.m_scintilla_Editor.GetDocPointer()
         self.m_scintilla_Minimap.SetDocPointer(doc_pointer)
+
+        self._current_color_match = None
 
         self.modified_markers_handles = []
         self.saved_markers_handles = []
@@ -185,7 +192,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         return None
 
     def on_editor_margin_click(self, event):
-        if event.GetMargin() == 2:
+        if event.GetMargin() == 3:
             editor = self.m_scintilla_Editor
 
             click_pos = event.GetPosition()
@@ -193,6 +200,52 @@ class CustomEditorTab(gui.EditorTabPanel):
 
             if editor.GetFoldLevel(line_clicked) & stc.STC_FOLDLEVELHEADERFLAG:
                 editor.ToggleFold(line_clicked)
+
+        elif event.GetMargin() == 2:
+            match_col = self._current_color_match
+            if not match_col:
+                return
+
+            editor = self.m_scintilla_Editor
+            
+            color_data = wx.ColourData()
+            color_data.SetChooseFull(True)
+            dlg = wx.ColourDialog(self, color_data)
+            if dlg.ShowModal() == wx.ID_OK:
+                selected = dlg.GetColourData().GetColour()
+
+                r = selected.Red()
+                g = selected.Green()
+                b = selected.Blue()
+
+                if match_col["type"] == "hex":
+                    new_text = (f"{{{r:02X}{g:02X}{b:02X}}}")
+
+                    editor.SetTargetStart(match_col["start"])
+                    editor.SetTargetEnd(match_col["end"])
+                    editor.ReplaceTarget(new_text)
+
+                elif match_col["type"] == "rgba":
+                    old_value = match_col["value"]
+
+                    alpha = (old_value[6:8] if len(old_value) == 8 else "FF")
+
+                    new_text = (
+                        f"0x"
+                        f"{r:02X}"
+                        f"{g:02X}"
+                        f"{b:02X}"
+                        f"{alpha}"
+                    )
+
+                    editor.SetTargetStart(match_col["start"])
+                    editor.SetTargetEnd(match_col["end"])
+                    editor.ReplaceTarget(new_text)
+
+                    match_col["value"] = new_text
+
+            dlg.Destroy()
+            
         event.Skip()
 
     def m_scintilla_EditorOnContextMenu( self, event ):
@@ -342,6 +395,44 @@ class CustomEditorTab(gui.EditorTabPanel):
         last_color = getattr(self.base_win, "last_picked_hex_color", "0xFFFFFFFF")
         self.m_scintilla_Editor.ReplaceSelection(last_color)
 
+    def create_color_rgba(self, color):
+        width = 12
+        height = 12
+
+        r = color.Red()
+        g = color.Green()
+        b = color.Blue()
+
+        border_r = max(0, r - 40)
+        border_g = max(0, g - 40)
+        border_b = max(0, b - 40)
+
+        rgba = bytearray()
+
+        for y in range(height):
+            for x in range(width):
+
+                border = (
+                    x == 0 or
+                    y == 0 or
+                    x == width - 1 or
+                    y == height - 1
+                )
+
+                if border:
+                    rgba.extend([border_r,border_g,border_b,255])
+                else:
+                    rgba.extend([r, g, b, 255])
+
+        return bytes(rgba)
+
+    def update_color_preview_marker(self,editor,line_num,html_color):
+        editor.MarkerDeleteAll(self.COLOR_PREVIEW_MARKER_ID)
+        rgba = self.create_color_rgba(wx.Colour(html_color))
+        editor.MarkerDefineRGBAImage(self.COLOR_PREVIEW_MARKER_ID,rgba)
+
+        editor.MarkerAdd(line_num,self.COLOR_PREVIEW_MARKER_ID)
+
     def on_editor_update_ui(self, event):
         editor = self.m_scintilla_Editor
 
@@ -384,6 +475,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         line_start_pos = editor.PositionFromLine(line_num)
         pos_in_line = current_pos - line_start_pos
         if self.color_preview:
+            
             detected_html_color = None
             highlight_start = 0
             highlight_length = 0
@@ -393,11 +485,22 @@ class CustomEditorTab(gui.EditorTabPanel):
                 if start_idx <= pos_in_line <= end_idx:
                     hex_content = m.group(1).decode('utf-8')
                     detected_html_color = f"#{hex_content[:6].upper()}"
+
+                    self._current_color_match = {
+                        "type": "rgba",
+                        "line": line_num,
+                        "start": line_start_pos + start_idx,
+                        "end": line_start_pos + end_idx,
+                        "value": hex_content,
+                    }
+                    
                     highlight_start = line_start_pos + start_idx
                     highlight_length = end_idx - start_idx
                     break
 
             if not detected_html_color:
+                editor.MarkerDeleteAll(self.COLOR_PREVIEW_MARKER_ID)
+                self._current_color_match = None
                 
                 for m in re.finditer(rb"\{([0-9A-Fa-f]{6})\}", line_bytes):
                     start_idx, end_idx = m.start(), m.end()
@@ -405,8 +508,18 @@ class CustomEditorTab(gui.EditorTabPanel):
                         hex_content = m.group(1).decode('utf-8')
                         detected_html_color = f"#{hex_content.upper()}"
 
+                        self._current_color_match = {
+                            "type": "hex",
+                            "line": line_num,
+                            "start": line_start_pos + start_idx,
+                            "end": line_start_pos + end_idx,
+                            "value": hex_content,
+                        }
+
                         highlight_start = line_start_pos + start_idx
                         highlight_length = end_idx - start_idx
+
+                        
                         break
                         
             if detected_html_color:
@@ -415,6 +528,8 @@ class CustomEditorTab(gui.EditorTabPanel):
                     editor.IndicatorSetForeground(self.COLOR_PREVIEW_INDICATOR_ID, wx.Colour(detected_html_color))
 
                     editor.IndicatorFillRange(highlight_start, highlight_length)
+                    
+                    self.update_color_preview_marker(editor,line_num,detected_html_color)
                 except Exception as e:
                     SpawnLogger.error(f"Init Color Preview Indicator: {e}")
         event.Skip()
@@ -607,10 +722,10 @@ class CustomEditorTab(gui.EditorTabPanel):
         editor.SetFoldMarginColour(True, "#F7F7F7")
         editor.SetFoldMarginHiColour(True, "#F7F7F7")
 
-        editor.SetMarginType(2, stc.STC_MARGIN_SYMBOL)
-        editor.SetMarginWidth(2, 16)
-        editor.SetMarginMask(2, stc.STC_MASK_FOLDERS)
-        editor.SetMarginSensitive(2, True)
+        editor.SetMarginType(3, stc.STC_MARGIN_SYMBOL)
+        editor.SetMarginWidth(3, 16)
+        editor.SetMarginMask(3, stc.STC_MASK_FOLDERS)
+        editor.SetMarginSensitive(3, True)
 
         v = ('#F3F3F3', '#606060')
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, *v)
@@ -620,6 +735,12 @@ class CustomEditorTab(gui.EditorTabPanel):
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, *v)
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, *v)
         editor.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, *v)
+
+        if self.color_preview:
+            editor.SetMarginType(2, stc.STC_MARGIN_SYMBOL)
+            editor.SetMarginWidth(2, 14)
+            editor.SetMarginMask(2, 1 << self.COLOR_PREVIEW_MARKER_ID)
+            editor.SetMarginSensitive(2, True)
 
         is_folding = self.ide_cfg.get("editor.features.folding", False)
         if is_folding:

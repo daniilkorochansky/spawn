@@ -99,6 +99,8 @@ class SpawnIDE(SpawnFrame):
         self.find_dialog_data.SetFlags(wx.FR_DOWN)
         self.active_find_dialog = None
 
+        self.zen_mode = False
+
         self.server_process_thread = None
 
         self.git_bash_process = None
@@ -150,6 +152,17 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_undo_click, id=wx.ID_UNDO)
         self.Bind(wx.EVT_MENU, self.on_redo_click, id=wx.ID_REDO)
 
+        self.Bind(wx.EVT_MENU, self.on_toggle_comment_click, id=wx.ID_TOGGLE_COMMENT)
+        self.Bind(wx.EVT_MENU, self.on_toggle_block_comment_click, id=wx.ID_TOGGLE_BLOCK_COMMENT)
+
+        self.Bind(wx.EVT_MENU, self.on_move_line_up_click, id=wx.ID_MOVE_LINE_UP)
+        self.Bind(wx.EVT_MENU, self.on_move_line_down_click, id=wx.ID_MOVE_LINE_DOWN)
+
+        self.Bind(wx.EVT_MENU, self.on_select_all_click, id=wx.ID_SELECT_ALL)
+
+        self.Bind(wx.EVT_MENU, self.on_duplicate_line_click, id=wx.ID_DUPLICATE_LINE)
+        self.Bind(wx.EVT_MENU, self.on_delete_line_click, id=wx.ID_DELETE_LINE)
+
         self.Bind(wx.EVT_MENU, self.on_zoom_in_click, id=wx.ID_ZOOM_IN)
         self.Bind(wx.EVT_MENU, self.on_zoom_out_click, id=wx.ID_ZOOM_OUT)
         self.Bind(wx.EVT_MENU, self.on_zoom_reset_click, id=wx.ID_RESET_ZOOM)
@@ -196,7 +209,11 @@ class SpawnIDE(SpawnFrame):
 
         self.Bind(wx.EVT_MENU, self.on_toggle_project_panel_click, id=wx.ID_TOGGLE_PROJECT_PANEL)
         self.Bind(wx.EVT_MENU, self.on_toggle_output_panel_click, id=wx.ID_TOGGLE_OUTPUT_PANEL)
-        self.Bind(wx.EVT_MENU, self.on_toggle_toolbar_panel_click, id=wx.ID_TOGGLE_TOOLBAR)
+        self.Bind(wx.EVT_MENU, self.on_toggle_toolbar_click, id=wx.ID_TOGGLE_TOOLBAR)
+        self.Bind(wx.EVT_MENU, self.on_toggle_statusbar_click, id=wx.ID_TOGGLE_STATUSBAR)
+
+        self.Bind(wx.EVT_MENU, self.on_fullscreen_click, id=wx.ID_FULLSCREEN)
+        self.Bind(wx.EVT_MENU, self.on_zenmode_click, id=wx.ID_TOGGLE_ZEN_MODE)
         
         self.Bind(wx.EVT_MENU, self.on_bug_report_click, id=wx.ID_BUG_REPORT)
         self.Bind(wx.EVT_MENU, self.on_donate_click, id=wx.ID_DONATE)
@@ -241,6 +258,226 @@ class SpawnIDE(SpawnFrame):
         self.toggle_project_ui_state(False)
         self.update_button_is_no_tabs()
         self.update_git_ui_controls_state()
+
+    def on_zenmode_click(self, event):
+        if not self.zen_mode:
+            pane = self.m_mgr.GetPane(self.m_auiToolBar)
+            pane.Show(False)
+
+            self.m_statusBar.Hide()
+            #self.SetMenuBar(None)
+
+            if self.current_project_path:
+                pane = self.m_mgr.GetPane(self.m_projectPanel)
+                pane.Show(False)
+
+                pane = self.m_mgr.GetPane(self.m_outputPanel)
+                pane.Show(False)
+            
+            self.m_mgr.Update()
+            self.Layout()
+            self.Refresh()
+            self.zen_mode = True
+        else:
+            pane = self.m_mgr.GetPane(self.m_auiToolBar)
+            pane.Show(True)
+
+            self.m_statusBar.Show()
+            #self.SetMenuBar(self.m_menubar)
+
+            if self.current_project_path:
+                pane = self.m_mgr.GetPane(self.m_projectPanel)
+                pane.Show(True)
+
+                pane = self.m_mgr.GetPane(self.m_outputPanel)
+                pane.Show(True)
+            
+            self.m_mgr.Update()
+            self.Layout()
+            self.Refresh()
+            self.zen_mode = False
+
+    def on_fullscreen_click(self, event):
+        self.ShowFullScreen(not self.IsFullScreen(), wx.FULLSCREEN_NOBORDER)
+        self.Layout()
+        self.Refresh()
+
+    def on_duplicate_line_click(self, event):
+        editor = (self.m_auinotebook_Main.GetCurrentPage().m_scintilla_Editor)
+        editor.LineDuplicate()
+
+    def on_delete_line_click(self, event):
+        editor = (self.m_auinotebook_Main.GetCurrentPage().m_scintilla_Editor)
+        editor.LineDelete()
+
+    def on_select_all_click(self, event):
+        editor = (self.m_auinotebook_Main.GetCurrentPage().m_scintilla_Editor)
+        editor.SelectAll()
+
+    def on_move_line_up_click(self, event):
+        editor = (self.m_auinotebook_Main.GetCurrentPage().m_scintilla_Editor)
+        editor.MoveSelectedLinesUp()
+
+    def on_move_line_down_click(self, event):
+        editor = (self.m_auinotebook_Main.GetCurrentPage().m_scintilla_Editor)
+        editor.MoveSelectedLinesDown()
+
+    def on_toggle_block_comment_click(self, event):
+        active_tab = self.m_auinotebook_Main.GetCurrentPage()
+        if not active_tab:
+            return
+
+        editor = active_tab.m_scintilla_Editor
+
+        selected_text = editor.GetSelectedText()
+
+        editor.BeginUndoAction()
+
+        try:
+
+            # -----------------------------------
+            # Работа с выделением
+            # -----------------------------------
+            if selected_text:
+
+                stripped = selected_text.strip()
+
+                if (
+                    stripped.startswith("/*")
+                    and
+                    stripped.endswith("*/")
+                ):
+
+                    start = selected_text.find("/*")
+                    end = selected_text.rfind("*/")
+
+                    new_text = (
+                        selected_text[:start]
+                        +
+                        selected_text[start + 2:end]
+                        +
+                        selected_text[end + 2:]
+                    )
+
+                else:
+
+                    new_text = (
+                        "/*\n"
+                        + selected_text +
+                        "\n*/"
+                    )
+
+                editor.ReplaceSelection(new_text)
+
+                return
+
+            # -----------------------------------
+            # Работа без выделения
+            # -----------------------------------
+            pos = editor.GetCurrentPos()
+            text = editor.GetText()
+
+            start = text.rfind("/*", 0, pos)
+            end = text.find("*/", pos)
+
+            if (
+                start == -1
+                or
+                end == -1
+            ):
+                return
+
+            # Проверяем что между /* и */
+            if pos < start or pos > end + 2:
+                return
+
+            editor.SetTargetStart(end)
+            editor.SetTargetEnd(end + 2)
+            editor.ReplaceTarget("")
+
+            editor.SetTargetStart(start)
+            editor.SetTargetEnd(start + 2)
+            editor.ReplaceTarget("")
+
+        finally:
+
+            editor.EndUndoAction()
+
+    def on_toggle_comment_click(self, event):
+        tab = self.m_auinotebook_Main.GetCurrentPage()
+        if tab:
+            editor = tab.m_scintilla_Editor
+            
+            start_pos = editor.GetSelectionStart()
+            end_pos = editor.GetSelectionEnd()
+
+            start_line = editor.LineFromPosition(start_pos)
+            end_line = editor.LineFromPosition(end_pos)
+
+            if (end_pos == editor.PositionFromLine(end_line) and end_line > start_line):
+                end_line -= 1
+
+            all_commented = True
+
+            for line_num in range(start_line,end_line + 1):
+                line = editor.GetLine(line_num)
+
+                if not line.strip():
+                    continue
+
+                if not line.lstrip().startswith("//"):
+                    all_commented = False
+                    break
+
+            editor.BeginUndoAction()
+
+            try:
+
+                if all_commented:
+
+                    for line_num in reversed(range(start_line, end_line + 1)):
+                        line = editor.GetLine(line_num)
+
+                        stripped = line.lstrip()
+
+                        if not stripped.startswith("//"):
+                            continue
+
+                        pos = editor.PositionFromLine(line_num)
+
+                        indent = (len(line) - len(stripped))
+
+                        remove_start = (pos + indent)
+
+                        remove_len = 2
+
+                        if stripped.startswith("// "):
+                            remove_len = 3
+
+                        editor.SetTargetStart(remove_start)
+
+                        editor.SetTargetEnd(remove_start + remove_len)
+
+                        editor.ReplaceTarget("")
+
+                else:
+
+                    for line_num in reversed(range(start_line, end_line + 1)):
+
+                        line = editor.GetLine(line_num)
+
+                        if not line.strip():
+                            continue
+
+                        pos = editor.PositionFromLine(line_num)
+
+                        indent = (len(line) -len(line.lstrip()))
+
+                        editor.InsertText(pos + indent,"// ")
+
+            finally:
+
+                editor.EndUndoAction()
 
     def try_register_tool(self, file_path):
         file_name = Path(file_path).name.lower()
@@ -340,10 +577,18 @@ class SpawnIDE(SpawnFrame):
         if tab:
             tab.m_scintilla_Editor.SetZoom(0)
 
-    def on_toggle_toolbar_panel_click(self, event):
+    def on_toggle_toolbar_click(self, event):
         pane = self.m_mgr.GetPane(self.m_auiToolBar)
         pane.Show(not pane.IsShown())
         self.m_mgr.Update()
+
+    def on_toggle_statusbar_click(self, event):
+        if self.m_statusBar.IsShown():
+            self.m_statusBar.Hide()
+            self.Layout()
+        else:
+            self.m_statusBar.Show()
+            self.Layout()
 
     def on_toggle_project_panel_click(self, event):
         pane = self.m_mgr.GetPane(self.m_projectPanel)
@@ -2521,7 +2766,8 @@ samp.ban
                       wx.ID_EOL_LF, wx.ID_ZOOM_IN, wx.ID_ZOOM_OUT, wx.ID_CUT, wx.ID_COPY,
                       wx.ID_PASTE, wx.ID_UNDO, wx.ID_REDO, wx.ID_REOPEN_TO_CP1252, wx.ID_REOPEN_TO_CP1253,
                       wx.ID_REOPEN_TO_CP1254, wx.ID_REOPEN_TO_CP1255, wx.ID_REOPEN_TO_CP1256, wx.ID_REOPEN_TO_CP1257,
-                      wx.ID_REOPEN_TO_CP1250, wx.ID_TOOLBAR_SAVE
+                      wx.ID_REOPEN_TO_CP1250, wx.ID_TOOLBAR_SAVE, wx.ID_TOGGLE_COMMENT, wx.ID_TOGGLE_BLOCK_COMMENT,
+                      wx.ID_MOVE_LINE_UP, wx.ID_MOVE_LINE_DOWN, wx.ID_SELECT_ALL, wx.ID_DUPLICATE_LINE, wx.ID_DELETE_LINE
                       ]
         for element_id in button_ids:
             menu_item = self.GetMenuBar().FindItemById(element_id)
