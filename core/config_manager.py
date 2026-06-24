@@ -36,6 +36,7 @@ class ConfigManager:
 
         self._schema = {
             "system": {
+                "recent_files": ([], list),
                 "pawn": {
                     "default_encoding": ("cp1251", str)
                     },

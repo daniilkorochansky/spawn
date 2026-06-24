@@ -38,6 +38,7 @@ class CustomEditorTab(gui.EditorTabPanel):
     def __init__(self, parent, file_path=""):
         super().__init__(parent)
 
+
         self.m_scintilla_Editor.Bind(stc.EVT_STC_SAVEPOINTLEFT, self.on_savepoint_left)
         self.m_scintilla_Editor.Bind(stc.EVT_STC_SAVEPOINTREACHED, self.on_savepoint_reached)
         self.m_scintilla_Editor.Bind(stc.EVT_STC_UPDATEUI, self.on_editor_update_ui)
@@ -52,9 +53,9 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.m_scintilla_Editor.RGBAImageSetWidth(12)
         self.m_scintilla_Editor.RGBAImageSetHeight(12)
 
-        self.ide_cfg = ConfigManager()
-
         self.base_win = wx.GetTopLevelParent(self)
+
+        self.ide_cfg = self.base_win.ide_cfg
 
         self.file_path = file_path
         self.is_untitled = (file_path == "")
@@ -627,6 +628,12 @@ class CustomEditorTab(gui.EditorTabPanel):
 
     def apply_pawn_styles(self):
         editor = self.m_scintilla_Editor
+
+        editor.SetEdgeColumn(120)
+        editor.SetEdgeMode(stc.STC_EDGE_LINE)
+
+        editor.SetMultipleSelection(True)
+        editor.SetAdditionalSelectionTyping(True)
         
         self.color_preview = self.ide_cfg.get("editor.features.color_preview", True)
         self.brace_matching = self.ide_cfg.get("editor.features.brace_matching.enabled", True)

@@ -127,6 +127,8 @@ wx.ID_SELECT_ALL = 6094
 wx.ID_DUPLICATE_LINE = 6095
 wx.ID_DELETE_LINE = 6096
 
+wx.ID_CLOSE_CURRENT_FILE = 6097
+
 wx.ID_BUG_REPORT = 6074
 
 def get_app_root_dir():
@@ -195,11 +197,16 @@ class SpawnFrame ( wx.Frame ):
         self.m_menuItem_NewFile = wx.MenuItem( self.m_file, wx.ID_NEW_FILE, _(u"New File")+ u"\t" + u"Ctrl+N", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_NewFile )
 
+        self.m_file.AppendSeparator()
+
         self.m_menuItem_OpenFile = wx.MenuItem( self.m_file, wx.ID_OPEN_FILE, _(u"Open File...")+ u"\t" + u"Ctrl+O", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_OpenFile )
 
         self.m_menuItem_OpenProjectFolder = wx.MenuItem( self.m_file, wx.ID_OPEN_SERVER_FOLDER, _(u"Open Server Folder...")+ u"\t" + u"Ctrl+Shift+O", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_OpenProjectFolder )
+
+        self.recent_files_submenu = wx.Menu()
+        self.m_file.AppendSubMenu(self.recent_files_submenu, _(u"Open Recent"), wx.EmptyString)
 
         self.m_file.AppendSeparator()
 
@@ -208,6 +215,11 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_menuItem_SaveAll = wx.MenuItem( self.m_file, wx.ID_SAVE_ALL, _(u"Save All")+ u"\t" + u"Ctrl+Shift+S", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_SaveAll )
+
+        self.m_file.AppendSeparator()
+
+        self.m_menuItem_CloseFile = wx.MenuItem( self.m_file, wx.ID_CLOSE_CURRENT_FILE, _(u"Close")+ u"\t" + u"Ctrl+W", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_file.Append( self.m_menuItem_CloseFile )
 
         self.m_file.AppendSeparator()
 

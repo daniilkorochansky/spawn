@@ -74,13 +74,14 @@ class SpawnFileDropTarget(wx.FileDropTarget):
 
     def OnDropFiles(self, x, y, filenames):
         for file_path in filenames:
+            file_path = PlatformUtils.normalize_path(file_path)
             if not os.path.isfile(file_path):
                 continue
             
             if os.path.isfile(file_path):
                 if self.main_frame.try_register_tool(file_path):
                     continue
-                elif Path(file_path).suffix.lower() in (".exe", ".jpg", ".png", ".mp4", ".mp3", ".ogg", ".avi", ".wav", ".bin", ".iso", ".md"):
+                elif Path(file_path).suffix.lower() in (".exe", ".jpg", ".png", ".mp4", ".mp3", ".ogg", ".avi", ".wav", ".bin", ".iso", ".md", ".pdf", ".doc", ".gif", ".pdb"):
                     continue
                 
                 self.main_frame.open_file_in_tab(file_path)
@@ -94,6 +95,10 @@ class SpawnIDE(SpawnFrame):
         SpawnLogger.initialize()
 
         self.ide_cfg = ConfigManager()
+
+        self._context_tab_idx = None
+
+        self._recent_file_ids = {}
         
         self.find_dialog_data = wx.FindReplaceData()
         self.find_dialog_data.SetFlags(wx.FR_DOWN)
@@ -113,6 +118,16 @@ class SpawnIDE(SpawnFrame):
         self.m_statusBar.SetStatusText(u"---", 1)
         self.m_statusBar.SetStatusText(u"---", 2)
         self.m_statusBar.SetStatusText(u"---", 3)
+
+##        self.file_history = wx.FileHistory(15)
+##        self.file_history.UseMenu(self.recent_files_submenu)
+##        
+##        recent_files = self.ide_cfg.get("system.recent_files",[])
+##        for path in reversed(recent_files):
+##            self.file_history.AddFileToHistory(path)
+
+        
+            
        #test
 ##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_ENGLISH)
 ##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_RUSSIAN)
@@ -219,6 +234,12 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_donate_click, id=wx.ID_DONATE)
         self.Bind(wx.EVT_MENU, self.on_about_click, id=wx.ID_ABOUT)
 
+        self.Bind(wx.EVT_MENU, self.on_close_current_file_click, id=wx.ID_CLOSE_CURRENT_FILE)
+
+
+        #self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_TAB_RIGHT_DOWN,self.on_editor_tab_context_menu)
+
+
         self.m_treeCtrl_ProjectTree.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_project_tree_right_click)
         
         self.current_project_path = None
@@ -258,6 +279,236 @@ class SpawnIDE(SpawnFrame):
         self.toggle_project_ui_state(False)
         self.update_button_is_no_tabs()
         self.update_git_ui_controls_state()
+        
+        self.update_recent_files_menu()
+
+    def on_close_current_file_click(self, event):
+        global_config_path = PlatformUtils.normalize_path(getattr(self.ide_cfg, "config_path", ""))
+        
+        page_idx = self.m_auinotebook_Main.GetSelection()
+
+        if page_idx == wx.NOT_FOUND:
+            return
+
+        tab = self.m_auinotebook_Main.GetPage(page_idx)
+
+        is_modified = tab.m_scintilla_Editor.GetModify() if hasattr(tab, "m_scintilla_Editor") else False
+        is_file_missing = hasattr(tab, "file_path") and tab.file_path and not os.path.exists(tab.file_path)
+
+        if is_modified or is_file_missing:
+            file_name = os.path.basename(tab.file_path) if tab.file_path else u"Untitled"
+
+            if is_file_missing:
+                msg = _(u"File '{file_name}' was deleted from the disk externally. Save a copy of it before closing the file?").format(file_name=file_name)
+            else:
+                if tab.file_path == global_config_path:
+                    msg = _(u"Settings changed. Save before exiting?")
+                else:
+                    msg = _(u"File '{file_name}' changed. Save it before exiting?").format(file_name=file_name)
+
+            res = wx.MessageBox(msg, _(u"Closing a file"), wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
+            if res == wx.YES:
+                self.on_save_current_file(None)
+
+                if tab.m_scintilla_Editor.GetModify() or (hasattr(tab, "file_path") and not os.path.exists(tab.file_path)):
+                    return False
+            elif res == wx.CANCEL:
+                return False
+                
+        self.m_auinotebook_Main.DeletePage(page_idx)
+        wx.CallAfter(self.update_button_is_no_tabs)
+        return True
+
+        
+
+    def add_recent_file(self, path):
+        path = PlatformUtils.normalize_path(path)
+        recent = self.ide_cfg.get("system.recent_files",[])
+        if path in recent:
+            recent.remove(path)
+
+        recent.insert(0, path)
+
+        recent = recent[:15]
+
+        self.ide_cfg.set("system.recent_files", recent)
+
+        self.update_recent_files_menu()
+
+    def update_recent_files_menu(self):
+        self._recent_file_ids.clear()
+        while self.recent_files_submenu.GetMenuItemCount() > 0:
+            item = self.recent_files_submenu.FindItemByPosition(0)
+            self.recent_files_submenu.DestroyItem(item)
+
+        recent = self.ide_cfg.get("system.recent_files",[])
+        valid_files = []
+        for path in recent:
+            if os.path.exists(path):
+                valid_files.append(path)
+
+        recent = valid_files
+        self.ide_cfg.set("system.recent_files", recent)
+
+        for path in recent:
+            if not os.path.exists(path):
+                continue
+
+            item_id = wx.NewIdRef()
+
+            self._recent_file_ids[int(item_id)] = path
+
+            self.recent_files_submenu.Append(
+                item_id,
+                Path(path).name
+            )
+
+            self.Bind(
+                wx.EVT_MENU,
+                self.on_recent_file,
+                id=item_id
+            )
+
+        if recent:
+
+            self.recent_files_submenu.AppendSeparator()
+
+        clear_id = wx.NewIdRef()
+
+        self.recent_files_submenu.Append(
+            clear_id,
+            _("Clear Recent Files")
+        )
+
+        self.Bind(
+            wx.EVT_MENU,
+            self.on_clear_recent_files,
+            id=clear_id
+        )
+
+    def on_recent_file(self, event):
+        path = self._recent_file_ids.get(event.GetId())
+
+        if not path:
+            return
+
+        if not os.path.exists(path):
+            wx.MessageBox(
+                _("File not found."),
+                _("Error"),
+                wx.OK | wx.ICON_ERROR
+            )
+            return
+
+        self.open_file_in_tab(path)
+
+    def on_clear_recent_files(self, event):
+        self.ide_cfg.set("system.recent_files", [])
+
+        self.update_recent_files_menu()
+
+    def on_editor_tab_context_menu(self, event):
+        page_idx = event.GetSelection()
+
+        if page_idx == wx.NOT_FOUND:
+            return
+
+        self._context_tab_idx = page_idx
+        tab = self.m_auinotebook_Main.GetPage(page_idx)
+
+        menu = wx.Menu()
+
+        id_close = wx.NewIdRef()
+        id_close_others = wx.NewIdRef()
+        id_close_all = wx.NewIdRef()
+
+        menu.Append(id_close, _("Close"))
+        menu.Append(id_close_others, _("Close Others"))
+        menu.Append(id_close_all, _("Close All"))
+
+        is_untitled = getattr(tab,"is_untitled",False)
+
+        file_path = getattr(tab,"file_path",None)
+        if file_path:
+            appdata_dir_check = PlatformUtils.get_config_dir()
+            config_path_check = os.path.join(appdata_dir_check, 'config.json')
+            is_settings_page = bool(file_path == config_path_check)
+        else:
+            is_settings_page = False
+
+        if not is_settings_page:
+            menu.AppendSeparator()
+
+            id_save = wx.NewIdRef()
+            id_save_as = wx.NewIdRef()
+
+            menu.Append(id_save, _("Save"))
+            #menu.Append(id_save_as, _("Save As..."))
+
+        if file_path:
+            menu.AppendSeparator()
+
+            id_copy_path = wx.NewIdRef()
+            id_show_file = wx.NewIdRef()
+            id_reload = wx.NewIdRef()
+
+            menu.Append(id_copy_path,_("Copy Full Path"))
+            menu.Append(id_show_file,_("Reveal in Explorer"))
+            menu.Append(id_reload,_("Reload From Disk"))
+
+            self.Bind(
+                wx.EVT_MENU,
+                self.on_context_tab_close,
+                id=id_close
+            )
+
+            self.Bind(
+                wx.EVT_MENU,
+                self.on_context_tab_close_others,
+                id=id_close_others
+            )
+
+            self.Bind(
+                wx.EVT_MENU,
+                self.on_context_tab_close_all,
+                id=id_close_all
+            )
+
+        self.m_auinotebook_Main.PopupMenu(menu)
+        menu.Destroy()
+
+    def on_context_tab_close(self, event):
+        pass
+
+    def on_context_tab_close_others(self, event):
+        pass
+
+    def on_context_tab_close_all(self, event):
+        pass
+
+##    def on_recent_file_click(self, event):
+##        file_num = (event.GetId() - wx.ID_FILE1)
+##
+##        path = self.file_history.GetHistoryFile(file_num)
+##
+##        if not os.path.exists(path):
+##            wx.MessageBox(_("File not found."),_("Error"),wx.OK | wx.ICON_ERROR)
+##
+##            self.file_history.RemoveFileFromHistory(file_num)
+##            return
+##
+##        self.open_file_in_tab(path)
+
+##    def add_recent_file(self, path):
+##        path = PlatformUtils.normalize_path(path)
+##        self.file_history.AddFileToHistory(path)
+##        recent = []
+##        count = self.file_history.GetCount()
+##
+##        for i in range(count):
+##            recent.append(self.file_history.GetHistoryFile(i))
+##
+##        self.ide_cfg.set("system.recent_files", recent)
 
     def on_zenmode_click(self, event):
         if not self.zen_mode:
@@ -1856,6 +2107,7 @@ samp.ban
             scintilla_search_flags |= wx.stc.STC_FIND_MATCHCASE
         if sys_flags & wx.FR_WHOLEWORD:
             scintilla_search_flags |= wx.stc.STC_FIND_WHOLEWORD
+        
 
         editor.SetSearchFlags(scintilla_search_flags)
         evt_type = event.GetEventType()
@@ -2767,7 +3019,8 @@ samp.ban
                       wx.ID_PASTE, wx.ID_UNDO, wx.ID_REDO, wx.ID_REOPEN_TO_CP1252, wx.ID_REOPEN_TO_CP1253,
                       wx.ID_REOPEN_TO_CP1254, wx.ID_REOPEN_TO_CP1255, wx.ID_REOPEN_TO_CP1256, wx.ID_REOPEN_TO_CP1257,
                       wx.ID_REOPEN_TO_CP1250, wx.ID_TOOLBAR_SAVE, wx.ID_TOGGLE_COMMENT, wx.ID_TOGGLE_BLOCK_COMMENT,
-                      wx.ID_MOVE_LINE_UP, wx.ID_MOVE_LINE_DOWN, wx.ID_SELECT_ALL, wx.ID_DUPLICATE_LINE, wx.ID_DELETE_LINE
+                      wx.ID_MOVE_LINE_UP, wx.ID_MOVE_LINE_DOWN, wx.ID_SELECT_ALL, wx.ID_DUPLICATE_LINE, wx.ID_DELETE_LINE,
+                      wx.ID_CLOSE_CURRENT_FILE
                       ]
         for element_id in button_ids:
             menu_item = self.GetMenuBar().FindItemById(element_id)
@@ -2827,13 +3080,14 @@ samp.ban
         
 
     def open_file_in_tab(self, file_path):
+        file_path = PlatformUtils.normalize_path(file_path)
         for page_idx in range(self.m_auinotebook_Main.GetPageCount()):
             tab = self.m_auinotebook_Main.GetPage(page_idx)
-
+     
             if hasattr(tab, 'file_path') and tab.file_path == file_path:
                 self.m_auinotebook_Main.SetSelection(page_idx)
                 return
-            
+          
         new_tab_page = CustomEditorTab(self.m_auinotebook_Main, file_path)
 
         file_name = os.path.basename(file_path)
@@ -2841,7 +3095,13 @@ samp.ban
 
         new_page_idx = self.m_auinotebook_Main.GetPageCount() - 1
         self.m_auinotebook_Main.SetPageToolTip(new_page_idx, file_path)
-        self.update_button_is_no_tabs() 
+        self.update_button_is_no_tabs()
+        
+        appdata_dir_check = PlatformUtils.get_config_dir()
+        config_path_check = os.path.join(appdata_dir_check, 'config.json')
+        config_path_check = PlatformUtils.normalize_path(config_path_check)
+        if file_path != config_path_check:
+            self.add_recent_file(file_path)
 
     def on_tree_item_clicked(self,event):
         item = event.GetItem()
