@@ -24,6 +24,7 @@ import wx.xrc
 
 import webbrowser
 import os
+import sys
 
 from core.logger import SpawnLogger
 from core.platform_utils import PlatformUtils
@@ -32,10 +33,21 @@ from core.version import __version__
 import gettext
 _ = gettext.gettext
 
+def get_app_root_dir():
+    if 'NUITKA_ONEFILE_PARENT' in os.environ or getattr(sys, 'frozen', False):
+        return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+
+    ui_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.dirname(ui_dir)
+
+APP_ROOT = get_app_root_dir()
+
 class BugReportDialog ( wx.Dialog ):
 
     def __init__( self, parent ):
-        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"Bug Report"), pos = wx.DefaultPosition, size = wx.Size( 718,466 ), style = wx.DEFAULT_DIALOG_STYLE )
+        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"Bug Report"), pos = wx.DefaultPosition, size = wx.Size( 718,466 ), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
+        icon = wx.Icon(os.path.join(APP_ROOT, "assets", "bug_report.ico"), wx.BITMAP_TYPE_ICO) 
+        self.SetIcon(icon)
 
         self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 

@@ -129,6 +129,7 @@ wx.ID_DELETE_LINE = 6096
 
 wx.ID_CLOSE_CURRENT_FILE = 6097
 
+
 wx.ID_BUG_REPORT = 6074
 
 def get_app_root_dir():
@@ -179,12 +180,6 @@ class SpawnFrame ( wx.Frame ):
         self.m_tool_RunServer = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_RUN_STOP_SERVER, _(u"Run / Stop Server"), wx.Bitmap(os.path.join(self.icons_folder,"tb_server_run.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Run / Stop Server"), wx.EmptyString, None )
 
         #self.m_tool_RunLinter = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_LINTER_RUN, _(u"Verify code"), wx.Bitmap( u"assets/icons/tb_linter_run.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Verify code"), wx.EmptyString, None )
-##        self.m_auiToolBar.AddStretchSpacer(1)
-##        self.m_infoCtrl = wx.InfoBar( self.m_auiToolBar )
-##        self.m_infoCtrl.SetMinSize(wx.Size(500, -1))
-##        self.m_infoCtrl.SetShowHideEffects( wx.SHOW_EFFECT_SLIDE_TO_LEFT, wx.SHOW_EFFECT_SLIDE_TO_RIGHT )
-##        self.m_infoCtrl.SetEffectDuration( 300 )
-##        self.m_auiToolBar.AddControl( self.m_infoCtrl )
 
         self.m_auiToolBar.Realize()
         self.m_mgr.AddPane( self.m_auiToolBar, wx.aui.AuiPaneInfo() .Top() .CaptionVisible( False ).CloseButton( False ).PaneBorder( False ).Movable( False ).Dock().Resizable().FloatingSize( wx.Size( 43,219 ) ).DockFixed( True ).BottomDockable( False ).LeftDockable( False ).RightDockable( False ).Floatable( False ).Layer( 10 ) )
@@ -267,22 +262,7 @@ class SpawnFrame ( wx.Frame ):
         self.m_menuItem_ToggleBlockComment = wx.MenuItem( self.m_edit, wx.ID_TOGGLE_BLOCK_COMMENT, _(u"Toggle Block Comment")+ u"\t" + u"Ctrl+Alt+A", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_ToggleBlockComment )
 
-        self.m_edit.AppendSeparator()
 
-        self.m_menuItem_MoveLineUp = wx.MenuItem( self.m_edit, wx.ID_MOVE_LINE_UP, _(u"Move Line Up")+ u"\t" + u"Alt+Up", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_edit.Append( self.m_menuItem_MoveLineUp)
-
-        self.m_menuItem_MoveLineDown = wx.MenuItem( self.m_edit, wx.ID_MOVE_LINE_DOWN, _(u"Move Line Down")+ u"\t" + u"Alt+Down", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_edit.Append( self.m_menuItem_MoveLineDown)
-
-        self.m_menuItem_DuplicateLine = wx.MenuItem( self.m_edit, wx.ID_DUPLICATE_LINE, _(u"Duplicate Line")+ u"\t" + u"Ctrl+D", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_edit.Append( self.m_menuItem_DuplicateLine)
-
-        self.m_menuItem_DeleteLine = wx.MenuItem( self.m_edit, wx.ID_DELETE_LINE, _(u"Delete Line")+ u"\t" + u"Ctrl+Shift+K", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_edit.Append( self.m_menuItem_DeleteLine)
-
-        #self.m_menuItem_QuickOutline = wx.MenuItem( self.m_edit, wx.ID_QUICK_OUTLINE, _(u"Quick Outline...")+ u"\t" + u"Ctrl+P", wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_edit.Append( self.m_menuItem_QuickOutline )
         self.m_edit.AppendSeparator()
 
         encoding_submenu = wx.Menu()
@@ -309,7 +289,23 @@ class SpawnFrame ( wx.Frame ):
         self.item_lf = eol_submenu.AppendRadioItem(wx.ID_EOL_LF, u"Unix (LF)")
         self.m_edit.AppendSubMenu(eol_submenu, _(u"Line Endings"), wx.EmptyString)
         self.m_menubar.Append( self.m_edit, _(u"Edit") )
+        
+        #Selection Menu
+        self.m_selection = wx.Menu()
+        self.m_menuItem_MoveLineUp = wx.MenuItem( self.m_selection, wx.ID_MOVE_LINE_UP, _(u"Move Line Up")+ u"\t" + u"Alt+Up", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_selection.Append( self.m_menuItem_MoveLineUp)
 
+        self.m_menuItem_MoveLineDown = wx.MenuItem( self.m_selection, wx.ID_MOVE_LINE_DOWN, _(u"Move Line Down")+ u"\t" + u"Alt+Down", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_selection.Append( self.m_menuItem_MoveLineDown)
+
+        self.m_menuItem_DuplicateLine = wx.MenuItem( self.m_selection, wx.ID_DUPLICATE_LINE, _(u"Duplicate Line")+ u"\t" + u"Ctrl+D", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_selection.Append( self.m_menuItem_DuplicateLine)
+
+        self.m_menuItem_DeleteLine = wx.MenuItem( self.m_selection, wx.ID_DELETE_LINE, _(u"Delete Line")+ u"\t" + u"Ctrl+Shift+K", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_selection.Append( self.m_menuItem_DeleteLine)
+
+        self.m_menubar.Append( self.m_selection, _(u"Selection") )
+        #View Menu  
         self.m_view = wx.Menu()
         self.m_menuItem_FullScreen = wx.MenuItem( self.m_view, wx.ID_FULLSCREEN, _(u"Full Screen")+ u"\t" + u"F11", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_FullScreen )
@@ -392,27 +388,9 @@ class SpawnFrame ( wx.Frame ):
 ##        self.m_tools.AppendSubMenu(language_submenu, _(u"Language"), wx.EmptyString)
 
 ##        self.m_tools.AppendSeparator()
-
-        def_encoding_submenu = wx.Menu()
-        self.m_tools.AppendSubMenu(def_encoding_submenu, _(u"Default Encoding"), wx.EmptyString)
-        def_encoding_set_submenu = wx.Menu()
-        self.item_set_to_utf8 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_UTF8, u"UTF-8 (Unicode)")
-        self.item_set_to_cp1250 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1250, u"Windows-1250 (Central European)")
-        self.item_set_to_cp1251 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1251, u"Windows-1251 (Cyrillic)")
-        self.item_set_to_cp1252 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1252, u"Windows-1252 (Western European)")
-        self.item_set_to_cp1253 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1253, u"Windows-1253 (Greek)")
-        self.item_set_to_cp1254 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1254, u"Windows-1254 (Turkish)")
-        self.item_set_to_cp1255 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1255, u"Windows-1255 (Hebrew)")
-        self.item_set_to_cp1256 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1256, u"Windows-1256 (Arabic)")
-        self.item_set_to_cp1257 = def_encoding_set_submenu.AppendRadioItem(wx.ID_SET_TO_CP1257, u"Windows-1257 (Baltic)")
-        def_encoding_submenu.AppendSubMenu(def_encoding_set_submenu, u"Pawn", wx.EmptyString)
-
-        self.m_tools.AppendSeparator()
         
         self.m_menuItem_Settings = wx.MenuItem( self.m_tools, wx.ID_SETTINGS, _(u"Settings..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_tools.Append( self.m_menuItem_Settings )
-        self.m_menuItem_ResetSettings = wx.MenuItem( self.m_tools, wx.ID_RESET_SETTINGS, _(u"Reset Settings"), wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_tools.Append( self.m_menuItem_ResetSettings )
 
         self.m_menubar.Append( self.m_tools, _(u"Tools") )
 

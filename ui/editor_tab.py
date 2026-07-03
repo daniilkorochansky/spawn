@@ -46,6 +46,9 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.m_scintilla_Editor.Bind(stc.EVT_STC_MARGINCLICK, self.on_editor_margin_click)
         self.m_scintilla_Editor.Bind(stc.EVT_STC_ZOOM, self.on_zoom_changed)
 
+        self._multiselect_text = None
+        self._multiselect_last_end = None
+
         self.COLOR_PREVIEW_INDICATOR_ID = 16
 
         self.COLOR_PREVIEW_MARKER_ID = 4
@@ -76,6 +79,9 @@ class CustomEditorTab(gui.EditorTabPanel):
         
         self.m_scintilla_Editor.Bind(stc.EVT_STC_MODIFIED, self.on_editor_modified_tracker)
 
+        self.m_scintilla_Editor.Bind(stc.EVT_STC_CHARADDED,self.on_editor_char_added)
+        self.m_scintilla_Editor.Bind(wx.EVT_KEY_DOWN,self.on_editor_key_down)
+
         if wx.Platform == '__WXMSW__':
             try:
                 self.m_scintilla_Editor.SetTechnology(stc.STC_TECHNOLOGY_DIRECTWRITE)
@@ -86,6 +92,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.color_preview = True
         self.brace_matching = True
         self.show_change_history = True
+        self.smart_indent = True
         #--------------------------
         self.update_zoom_status()
         
@@ -94,6 +101,336 @@ class CustomEditorTab(gui.EditorTabPanel):
             self.apply_lexer_by_extension()
         else:
             self.set_plain_text_mode()
+
+    def apply_settings(self):
+        editor = self.m_scintilla_Editor
+
+        self.color_preview = self.ide_cfg.get("editor.features.color_preview", True)
+        self.brace_matching = self.ide_cfg.get("editor.features.brace_matching.enabled", True)
+        self.show_change_history = self.ide_cfg.get("editor.features.show_change_history.enabled", True)
+        self.smart_indent = self.ide_cfg.get("editor.features.smart_indent", True)
+
+        font_size = self.ide_cfg.get("editor.font.size", 11)
+        font_family = self.ide_cfg.get("editor.font.family", PlatformUtils.default_editor_font())
+        font = wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family)
+        editor.StyleResetDefault()
+        
+        editor.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
+        line_spacing = self.ide_cfg.get("editor.font.line_spacing", 0)
+        if line_spacing < 0:
+            editor.SetExtraAscent(0)
+            editor.SetExtraDescent(line_spacing)
+        else:
+            editor.SetExtraAscent(line_spacing)
+            editor.SetExtraDescent(0)
+            
+        if self.ide_cfg.get("editor.features.multicursor.enable", False):
+            editor.SetMultipleSelection(True)
+            editor.SetAdditionalSelectionTyping(True)
+        else:
+            editor.SetMultipleSelection(False)
+            editor.SetAdditionalSelectionTyping(False)
+
+        if not self.color_preview:
+            editor.MarkerDeleteAll(self.COLOR_PREVIEW_MARKER_ID)
+            total_chars = editor.GetTextLength()
+            editor.SetIndicatorCurrent(self.COLOR_PREVIEW_INDICATOR_ID)
+            editor.IndicatorClearRange(0, total_chars)
+            editor.SetMarginWidth(2, 0)
+        else:
+            editor.SetMarginType(2, stc.STC_MARGIN_SYMBOL)
+            editor.SetMarginWidth(2, 14)
+            editor.SetMarginMask(2, 1 << self.COLOR_PREVIEW_MARKER_ID)
+            editor.SetMarginSensitive(2, True)
+
+        if self.ide_cfg.get("editor.features.folding", True) and editor.GetLexer() == stc.STC_LEX_CPP:
+            editor.SetMarginType(3, stc.STC_MARGIN_SYMBOL)
+            editor.SetMarginWidth(3, 16)
+            editor.SetMarginMask(3, stc.STC_MASK_FOLDERS)
+            editor.SetMarginSensitive(3, True)
+
+            v = ('#F3F3F3', '#606060')
+            editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, *v)
+            editor.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, *v)
+            editor.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, *v)
+            editor.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNER, *v)
+            editor.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, *v)
+            editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, *v)
+            editor.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, *v)
+
+            
+            editor.SetProperty("fold", "1")
+            editor.SetProperty("fold.comment", "1")
+            editor.SetProperty("fold.compact", "0")
+            editor.SetFoldFlags(stc.STC_FOLDFLAG_LINEBEFORE_CONTRACTED)
+        else:
+            editor.SetProperty("fold", "0")
+            editor.SetProperty("fold.comment", "0")
+            editor.SetMarginWidth(3, 0)
+
+        if self.show_change_history and editor.GetLexer() == stc.STC_LEX_CPP:
+            editor.SetMarginType(1, stc.STC_MARGIN_SYMBOL)
+            editor.SetMarginWidth(1, 4)
+            editor.SetMarginMask(1, (1 << 13) | (1 << 14))
+            editor.SetMarginSensitive(1, False)
+
+            editor.MarkerDeleteAll(13)
+            editor.MarkerDeleteAll(14)
+
+            marker_modified_color = self.ide_cfg.get("editor.features.show_change_history.color_marker_modified", "#FFD324")
+            marker_saved_color = self.ide_cfg.get("editor.features.show_change_history.color_marker_saved", "#228B22")
+            
+            editor.MarkerDefine(self.MARKER_MODIFIED_ID, stc.STC_MARK_FULLRECT)
+            editor.MarkerSetForeground(self.MARKER_MODIFIED_ID, marker_modified_color)
+            editor.MarkerSetBackground(self.MARKER_MODIFIED_ID, marker_modified_color)
+            editor.MarkerDefine(self.MARKER_SAVED_ID, stc.STC_MARK_FULLRECT)
+            editor.MarkerSetForeground(self.MARKER_SAVED_ID, marker_saved_color)
+            editor.MarkerSetBackground(self.MARKER_SAVED_ID, marker_saved_color)
+        else:
+            editor.SetMarginWidth(1, 0)
+            editor.MarkerDeleteAll(13)
+            editor.MarkerDeleteAll(14)
+
+        if self.ide_cfg.get("editor.features.line_numbers", True):
+            editor.SetMarginType(0, stc.STC_MARGIN_NUMBER )
+            editor.SetMarginWidth(0, editor.TextWidth( stc.STC_STYLE_LINENUMBER, "_999999" ) )
+        else:
+            editor.SetMarginWidth(0, 0)
+
+        if self.brace_matching:
+            color_bracelight = self.ide_cfg.get("editor.features.brace_matching.color_bracelight", "#FFFFFF")
+            backcolor_bracelight = self.ide_cfg.get("editor.features.brace_matching.backcolor_bracelight", "#E0E0FF")
+            color_bracebad = self.ide_cfg.get("editor.features.brace_matching.color_bracebad", "#FFFFFF")
+            backcolor_bracebad = self.ide_cfg.get("editor.features.brace_matching.backcolor_bracebad", "#E51400")
+
+            editor.StyleSetFont(stc.STC_STYLE_BRACELIGHT, wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family))
+            editor.StyleSetForeground(stc.STC_STYLE_BRACELIGHT, color_bracelight)
+            editor.StyleSetBackground(stc.STC_STYLE_BRACELIGHT, backcolor_bracelight)
+            editor.StyleSetFont(stc.STC_STYLE_BRACEBAD, wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family))
+            editor.StyleSetForeground(stc.STC_STYLE_BRACEBAD, color_bracebad)
+            editor.StyleSetBackground(stc.STC_STYLE_BRACEBAD, backcolor_bracebad)
+        else:
+            editor.BraceHighlight(-1, -1)
+
+        editor.SetCaretLineBackground(self.ide_cfg.get("editor.current_line_color","#F8FAFD"))
+        editor.SetSelBackground( True, self.ide_cfg.get("editor.selection_color", "#CCE8FF"))
+            
+    def _is_inside_comment_or_string(self,editor,pos):
+        style = editor.GetStyleAt(pos)
+
+        return style in (
+            stc.STC_C_COMMENT,
+            stc.STC_C_COMMENTLINE,
+            stc.STC_C_STRING,
+            stc.STC_C_CHARACTER
+        )
+
+    def _smart_backspace(self,editor):
+        pos = editor.GetCurrentPos()
+
+        if pos <= 0:
+            return False
+
+        if pos >= editor.GetTextLength():
+            return False
+
+        left = chr(editor.GetCharAt(pos - 1))
+        right = chr(editor.GetCharAt(pos))
+
+        pairs = {
+            "(": ")",
+            "[": "]",
+            "{": "}",
+            "\"": "\"",
+            "'": "'"
+        }
+
+        if left in pairs and pairs[left] == right:
+            editor.BeginUndoAction()
+            try:
+
+                editor.SetTargetStart(pos - 1)
+                editor.SetTargetEnd(pos + 1)
+                editor.ReplaceTarget("")
+
+            finally:
+                editor.EndUndoAction()
+
+            return True
+
+        return False
+
+    def _skip_closing_char(self,editor,key_char):
+        pos = editor.GetCurrentPos()
+
+        if pos >= editor.GetTextLength():
+            return False
+
+        current = editor.GetCharAt(pos)
+        if current == ord(key_char):
+
+            editor.GotoPos(pos + 1)
+
+            return True
+
+        return False
+
+    def on_editor_key_down(self, event):
+        event.Skip()
+
+    def on_editor_char_added(self, event):
+        if self.smart_indent:
+            editor = self.m_scintilla_Editor
+
+            ch = event.GetKey()
+
+            if ch == ord('\n'):
+                self.smart_indent_newline(editor)
+
+            elif ch == ord('}'):
+                self.smart_indent_closing_brace(editor)
+
+       
+        event.Skip()
+
+    def smart_indent_closing_brace(self, editor):
+        pos = editor.GetCurrentPos()
+
+        line_num = editor.LineFromPosition(pos)
+
+        line_start = editor.PositionFromLine(
+            line_num
+        )
+
+        text_before = editor.GetTextRange(
+            line_start,
+            pos
+        )
+
+        # строка должна содержать
+        # только табы и }
+        if text_before.strip() != "}":
+            return
+
+        level = self.get_indent_level(
+            editor,
+            line_num
+        )
+
+        indent = "\t" * max(0, level - 1)
+
+        editor.BeginUndoAction()
+
+        try:
+
+            editor.SetTargetStart(line_start)
+            editor.SetTargetEnd(pos)
+
+            editor.ReplaceTarget(
+                indent + "}"
+            )
+
+        finally:
+
+            editor.EndUndoAction()
+
+    def smart_indent_newline(self, editor):
+        pos = editor.GetCurrentPos()
+
+        line_num = editor.LineFromPosition(pos)
+
+        level = self.get_indent_level(
+            editor,
+            line_num
+        )
+
+        current_line = editor.GetLine(line_num).strip()
+
+        # Если строка начинается с }
+        if current_line.startswith("}"):
+            level -= 1
+
+        level = max(0, level)
+
+        indent = "\t" * level
+
+        editor.AddText(indent)
+
+        prev_line = editor.GetLine(
+            max(0, line_num - 1)
+        ).strip()
+
+        if (
+            prev_line.endswith("{")
+            and
+            current_line.startswith("}")
+        ):
+
+            editor.BeginUndoAction()
+
+            try:
+
+                editor.SetCurrentPos(pos)
+                editor.SetSelection(pos, pos)
+
+                editor.AddText(
+                    "\n" +
+                    ("\t" * (level - 1))
+                )
+
+                editor.SetCurrentPos(
+                    pos + len(indent)
+                )
+
+                editor.SetSelection(
+                    pos + len(indent),
+                    pos + len(indent)
+                )
+
+            finally:
+
+                editor.EndUndoAction()
+
+    def get_indent_level(self, editor, target_line):
+        level = 0
+
+        in_string = False
+        escape = False
+
+        for line_num in range(target_line):
+
+            line = editor.GetLine(line_num)
+
+            # убрать // комментарий
+            comment_pos = line.find("//")
+
+            if comment_pos != -1:
+                line = line[:comment_pos]
+
+            for ch in line:
+
+                if escape:
+                    escape = False
+                    continue
+
+                if ch == "\\":
+                    escape = True
+                    continue
+
+                if ch == '"':
+                    in_string = not in_string
+                    continue
+
+                if in_string:
+                    continue
+
+                if ch == "{":
+                    level += 1
+
+                elif ch == "}":
+                    level -= 1
+
+        return max(0, level)
 
     def on_zoom_changed(self, event):
         self.update_zoom_status()
@@ -553,40 +890,6 @@ class CustomEditorTab(gui.EditorTabPanel):
 
         event.Skip()
 
-##    def configure_minimap_base(self):
-##        font = wx.Font(2, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Consolas")
-##        self.m_scintilla_Minimap.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
-##        self.m_scintilla_Minimap.StyleSetSize(stc.STC_STYLE_DEFAULT, 2)
-##
-##        self.m_scintilla_Minimap.StyleResetDefault()
-##        self.m_scintilla_Minimap.StyleClearAll()
-##
-##        for style_idx in range(0,256):
-##            self.m_scintilla_Minimap.StyleSetFont(style_idx, font)
-##            self.m_scintilla_Minimap.StyleSetSize(style_idx, 2)
-##
-##        self.m_scintilla_Minimap.SetExtraAscent(0)
-##        self.m_scintilla_Minimap.SetExtraDescent(0)
-##
-##        if hasattr(self.m_scintilla_Minimap, "SetLineSpacing"):
-##            self.m_scintilla_Minimap.SetLineSpacing(0)
-##
-##        self.m_scintilla_Minimap.SetProperty("fold", "0")
-##
-##        self.m_scintilla_Minimap.StyleSetSize(0, 2)
-##        self.m_scintilla_Minimap.SetMarginWidth(0,0)
-##        self.m_scintilla_Minimap.SetMarginWidth(1,0)
-##        self.m_scintilla_Minimap.SetMarginWidth(2,0)
-##        self.m_scintilla_Minimap.SetHScrollBar(None)
-##        self.m_scintilla_Minimap.SetVScrollBar(None)
-##
-##        self.m_scintilla_Minimap.SetCaretLineVisible(False)
-##        self.m_scintilla_Minimap.SetCaretWidth(0)
-##        
-##
-##        self.m_scintilla_Minimap.SetSelBackground(True, "#FFFFFF")
-##        self.m_scintilla_Minimap.SetSelForeground(True, "#000000")
-
 
     def apply_lexer_by_extension(self):
         if not self.file_path:
@@ -597,11 +900,11 @@ class CustomEditorTab(gui.EditorTabPanel):
 
         if ext in ['.pwn', '.inc']:
             self.m_scintilla_Editor.SetLexer(stc.STC_LEX_CPP)
-            #self.m_scintilla_Minimap.SetLexer(stc.STC_LEX_CPP)
+           
             self.apply_pawn_styles()
         elif ext in ['.json']:
             self.m_scintilla_Editor.SetLexer(stc.STC_LEX_JSON)
-            #self.m_scintilla_Minimap.SetLexer(stc.STC_LEX_JSON)
+           
             self.apply_json_styles()
         else:
             self.set_plain_text_mode()
@@ -609,59 +912,28 @@ class CustomEditorTab(gui.EditorTabPanel):
     def set_plain_text_mode(self):
         editor = self.m_scintilla_Editor
         editor.SetLexer(stc.STC_LEX_NULL)
-        editor.StyleResetDefault()
 
-        font_size = self.ide_cfg.get("editor.font.size", 11)
-        font_family = self.ide_cfg.get("editor.font.family", "Consolas")
-        font = wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family)
-        editor.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
-
-        editor.StyleClearAll()
+        self.apply_settings()
+        
+        editor.StyleSetForeground(stc.STC_STYLE_DEFAULT, "#1E1E1E")
+        editor.SetCaretForeground("#1E1E1E")
+        editor.SetCaretLineVisible(True)
         editor.Refresh()
-
-        editor.MarkerDeleteAll(self.MARKER_MODIFIED_ID)
-        editor.MarkerDeleteAll(self.MARKER_SAVED_ID)
-        editor.MarkerDeleteAll(self.MARKER_GIT_MODIFIED_ID)
-
-        editor.SetMarginWidth(1, 0)
-        editor.SetMarginWidth(2, 0)
 
     def apply_pawn_styles(self):
         editor = self.m_scintilla_Editor
 
-        editor.SetEdgeColumn(120)
-        editor.SetEdgeMode(stc.STC_EDGE_LINE)
-
-        editor.SetMultipleSelection(True)
-        editor.SetAdditionalSelectionTyping(True)
-        
-        self.color_preview = self.ide_cfg.get("editor.features.color_preview", True)
-        self.brace_matching = self.ide_cfg.get("editor.features.brace_matching.enabled", True)
-        self.show_change_history = self.ide_cfg.get("editor.features.show_change_history.enabled", True)
-        
         pawn_keywords = "public stock forward native new enum const static if else switch case default for while do break continue return sizeof state goto char hook"
         pawn_types = "bool Float Text PlayerText Text3D Menu DB DBResult Bit Group File SV_GSTREAM SV_STREAM"
         pawn_preprocessor = "define include pragma endinput if else elseif endif assert tryinclude error emit undef"
         
         editor.SetLexer(stc.STC_LEX_CPP)
 
-        font_size = self.ide_cfg.get("editor.font.size", 11)
-        font_family = self.ide_cfg.get("editor.font.family", "Consolas")
-        font = wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family)
-        editor.StyleResetDefault()
+        self.apply_settings()
         
-        editor.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
-        line_spacing = self.ide_cfg.get("editor.font.line_spacing", 0)
-        if line_spacing < 0:
-            editor.SetExtraAscent(0)
-            editor.SetExtraDescent(line_spacing)
-        else:
-            editor.SetExtraAscent(line_spacing)
-            editor.SetExtraDescent(0)
-
         editor.StyleSetForeground(stc.STC_STYLE_DEFAULT, "#1E1E1E")
                   
-        editor.StyleClearAll()
+        #editor.StyleClearAll()
 
         editor.SetKeyWords(0, pawn_keywords)
         editor.SetKeyWords(1, pawn_types)
@@ -671,7 +943,6 @@ class CustomEditorTab(gui.EditorTabPanel):
         editor.StyleSetForeground(stc.STC_C_COMMENTLINE, "#6A9955")
         editor.StyleSetForeground(stc.STC_C_COMMENTDOC, "#6A9955")
         editor.StyleSetForeground(stc.STC_C_WORD, "#005CC5")
-        #editor.StyleSetBold(stc.STC_C_WORD, True)
         editor.StyleSetForeground(stc.STC_C_WORD2, "#6F42C1")
         editor.StyleSetForeground(stc.STC_C_PREPROCESSOR, "#AF00DB")
         editor.StyleSetForeground(stc.STC_C_STRING, "#C41A16")
@@ -685,98 +956,23 @@ class CustomEditorTab(gui.EditorTabPanel):
 
         editor.SetCaretForeground("#1E1E1E")
         editor.SetCaretLineVisible(True)
-        editor.SetCaretLineBackground("#F8FAFD")
-
-        color_bracelight = self.ide_cfg.get("editor.features.brace_matching.color_bracelight", "#FFFFFF")
-        backcolor_bracelight = self.ide_cfg.get("editor.features.brace_matching.backcolor_bracelight", "#E0E0FF")
-        color_bracebad = self.ide_cfg.get("editor.features.brace_matching.color_bracebad", "#FFFFFF")
-        backcolor_bracebad = self.ide_cfg.get("editor.features.brace_matching.backcolor_bracebad", "#E51400")
-
-        editor.StyleSetFont(stc.STC_STYLE_BRACELIGHT, wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family))
-        editor.StyleSetForeground(stc.STC_STYLE_BRACELIGHT, color_bracelight)
-        editor.StyleSetBackground(stc.STC_STYLE_BRACELIGHT, backcolor_bracelight)
-        editor.StyleSetFont(stc.STC_STYLE_BRACEBAD, wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family))
-        editor.StyleSetForeground(stc.STC_STYLE_BRACEBAD, color_bracebad)
-        editor.StyleSetBackground(stc.STC_STYLE_BRACEBAD, backcolor_bracebad)
-
-        is_line_numbers = self.ide_cfg.get("editor.features.line_numbers", False)
-        if is_line_numbers:
-            editor.SetMarginType( 0, stc.STC_MARGIN_NUMBER )
-            editor.SetMarginWidth( 0, editor.TextWidth( stc.STC_STYLE_LINENUMBER, "_999999" ) )
-
-        editor.SetMarginType(1, stc.STC_MARGIN_SYMBOL)
-        editor.SetMarginWidth(1, 4)
-        editor.SetMarginMask(1, (1 << 13) | (1 << 14))
-        editor.SetMarginSensitive(1, False)
-
-        marker_modified_color = self.ide_cfg.get("editor.features.show_change_history.color_marker_modified", "#FFD324")
-        marker_saved_color = self.ide_cfg.get("editor.features.show_change_history.color_marker_saved", "#228B22")
-        
-        editor.MarkerDefine(self.MARKER_MODIFIED_ID, stc.STC_MARK_FULLRECT)
-        editor.MarkerSetForeground(self.MARKER_MODIFIED_ID, marker_modified_color)
-        editor.MarkerSetBackground(self.MARKER_MODIFIED_ID, marker_modified_color)
-        editor.MarkerDefine(self.MARKER_SAVED_ID, stc.STC_MARK_FULLRECT)
-        editor.MarkerSetForeground(self.MARKER_SAVED_ID, marker_saved_color)
-        editor.MarkerSetBackground(self.MARKER_SAVED_ID, marker_saved_color)
 
         editor.MarkerDefine(self.MARKER_GIT_MODIFIED_ID, wx.stc.STC_MARK_BACKGROUND)
         editor.MarkerSetBackground(self.MARKER_GIT_MODIFIED_ID, "#FFF3CD")
 
-        editor.SetSelBackground( True, "#CCE8FF" )
         editor.SetSelForeground( True, "#1E1E1E" )
         editor.StyleSetForeground(stc.STC_STYLE_LINENUMBER,"#808080")
         editor.StyleSetBackground(stc.STC_STYLE_LINENUMBER,"#F3F3F3")
         editor.SetFoldMarginColour(True, "#F7F7F7")
         editor.SetFoldMarginHiColour(True, "#F7F7F7")
-
-        editor.SetMarginType(3, stc.STC_MARGIN_SYMBOL)
-        editor.SetMarginWidth(3, 16)
-        editor.SetMarginMask(3, stc.STC_MASK_FOLDERS)
-        editor.SetMarginSensitive(3, True)
-
-        v = ('#F3F3F3', '#606060')
-        editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, *v)
-        editor.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, *v)
-        editor.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, *v)
-        editor.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNER, *v)
-        editor.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, *v)
-        editor.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, *v)
-        editor.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, *v)
-
-        if self.color_preview:
-            editor.SetMarginType(2, stc.STC_MARGIN_SYMBOL)
-            editor.SetMarginWidth(2, 14)
-            editor.SetMarginMask(2, 1 << self.COLOR_PREVIEW_MARKER_ID)
-            editor.SetMarginSensitive(2, True)
-
-        is_folding = self.ide_cfg.get("editor.features.folding", False)
-        if is_folding:
-            editor.SetProperty("fold", "1")
-            editor.SetProperty("fold.comment", "1")
-            editor.SetProperty("fold.compact", "0")
-            editor.SetFoldFlags(stc.STC_FOLDFLAG_LINEBEFORE_CONTRACTED)
-
+        
         editor.Refresh()
 
     def apply_json_styles(self):
         editor = self.m_scintilla_Editor
         editor.SetLexer(stc.STC_LEX_JSON)
-        
-        font_size = self.ide_cfg.get("editor.font.size", 11)
-        font_family = self.ide_cfg.get("editor.font.family", "Consolas")
-        font = wx.Font(font_size, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, font_family)
-        editor.StyleResetDefault()
-        
-        editor.StyleSetFont(stc.STC_STYLE_DEFAULT, font)
-        line_spacing = self.ide_cfg.get("editor.font.line_spacing", 0)
-        if line_spacing < 0:
-            editor.SetExtraAscent(0)
-            editor.SetExtraDescent(line_spacing)
-        else:
-            editor.SetExtraAscent(line_spacing)
-            editor.SetExtraDescent(0)
-            
-        editor.StyleClearAll()
+
+        self.apply_settings()
 
         editor.StyleSetForeground(stc.STC_JSON_PROPERTYNAME, "#0451A5")
         editor.StyleSetBold(stc.STC_JSON_PROPERTYNAME, True)
@@ -789,12 +985,8 @@ class CustomEditorTab(gui.EditorTabPanel):
         editor.SetTabWidth(4)
         editor.SetUseTabs(False)
 
-        editor.SetCaretForeground("#000000")
+        editor.SetCaretForeground("#1E1E1E")
         editor.SetCaretLineVisible(True)
-        editor.SetCaretLineBackground("#E8E8E8")
-
-        editor.SetMarginWidth(1, 0)
-        editor.SetMarginMask(1, 0)
             
         editor.Refresh()
 

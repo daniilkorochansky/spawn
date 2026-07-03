@@ -39,6 +39,7 @@ from ui.spawn_base import SpawnFrame
 from ui.editor_tab import CustomEditorTab
 from ui.support_dialog import SupportDialog
 from ui.about_dialog import SpawnAboutDialog
+from ui.settings_dialog import SettingsDialog
 from ui.project_tree import ProjectTreeManager
 from ui.bug_report_dialog import BugReportDialog
 from ui.new_project_dialog import NewProjectDialog
@@ -81,7 +82,7 @@ class SpawnFileDropTarget(wx.FileDropTarget):
             if os.path.isfile(file_path):
                 if self.main_frame.try_register_tool(file_path):
                     continue
-                elif Path(file_path).suffix.lower() in (".exe", ".jpg", ".png", ".mp4", ".mp3", ".ogg", ".avi", ".wav", ".bin", ".iso", ".md", ".pdf", ".doc", ".gif", ".pdb"):
+                elif Path(file_path).suffix.lower() not in (".pwn", ".json", ".inc", ".cfg", ".txt", ".yaml", ".ini"):
                     continue
                 
                 self.main_frame.open_file_in_tab(file_path)
@@ -119,15 +120,6 @@ class SpawnIDE(SpawnFrame):
         self.m_statusBar.SetStatusText(u"---", 2)
         self.m_statusBar.SetStatusText(u"---", 3)
 
-##        self.file_history = wx.FileHistory(15)
-##        self.file_history.UseMenu(self.recent_files_submenu)
-##        
-##        recent_files = self.ide_cfg.get("system.recent_files",[])
-##        for path in reversed(recent_files):
-##            self.file_history.AddFileToHistory(path)
-
-        
-            
        #test
 ##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_ENGLISH)
 ##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_RUSSIAN)
@@ -153,8 +145,7 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_TOOL, self.on_open_single_file, id=wx.ID_TOOLBAR_OPEN_FILE)
         self.Bind(wx.EVT_MENU, self.on_ide_close_request, id=wx.ID_EXIT)
         
-        self.Bind(wx.EVT_MENU, self.on_open_settings_tab_click, id=wx.ID_SETTINGS)
-        self.Bind(wx.EVT_MENU, self.on_set_reset_settings_click, id=wx.ID_RESET_SETTINGS)
+        self.Bind(wx.EVT_MENU, self.on_open_settings_click, id=wx.ID_SETTINGS)
         
         self.Bind(wx.EVT_MENU, self.on_open_find_dialog, id=wx.ID_FIND_REPLACE)
         self.Bind(wx.EVT_MENU, self.on_execute_go_to_line, id=wx.ID_GO_TO_LINE)
@@ -178,6 +169,7 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_duplicate_line_click, id=wx.ID_DUPLICATE_LINE)
         self.Bind(wx.EVT_MENU, self.on_delete_line_click, id=wx.ID_DELETE_LINE)
 
+
         self.Bind(wx.EVT_MENU, self.on_zoom_in_click, id=wx.ID_ZOOM_IN)
         self.Bind(wx.EVT_MENU, self.on_zoom_out_click, id=wx.ID_ZOOM_OUT)
         self.Bind(wx.EVT_MENU, self.on_zoom_reset_click, id=wx.ID_RESET_ZOOM)
@@ -194,16 +186,6 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1255, id=wx.ID_REOPEN_TO_CP1255)
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1256, id=wx.ID_REOPEN_TO_CP1256)
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1257, id=wx.ID_REOPEN_TO_CP1257)
-
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_utf8, id=wx.ID_SET_TO_UTF8)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1250, id=wx.ID_SET_TO_CP1250)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1251, id=wx.ID_SET_TO_CP1251)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1252, id=wx.ID_SET_TO_CP1252)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1253, id=wx.ID_SET_TO_CP1253)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1254, id=wx.ID_SET_TO_CP1254)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1255, id=wx.ID_SET_TO_CP1255)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1256, id=wx.ID_SET_TO_CP1256)
-        self.Bind(wx.EVT_MENU, self.on_menu_set_enc_cp1257, id=wx.ID_SET_TO_CP1257)
         
         self.Bind(wx.EVT_TOOL, self.on_build_project_execute, id=wx.ID_TOOLBAR_BUILD_PROJECT)
         self.Bind(wx.EVT_MENU, self.on_build_project_execute, id=wx.ID_BUILD_PROJECT)
@@ -236,9 +218,7 @@ class SpawnIDE(SpawnFrame):
 
         self.Bind(wx.EVT_MENU, self.on_close_current_file_click, id=wx.ID_CLOSE_CURRENT_FILE)
 
-
         #self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_TAB_RIGHT_DOWN,self.on_editor_tab_context_menu)
-
 
         self.m_treeCtrl_ProjectTree.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_project_tree_right_click)
         
@@ -281,6 +261,7 @@ class SpawnIDE(SpawnFrame):
         self.update_git_ui_controls_state()
         
         self.update_recent_files_menu()
+        
 
     def on_close_current_file_click(self, event):
         global_config_path = PlatformUtils.normalize_path(getattr(self.ide_cfg, "config_path", ""))
@@ -323,15 +304,16 @@ class SpawnIDE(SpawnFrame):
 
     def add_recent_file(self, path):
         path = PlatformUtils.normalize_path(path)
-        recent = self.ide_cfg.get("system.recent_files",[])
+        recent = self.ide_cfg.get("recent_files",[])
         if path in recent:
             recent.remove(path)
 
         recent.insert(0, path)
+        
+        r_limit = self.ide_cfg.get("recent_files_limit",15)
+        recent = recent[:r_limit]
 
-        recent = recent[:15]
-
-        self.ide_cfg.set("system.recent_files", recent)
+        self.ide_cfg.set("recent_files", recent)
 
         self.update_recent_files_menu()
 
@@ -341,14 +323,14 @@ class SpawnIDE(SpawnFrame):
             item = self.recent_files_submenu.FindItemByPosition(0)
             self.recent_files_submenu.DestroyItem(item)
 
-        recent = self.ide_cfg.get("system.recent_files",[])
+        recent = self.ide_cfg.get("recent_files",[])
         valid_files = []
         for path in recent:
             if os.path.exists(path):
                 valid_files.append(path)
 
         recent = valid_files
-        self.ide_cfg.set("system.recent_files", recent)
+        self.ide_cfg.set("recent_files", recent)
 
         for path in recent:
             if not os.path.exists(path):
@@ -403,7 +385,7 @@ class SpawnIDE(SpawnFrame):
         self.open_file_in_tab(path)
 
     def on_clear_recent_files(self, event):
-        self.ide_cfg.set("system.recent_files", [])
+        self.ide_cfg.set("recent_files", [])
 
         self.update_recent_files_menu()
 
@@ -485,30 +467,6 @@ class SpawnIDE(SpawnFrame):
 
     def on_context_tab_close_all(self, event):
         pass
-
-##    def on_recent_file_click(self, event):
-##        file_num = (event.GetId() - wx.ID_FILE1)
-##
-##        path = self.file_history.GetHistoryFile(file_num)
-##
-##        if not os.path.exists(path):
-##            wx.MessageBox(_("File not found."),_("Error"),wx.OK | wx.ICON_ERROR)
-##
-##            self.file_history.RemoveFileFromHistory(file_num)
-##            return
-##
-##        self.open_file_in_tab(path)
-
-##    def add_recent_file(self, path):
-##        path = PlatformUtils.normalize_path(path)
-##        self.file_history.AddFileToHistory(path)
-##        recent = []
-##        count = self.file_history.GetCount()
-##
-##        for i in range(count):
-##            recent.append(self.file_history.GetHistoryFile(i))
-##
-##        self.ide_cfg.set("system.recent_files", recent)
 
     def on_zenmode_click(self, event):
         if not self.zen_mode:
@@ -764,42 +722,6 @@ class SpawnIDE(SpawnFrame):
 
         return False
 
-    def on_menu_set_enc_utf8(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "utf-8")
-        self.item_set_to_utf8.Check(True)
-
-    def on_menu_set_enc_cp1250(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1250")
-        self.item_set_to_cp1250.Check(True)
-
-    def on_menu_set_enc_cp1251(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1251")
-        self.item_set_to_cp1251.Check(True)
-
-    def on_menu_set_enc_cp1252(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1252")
-        self.item_set_to_cp1252.Check(True)
-
-    def on_menu_set_enc_cp1253(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1253")
-        self.item_set_to_cp1253.Check(True)
-
-    def on_menu_set_enc_cp1254(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1254")
-        self.item_set_to_cp1254.Check(True)
-
-    def on_menu_set_enc_cp1255(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1255")
-        self.item_set_to_cp1255.Check(True)
-
-    def on_menu_set_enc_cp1256(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1256")
-        self.item_set_to_cp1256.Check(True)
-
-    def on_menu_set_enc_cp1257(self, event):
-        self.ide_cfg.set("system.pawn.default_encoding", "cp1257")
-        self.item_set_to_cp1257.Check(True)
-
     def on_bug_report_click(self, event):
         dlg = BugReportDialog(self)
         dlg.ShowModal()
@@ -1037,13 +959,13 @@ samp.ban
             self.reopen_with_encoding(tab, "cp1250")
             
 
-    def on_set_reset_settings_click(self, event):
-        confirm = wx.MessageBox(_(u"Are you sure you want to reset all settings to their default values?"), _(u"Warning"), wx.YES_NO | wx.ICON_WARNING, self)
-        if confirm == wx.NO:
-            return
-
-        self.ide_cfg.reset_settings()
-        self.check_environment_on_startup()
+##    def on_set_reset_settings_click(self, event):
+##        confirm = wx.MessageBox(_(u"Are you sure you want to reset all settings to their default values?"), _(u"Warning"), wx.YES_NO | wx.ICON_WARNING, self)
+##        if confirm == wx.NO:
+##            return
+##
+##        self.ide_cfg.reset_settings()
+##        self.check_environment_on_startup()
 
     def on_undo_click(self, event):
         tab = self.m_auinotebook_Main.GetCurrentPage()
@@ -1247,34 +1169,6 @@ samp.ban
     def check_environment_on_startup(self):
         self.SendSizeEvent()
         self.Layout()
-
-        current_default_enc = self.ide_cfg.get("system.pawn.default_encoding","cp1251")
-        if current_default_enc == "utf-8":
-            self.item_set_to_utf8.Check(True)
-
-        elif current_default_enc == "cp1250":
-            self.item_set_to_cp1250.Check(True)
-
-        elif current_default_enc == "cp1251":
-            self.item_set_to_cp1251.Check(True)
-
-        elif current_default_enc == "cp1252":
-            self.item_set_to_cp1252.Check(True)
-
-        elif current_default_enc == "cp1253":
-            self.item_set_to_cp1253.Check(True)
-
-        elif current_default_enc == "cp1254":
-            self.item_set_to_cp1254.Check(True)
-
-        elif current_default_enc == "cp1255":
-            self.item_set_to_cp1255.Check(True)
-
-        elif current_default_enc == "cp1256":
-            self.item_set_to_cp1256.Check(True)
-
-        elif current_default_enc == "cp1257":
-            self.item_set_to_cp1257.Check(True)
 
         sampctl_path = self.ide_cfg.get("system.sampctl.executable_path", "")
         sampctl_ready = bool(sampctl_path and os.path.exists(sampctl_path) and os.path.isfile(sampctl_path))
@@ -2346,20 +2240,22 @@ samp.ban
 
         self.m_richText_BuildOutput.EndBold()
 
-    def on_open_settings_tab_click(self, event):
-        notebook = self.m_auinotebook_Main
-
-        global_config_path = getattr(self.ide_cfg, "config_path", "")
-        for i in range(notebook.GetPageCount()):
-            tab = notebook.GetPage(i)
-            if hasattr(tab, 'file_path') and tab.file_path == global_config_path:
-                notebook.SetSelection(i)
-                return
-        self.open_file_in_tab(global_config_path)
-        active_tab = notebook.GetCurrentPage()
-        if active_tab:
-            notebook.SetPageText(notebook.GetSelection(), _(u"Settings"))
-            notebook.SetPageToolTip(notebook.GetSelection(), "")
+    def on_open_settings_click(self, event):
+        dlg = SettingsDialog(self)
+        dlg.ShowModal()
+##        notebook = self.m_auinotebook_Main
+##
+##        global_config_path = getattr(self.ide_cfg, "config_path", "")
+##        for i in range(notebook.GetPageCount()):
+##            tab = notebook.GetPage(i)
+##            if hasattr(tab, 'file_path') and tab.file_path == global_config_path:
+##                notebook.SetSelection(i)
+##                return
+##        self.open_file_in_tab(global_config_path)
+##        active_tab = notebook.GetCurrentPage()
+##        if active_tab:
+##            notebook.SetPageText(notebook.GetSelection(), _(u"Settings"))
+##            notebook.SetPageToolTip(notebook.GetSelection(), "")
 
     def on_project_tree_right_click(self, event):
         item_id = event.GetItem()

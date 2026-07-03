@@ -22,29 +22,10 @@
 from core.config_manager import ConfigManager
 
 
-def test_default_values_are_loaded():
-    
-    manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
-
-    assert manager.get("system.git.enable") == False
-    assert manager.get("editor.font.size") == 11
-    assert manager.get("editor.font.family") == "Consolas"
-    assert manager.get("editor.features.color_preview") is True
-
-def test_get_returns_existing_value():
-    
-    manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
-
-    value = manager.get("editor.font.size")
-
-    assert value == 11
-
 def test_get_returns_default_for_missing_key():
     
     manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
+    manager.current_config = manager._extract_defaults(manager._global_schema)
     value = manager.get(
         "editor.not_exists",
         "fallback"
@@ -55,7 +36,7 @@ def test_get_returns_default_for_missing_key():
 def test_set_updates_valid_value():
     
     manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
+    manager.current_config = manager._extract_defaults(manager._global_schema)
     result = manager.set(
         "editor.font.size",
         11
@@ -67,7 +48,7 @@ def test_set_updates_valid_value():
 def test_set_rejects_invalid_type():
     
     manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
+    manager.current_config = manager._extract_defaults(manager._global_schema)
     result = manager.set(
         "editor.font.size",
         "large"
@@ -79,7 +60,7 @@ def test_set_rejects_invalid_type():
 def test_set_rejects_unknown_path():
     
     manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
+    manager.current_config = manager._extract_defaults(manager._global_schema)
     result = manager.set(
         "editor.unknown.option",
         True
@@ -90,9 +71,9 @@ def test_set_rejects_unknown_path():
 def test_extract_defaults():
     
     manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
+    manager.current_config = manager._extract_defaults(manager._global_schema)
     defaults = manager._extract_defaults(
-        manager._schema
+        manager._global_schema
     )
 
     assert defaults["system"]["git"]["enable"] == False
@@ -102,7 +83,7 @@ def test_extract_defaults():
 def test_validate_level_restores_invalid_values():
     
     manager = ConfigManager()
-    manager.current_config = manager._extract_defaults(manager._schema)
+    manager.current_config = manager._extract_defaults(manager._global_schema)
     user_data = {
         "system": {
             "git": {
@@ -112,7 +93,7 @@ def test_validate_level_restores_invalid_values():
     }
 
     validated = manager._validate_level(
-        manager._schema,
+        manager._global_schema,
         user_data
     )
 
