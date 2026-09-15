@@ -54,16 +54,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.architecture }}-
 
+      - name: Install UPX
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          install-only: true
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install zstandart
+          pip install zstandard
           pip install nuitka
 
       - name: Build with Nuitka
         run: |
-          python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version=${{ github.event.inputs.version }} --product-version=${{ github.event.inputs.version }} --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+          python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --enable-plugin=anti-bloat --enable-plugin=upx --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version=${{ steps.get_version.outputs.version }} --product-version=${{ steps.get_version.outputs.version }} --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
