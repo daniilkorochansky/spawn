@@ -68,7 +68,7 @@ jobs:
 
       - name: Build with Nuitka
         run: |
-          python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --enable-plugin=anti-bloat --enable-plugin=upx --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version=${{ steps.get_version.outputs.version }} --product-version=${{ steps.get_version.outputs.version }} --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+          python -m nuitka --standalone --onefile --onefile-no-compression --include-data-dir=assets=assets --windows-console-mode=disable --enable-plugin=anti-bloat --enable-plugin=upx --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version=${{ steps.get_version.outputs.version }} --product-version=${{ steps.get_version.outputs.version }} --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
