@@ -132,6 +132,7 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_close_project_click, id=wx.ID_CLOSE_PROJECT)
         self.Bind(wx.EVT_MENU, self.on_new_project, id=wx.ID_NEW_PROJECT)
         self.Bind(wx.EVT_MENU, self.on_open_project_folder_click, id=wx.ID_OPEN_SERVER_FOLDER)
+        self.Bind(wx.EVT_TOOL, self.on_open_project_folder_click, id=wx.ID_TOOLBAR_OPEN_FOLDER)
         self.m_treeCtrl_ProjectTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_tree_item_clicked)
         self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
         self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.on_tab_closing)
