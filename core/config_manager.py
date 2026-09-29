@@ -47,6 +47,22 @@ class ConfigManager:
                 "restart_required": False
                 }),
             "system": {
+                "apps": {
+                    "enable_open_last_server_folder" : (False, bool, {
+                        "title": _(u"Apps Auto Open Last Server Folder"), 
+                        "description": _(u"Automaticallly open last server folder when opened apps"),
+                        "keywords": ["apps", "apps configuration"],
+                        "category": "System",
+                        "restart_required": False
+                    }),
+                    "last_server_folder_path" : ("", str, {
+                        "title": _(u"Last Server Folder"), 
+                        "description": _(u"Last Server Folder Path"),
+                        "keywords": ["apps", "path", "apps configuration"],
+                        "category": _(u"System"),
+                        "restart_required": False
+                        })
+                },
                 "git": {
                     "enable": (False, bool, {
                         "title": _(u"Git Integration"), 
@@ -81,6 +97,7 @@ class ConfigManager:
                         "restart_required": False
                         } )
                     }
+                
                 },
             "editor": {
                 "selection_color": ("#CCE8FF", str, {

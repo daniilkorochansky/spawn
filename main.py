@@ -263,6 +263,13 @@ class SpawnIDE(SpawnFrame):
         
         self.update_recent_files_menu()
         
+        path = self.ide_cfg.get("system.apps.last_server_folder_path", "")
+        lastFolderConfig = self.ide_cfg.get("system.apps.enable_open_last_server_folder", False)
+        if lastFolderConfig:
+            if path != "" :
+                if os.path.exists(path):
+                    self.load_project(path)
+        
 
     def on_close_current_file_click(self, event):
         global_config_path = PlatformUtils.normalize_path(getattr(self.ide_cfg, "config_path", ""))
@@ -2884,6 +2891,8 @@ samp.ban
                 return
             
             if self.current_project_path != chosen_path:
+                self.ide_cfg.set("system.apps.last_server_folder_path", chosen_path)
+                # wx.Config("CachedSpawnServerPath").Write("last_opened_path", chosen_path)
                 self.on_close_project_click(None)
                 self.load_project(chosen_path)
 
