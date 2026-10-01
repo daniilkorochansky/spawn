@@ -2892,7 +2892,6 @@ samp.ban
             
             if self.current_project_path != chosen_path:
                 self.ide_cfg.set("system.apps.last_server_folder_path", chosen_path)
-                # wx.Config("CachedSpawnServerPath").Write("last_opened_path", chosen_path)
                 self.on_close_project_click(None)
                 self.load_project(chosen_path)
 

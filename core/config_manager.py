@@ -97,7 +97,6 @@ class ConfigManager:
                         "restart_required": False
                         } )
                     }
-                
                 },
             "editor": {
                 "selection_color": ("#CCE8FF", str, {
