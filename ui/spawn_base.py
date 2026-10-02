@@ -35,6 +35,7 @@ wx.ID_TOOLBAR_OPEN_FILE = 6000
 wx.ID_TOOLBAR_SAVE_ALL = 6001
 wx.ID_TOOLBAR_BUILD_PROJECT = 6002
 wx.ID_TOOLBAR_RUN_STOP_SERVER = 6003
+wx.ID_TOOLBAR_OPEN_FOLDER = 6004
 wx.ID_NEW_PROJECT = 6005
 wx.ID_NEW_FILE = 6006
 wx.ID_OPEN_FILE = 6007
@@ -159,7 +160,9 @@ class SpawnFrame ( wx.Frame ):
         
         self.m_tool_NewFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_NEW_FILE, _(u"New File"), wx.Bitmap(os.path.join(self.icons_folder,"tb_file_new.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"New File"), wx.EmptyString, None )
         
-        self.m_tool_OpenFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_OPEN_FILE, _(u"Open File..."), wx.Bitmap(os.path.join(self.icons_folder,"tb_open.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Open File..."), wx.EmptyString, None )
+        self.m_tool_OpenFile = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_OPEN_FILE, _(u"Open File..."), wx.Bitmap(os.path.join(self.icons_folder,"tb_file_open.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Open File..."), wx.EmptyString, None )
+        
+        self.m_tool_OpenFolder = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_OPEN_FOLDER, _(u"Open Server Folder..."), wx.Bitmap(os.path.join(self.icons_folder,"tb_folder_open.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Open Server Folder..."), wx.EmptyString, None )
 
         self.m_tool_Save = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_SAVE, _(u"Save"), wx.Bitmap(os.path.join(self.icons_folder,"tb_save.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Save"), wx.EmptyString, None )
 

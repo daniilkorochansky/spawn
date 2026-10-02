@@ -639,6 +639,13 @@ class SettingsDialog ( wx.Dialog ):
 
         bSizer_System_Main.Add( bSizer_System_General, 0, wx.EXPAND, 5 )
 
+        bSizer_AppConfig = wx.BoxSizer( wx.HORIZONTAL )
+        self.m_checkBox_EnableOpenLastServerFolder = wx.CheckBox(self.m_scrolledWindow_Panel_System, wx.ID_ANY, _(u"Automatically open last server folder."), wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer_AppConfig.Add(self.m_checkBox_EnableOpenLastServerFolder, 0, wx.ALL, 5)
+        self.register_setting(self.m_checkBox_EnableOpenLastServerFolder, "system.apps.enable_open_last_server_folder", self.m_panel_System)
+
+        bSizer_System_Main.Add( bSizer_AppConfig, 0, wx.EXPAND, 5 )
+
         bSizer_RecentFilesLimit = wx.BoxSizer( wx.HORIZONTAL )
 
         self.m_staticText_RecentFilesLimit = wx.StaticText( self.m_scrolledWindow_Panel_System, wx.ID_ANY, _(u"Recent Files Limit:"), wx.DefaultPosition, wx.DefaultSize, 0 )

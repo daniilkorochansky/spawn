@@ -132,6 +132,7 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_close_project_click, id=wx.ID_CLOSE_PROJECT)
         self.Bind(wx.EVT_MENU, self.on_new_project, id=wx.ID_NEW_PROJECT)
         self.Bind(wx.EVT_MENU, self.on_open_project_folder_click, id=wx.ID_OPEN_SERVER_FOLDER)
+        self.Bind(wx.EVT_TOOL, self.on_open_project_folder_click, id=wx.ID_TOOLBAR_OPEN_FOLDER)
         self.m_treeCtrl_ProjectTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_tree_item_clicked)
         self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
         self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.on_tab_closing)
@@ -261,6 +262,13 @@ class SpawnIDE(SpawnFrame):
         self.update_git_ui_controls_state()
         
         self.update_recent_files_menu()
+        
+        path = self.ide_cfg.get("system.apps.last_server_folder_path", "")
+        lastFolderConfig = self.ide_cfg.get("system.apps.enable_open_last_server_folder", False)
+        if lastFolderConfig:
+            if path != "" :
+                if os.path.exists(path):
+                    self.load_project(path)
         
 
     def on_close_current_file_click(self, event):
@@ -2883,6 +2891,7 @@ samp.ban
                 return
             
             if self.current_project_path != chosen_path:
+                self.ide_cfg.set("system.apps.last_server_folder_path", chosen_path)
                 self.on_close_project_click(None)
                 self.load_project(chosen_path)
 
