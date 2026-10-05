@@ -1,0 +1,78 @@
+name: Build Linux
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Program version (format X.X.X, example 1.0.4)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update core/version.py
+        shell: bash
+        run: |
+          echo "__version__ = '${{ github.event.inputs.version }}'" > core/version.py
+
+          echo "Current version:"
+          cat core/version.py
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            patchelf \
+            libgtk-3-dev
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install zstandard
+          pip install nuitka
+
+      - name: Build with Nuitka
+        run: |
+          python -m nuitka \
+            --standalone \
+            --onefile \
+            --include-data-dir=assets=assets \
+            --assume-yes-for-downloads \
+            --company-name="Spawn Project" \
+            --product-name="Spawn" \
+            --copyright="Copyright (C) 2026 Daniil Korochansky" \
+            --output-filename=Spawn \
+            --file-version=${{ github.event.inputs.version }} \
+            --product-version=${{ github.event.inputs.version }} \
+            --file-description="IDE for open.mp and SA-MP development" \
+            --output-dir=dist \
+            --include-package=wx \
+            main.py
+
+      - name: Make executable
+        run: |
+          chmod +x dist/Spawn
+
+      - name: Create archive
+        run: |
+          tar -czf Spawn_Linux_${{ github.event.inputs.version }}.tar.gz \
+            -C dist Spawn
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Spawn_Linux_${{ github.event.inputs.version }}
+          path: Spawn_Linux_${{ github.event.inputs.version }}.tar.gz
+          if-no-files-found: error
