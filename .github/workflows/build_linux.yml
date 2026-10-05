@@ -57,9 +57,14 @@ jobs:
             --include-data-dir=assets=assets \
             --assume-yes-for-downloads \
             --output-filename=Spawn \
+            --plugin-enable=pthreads \
             --output-dir=dist \
             --include-package=wx \
             main.py
+
+      - name: Make executable
+        run: |
+          chmod +x dist/Spawn
 
       - name: Create archive
         run: |
