@@ -28,6 +28,7 @@ import os
 import shutil
 import re
 import codecs
+import signal
 
 CODING_RE = re.compile(rb'^\s*//.*?coding\s*:\s*([a-zA-Z0-9_\-]+)',re.IGNORECASE | re.MULTILINE)
 
@@ -43,6 +44,27 @@ class PlatformUtils:
     "cp1255",
     "cp1256",
     )
+
+    @staticmethod
+    def resolve_executable(configured_path, *names):
+        """Return a runnable executable from the configured path or PATH."""
+        if configured_path:
+            configured_path = os.path.expandvars(
+                os.path.expanduser(str(configured_path))
+            ).strip()
+
+            if configured_path:
+                if PlatformUtils.is_executable(configured_path):
+                    return os.path.abspath(configured_path)
+
+                resolved = shutil.which(configured_path)
+                if resolved and PlatformUtils.is_executable(resolved):
+                    return resolved
+
+        for name in names:
+            resolved = shutil.which(name)
+            if resolved and PlatformUtils.is_executable(resolved):
+                return resolved
     
     @staticmethod
     def detect_declared_encoding_from_text(text):
@@ -232,8 +254,14 @@ class PlatformUtils:
                 stderr=subprocess.PIPE,
                 creationflags=subprocess.CREATE_NO_WINDOW
                 )
-        else:
-            process.terminate()
+        elif PlatformUtils.is_linux():
+            try:
+                os.kill(
+                    os.getpgid(process.pid),
+                    signal.SIGTERM
+                )
+            except (ProcessLookupError, PermissionError, OSError):
+                process.terminate()
 
     @staticmethod
     def is_executable(path):
@@ -257,6 +285,15 @@ class PlatformUtils:
         return ""
 
     @staticmethod
+    def normalize_git_relative_path(path):
+        path = str(path).strip('"').replace('\\', '/').strip()
+
+        if PlatformUtils.is_windows():
+            return path.lower()
+
+        return path
+
+    @staticmethod
     def open_directory(path):
         if not os.path.exists(path):
             return False
@@ -264,10 +301,20 @@ class PlatformUtils:
         try:
             if PlatformUtils.is_windows():
                 os.startfile(path)
+
+            elif PlatformUtils.is_linux():
+                opener = shutil.which("xdg-open") or shutil.which("gio")
+
+                if not opener:
+                    return False
+
+                if os.path.basename(opener) == "gio":
+                    subprocess.Popen([opener, "open", path])
+                else:
+                    subprocess.Popen([opener, path])
+
             else:
-                subprocess.Popen(
-                    ["xdg-open", path]
-                )
+                return False
 
             return True
 
@@ -280,6 +327,11 @@ class PlatformUtils:
             "gnome-terminal",
             "konsole",
             "xfce4-terminal",
+            "mate-terminal",
+            "lxterminal",
+            "kitty",
+            "alacritty",
+            "wezterm",
             "xterm"
         ]
 

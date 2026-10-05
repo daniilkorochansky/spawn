@@ -826,7 +826,7 @@ samp.ban
 
         gitignore_path = os.path.join(self.current_project_path,".gitignore")
         try:
-            with open(gitignore_path,"w",encoding="utf-8",newline="\r\n") as f:
+            with open(gitignore_path,"w",encoding="utf-8",newline="") as f:
                 f.write(gitignore_content)
             return True
 
@@ -849,11 +849,35 @@ samp.ban
         if not git_exe:
             return
 
-        git_bin_dir = os.path.dirname(git_exe)
-        git_bash = os.path.join(git_bin_dir,"bash.exe")
-        git_bash = os.path.abspath(git_bash)
+        if PlatformUtils.is_linux():
+            shell = shutil.which("bash") or shutil.which("sh")
+            terminal = PlatformUtils.get_terminal()
 
-        self.git_bash_process = subprocess.Popen([git_bash],cwd=self.current_project_path)
+            if not shell or not terminal:
+                wx.MessageBox(
+                    _("No supported terminal emulator was found."),
+                    _("Git Terminal"),
+                    wx.OK | wx.ICON_ERROR,
+                    self
+                )
+                return
+
+            terminal_cmd = PlatformUtils.create_terminal_command(
+                shell,
+                ["-i"]
+            )
+
+            self.git_bash_process = subprocess.Popen(
+                terminal_cmd,
+                cwd=self.current_project_path
+            )
+
+        else:
+            git_bin_dir = os.path.dirname(git_exe)
+            git_bash = os.path.join(git_bin_dir,"bash.exe")
+            git_bash = os.path.abspath(git_bash)
+
+            self.git_bash_process = subprocess.Popen([git_bash],cwd=self.current_project_path)
 
     def reopen_with_encoding(self, tab, new_encoding):
         if not getattr(tab, "file_path", None):
@@ -1178,13 +1202,21 @@ samp.ban
         self.SendSizeEvent()
         self.Layout()
 
-        sampctl_path = self.ide_cfg.get("system.sampctl.executable_path", "")
-        sampctl_ready = bool(sampctl_path and os.path.exists(sampctl_path) and os.path.isfile(sampctl_path))
+        sampctl_path = PlatformUtils.resolve_executable(
+            self.ide_cfg.get("system.sampctl.executable_path", ""),
+            "sampctl"
+        )
+
+        sampctl_ready = bool(sampctl_path)
 
         git_ready = True
         if self.ide_cfg.get("system.git.enable", False):
-            git_path = self.ide_cfg.get("system.git.executable_path", "")
-            git_ready = bool(git_path and os.path.exists(git_path) and os.path.isfile(git_path))
+            git_path = PlatformUtils.resolve_executable(
+                self.ide_cfg.get("system.git.executable_path", ""),
+                "git"
+            )
+
+            git_ready = bool(git_path)
             
         if self.current_project_path and sampctl_ready:
             self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, True)
@@ -1468,7 +1500,7 @@ samp.ban
             return
 
         relative_path = os.path.relpath(file_path, self.current_project_path)
-        clean_relative_path = relative_path.replace('\\', '/').strip().lower()
+        clean_relative_path = PlatformUtils.normalize_git_relative_path(relative_path)
 
         status = "normal"
         if hasattr(self, "git_manager") and self.git_manager and self.git_manager.is_repo:
@@ -1751,7 +1783,7 @@ samp.ban
             return
 
         relative_path = os.path.relpath(file_path, self.current_project_path)
-        clean_relative_path = relative_path.replace('\\', '/').strip().lower()
+        clean_relative_path = PlatformUtils.normalize_git_relative_path(relative_path)
 
         if hasattr(self, "git_manager") and self.git_manager and self.git_manager.is_repo:
             status = self.git_manager.get_file_status(clean_relative_path)
@@ -1925,7 +1957,10 @@ samp.ban
         if not self.current_project_path:
             return
         
-        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
+        sampctl_bin_path = PlatformUtils.resolve_executable(
+            self.ide_cfg.get("system.sampctl.executable_path", ""),
+            "sampctl"
+        )
         with DependencyManagerDialog(self, self.current_project_path, sampctl_bin_path) as dlg:
             dlg.ShowModal()
 
@@ -2073,56 +2108,86 @@ samp.ban
     def on_run_server_execute(self, event):
         if not self.current_project_path:
             return
-        if os.name == 'nt':
+
+        # На Windows дополнительно завершаем запущенные серверы,
+        # которые могли быть запущены вне Spawn.
+        if PlatformUtils.is_windows():
             for exe_name in ["samp-server.exe", "omp-server.exe"]:
                 subprocess.run(
                     ["taskkill", "/F", "/IM", exe_name],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     creationflags=subprocess.CREATE_NO_WINDOW
-                    )
+                )
 
         tb = self.m_auiToolBar
 
+        # Если сервер, запущенный Spawn, уже работает — останавливаем его.
         if self.server_process_thread and self.server_process_thread.is_alive():
-            self.m_statusBar.SetStatusText(_(u"Stopping the server..."), 0)
+            self.m_statusBar.SetStatusText(
+                _(u"Stopping the server..."),
+                0
+            )
 
             self.server_process_thread.stop_server()
             return
 
-        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
-        if not os.path.exists(sampctl_bin_path):
+        sampctl_bin_path = PlatformUtils.resolve_executable(
+            self.ide_cfg.get("system.sampctl.executable_path", ""),
+            "sampctl"
+        )
+
+        # Проверяем именно возможность запуска.
+        if not PlatformUtils.is_executable(sampctl_bin_path):
             self.check_environment_on_startup()
             return
 
         self.m_richText_ServerConsole.Clear()
 
-        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
+        self.m_auiToolBar.EnableTool(
+            wx.ID_TOOLBAR_BUILD_PROJECT,
+            False
+        )
         self.m_menuItem_Ensure.Enable(False)
         self.m_menuItem_ProjectClose.Enable(False)
         self.m_menuItem_CompileProject.Enable(False)
-        #self.m_menuItem_CleanProject.Enable(False)
+        # self.m_menuItem_CleanProject.Enable(False)
         self.m_menuItem_NewProject.Enable(False)
         self.m_menuItem_OpenProjectFolder.Enable(False)
 
         self.m_auinotebook_Output.SetSelection(1)
-        
+
         self.m_mgr.Update()
 
         self.m_richText_ServerConsole.BeginBold()
-        self.m_richText_ServerConsole.WriteText(_(u"Initializing and starting the server...\n\n"))
+        self.m_richText_ServerConsole.WriteText(
+            _(u"Initializing and starting the server...\n\n")
+        )
         self.m_richText_ServerConsole.EndBold()
 
-        self.m_statusBar.SetStatusText(_(u"Server is running..."), 0)
-
+        self.m_statusBar.SetStatusText(
+            _(u"Server is running..."),
+            0
+        )
 
         tool_item = tb.FindTool(wx.ID_TOOLBAR_RUN_STOP_SERVER)
+
         if tool_item:
-            tool_item.SetBitmap(wx.Bitmap(os.path.join(self.icons_folder,"tb_server_stop.png"), wx.BITMAP_TYPE_PNG))
+            tool_item.SetBitmap(
+                wx.Bitmap(
+                    os.path.join(
+                        self.icons_folder,
+                        "tb_server_stop.png"
+                    ),
+                    wx.BITMAP_TYPE_PNG
+                )
+            )
+
             tb.Realize()
             tb.Refresh()
-            
+
             pane = self.m_mgr.GetPane(tb)
+
             if pane.IsShown():
                 tb.GetContainingSizer().Layout()
 
@@ -2131,7 +2196,8 @@ samp.ban
             sampctl_executable=sampctl_bin_path,
             rich_text_ctrl=self.m_richText_ServerConsole,
             on_finished_callback=self.on_server_stopped
-            )
+        )
+
         self.server_process_thread.start()
 
     def on_server_stopped(self, manual_stop):
@@ -2176,7 +2242,10 @@ samp.ban
         if not self.current_project_path:
             return
 
-        sampctl_bin_path = self.ide_cfg.get("system.sampctl.executable_path", "")
+        sampctl_bin_path = PlatformUtils.resolve_executable(
+            self.ide_cfg.get("system.sampctl.executable_path", ""),
+            "sampctl"
+        )
         if not os.path.exists(sampctl_bin_path):
             self.check_environment_on_startup()
             return
@@ -2338,7 +2407,10 @@ samp.ban
 
         try:
             new_repo = Repo.init(self.current_project_path)
-            git_executable = self.ide_cfg.get("system.git.executable_path", "")
+            git_executable = PlatformUtils.resolve_executable(
+                self.ide_cfg.get("system.git.executable_path", ""),
+                "git"
+            )
 
 
             self.git_manager = GitManager(self.current_project_path, git_executable)
@@ -2394,7 +2466,10 @@ samp.ban
                 full_new_dir = os.path.join(parent_dir, new_folder_name)
                 try:
                     os.makedirs(full_new_dir, exist_ok=True)
-                    git_executable = self.ide_cfg.get("system.git.executable_path", "")
+                    git_executable = PlatformUtils.resolve_executable(
+                        self.ide_cfg.get("system.git.executable_path", ""),
+                        "git"
+                    )
                     if self.git_enabled and os.path.isfile(git_executable) and self.git_manager.is_repo:
                         self.git_manager.update_statuses_cache()
                     self.refresh_project_tree()
@@ -2764,7 +2839,10 @@ samp.ban
             self.Enable(False)
            
             self.m_statusBar.SetStatusText(_(u"Initialization of a new server has begun..."), 0)
-            sampctl_exe = self.ide_cfg.get("system.sampctl.executable_path", "")
+            sampctl_exe = PlatformUtils.resolve_executable(
+                self.ide_cfg.get("system.sampctl.executable_path", ""),
+                "sampctl"
+            )
             worker = ProjectCreateWorker(full_project_path, sampctl_exe, self.on_new_project_async_finished)
             worker.start()
         except Exception as e:
@@ -2953,7 +3031,10 @@ samp.ban
             self.file_watcher.start(path)
             
             if self.git_enabled:
-                git_executable = self.ide_cfg.get("system.git.executable_path", "")
+                git_executable = PlatformUtils.resolve_executable(
+                    self.ide_cfg.get("system.git.executable_path", ""),
+                    "git"
+                )
                 
                 self.git_manager = GitManager(path, git_executable)
                 if self.git_manager.is_repo:
@@ -3062,8 +3143,12 @@ samp.ban
     @property
     def git_enabled(self):
         config_enable = self.ide_cfg.get("system.git.enable", False)
-        git_executable = self.ide_cfg.get("system.git.executable_path", "")
-        return bool(config_enable and git_executable and os.path.isfile(git_executable))
+        git_executable = PlatformUtils.resolve_executable(
+            self.ide_cfg.get("system.git.executable_path", ""),
+            "git"
+        )
+
+        return bool(config_enable and git_executable)
 
     def on_save_current_file(self,event):
         active_tab = self.m_auinotebook_Main.GetCurrentPage()

@@ -100,6 +100,10 @@ class BackgroundCompiler(threading.Thread):
         if not PlatformUtils.is_executable(self.sampctl_bin):
             wx.CallAfter(self.append_to_rich_console,_("Invalid SAMPCTL executable.\n"))
 
+##        if self.on_finished:
+##            wx.CallAfter(self.on_finished, False)
+##            return
+
         cmd = [self.sampctl_bin, "build"]
         if self.extra_flags:
             cmd.extend(["--", self.extra_flags])

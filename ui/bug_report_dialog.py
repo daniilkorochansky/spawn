@@ -110,7 +110,7 @@ class BugReportDialog ( wx.Dialog ):
 
     def on_open_logs_folder(self, event):
         log_dir = os.path.join(PlatformUtils.get_config_dir(),"logs")
-        os.startfile(log_dir)
+        PlatformUtils.open_directory(log_dir)
 
     def on_issues(self, event):
         webbrowser.open(u"https://github.com/daniilkorochansky/spawn/issues/new")

@@ -36,8 +36,13 @@ class ProjectCreateWorker(threading.Thread):
     def run(self):
         try:
             
-            exec_command = os.path.normpath(self.sampctl_path)
-            print(exec_command)
+            exec_command = PlatformUtils.resolve_executable(
+                self.sampctl_path,
+                "sampctl"
+            )
+
+            if not exec_command:
+                raise FileNotFoundError("SAMPCTL executable was not found")
             
             cmd = PlatformUtils.create_terminal_command(exec_command,["init"])
             process = subprocess.Popen(

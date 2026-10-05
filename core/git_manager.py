@@ -25,6 +25,7 @@ import sys
 from git import Repo
 
 from core.logger import SpawnLogger
+from core.platform_utils import PlatformUtils
 
 class GitManager:
     """
@@ -120,7 +121,7 @@ class GitManager:
             for diff_item in self.repo.index.diff(None):
                 path = diff_item.b_path if diff_item.b_path else diff_item.a_path
                 if path:
-                    clean_path = str(path).strip('"').replace('\\','/').strip().lower()
+                    clean_path = PlatformUtils.normalize_git_relative_path(path)
                     if diff_item.change_type == 'D':
                         self.status_cache[clean_path] = "deleted"
                     else:
@@ -134,14 +135,14 @@ class GitManager:
                     path = key_item[0] if isinstance(key_item, tuple) else key_item
 
                     if path:
-                        clean_path = str(path).strip('"').replace('\\','/').strip().lower()
+                        clean_path = PlatformUtils.normalize_git_relative_path(path)
                         if clean_path not in self.status_cache:
                             self.status_cache[clean_path] = "staged"
             else:
                 for diff_item in self.repo.index.diff("HEAD"):
                     path = diff_item.a_path if diff_item.a_path else diff_item.b_path
                     if path:
-                        clean_path = str(path).strip('"').replace('\\','/').strip().lower()
+                        clean_path = PlatformUtils.normalize_git_relative_path(path)
                         if clean_path not in self.status_cache:
                             self.status_cache[clean_path] = "staged"
         except Exception as e:
@@ -150,7 +151,7 @@ class GitManager:
         try:
             for untracked_file in self.repo.untracked_files:
                 if untracked_file:
-                    clean_path = str(untracked_file).strip('"').replace('\\','/').strip().lower()
+                    clean_path = PlatformUtils.normalize_git_relative_path(untracked_file)
                     if clean_path not in self.status_cache:
                         self.status_cache[clean_path] = "untracked"
         except Exception as e:
@@ -161,7 +162,7 @@ class GitManager:
             for line in ignored_raw.splitlines():
                 if line.startswith("!! "):
                     path = line[3:].strip().strip('"')
-                    clean_path = path.replace('\\','/').strip().lower()
+                    clean_path = PlatformUtils.normalize_git_relative_path(path)
                     if clean_path not in self.status_cache:
                         self.status_cache[clean_path] = "ignored"
         except Exception as e:
@@ -169,7 +170,7 @@ class GitManager:
         #print(f"[Git Cache] Current cache: {self.status_cache}")
 
     def get_file_status(self, relative_path):
-        clean_path = relative_path.replace('\\', '/').strip().lower()
+        clean_path = PlatformUtils.normalize_git_relative_path(relative_path)
 
         status = self.status_cache.get(clean_path)
         if status:

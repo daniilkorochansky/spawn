@@ -89,14 +89,21 @@ class BackgroundRunner(threading.Thread):
         cmd = [self.sampctl_bin, "run"]
 
         try:
+            popen_kwargs = {
+                "cwd": self.project_path,
+                "stdout": subprocess.PIPE,
+                "stderr": subprocess.STDOUT,
+                "startupinfo": startupinfo,
+                "bufsize": 0,
+            }
+
+            if PlatformUtils.is_linux():
+                popen_kwargs["start_new_session"] = True
+
             self.process = subprocess.Popen(
                 cmd,
-                cwd=self.project_path,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                startupinfo=startupinfo,
-                bufsize=0
-                )
+                **popen_kwargs
+            )
             buffer = bytearray()
 
             while True:
