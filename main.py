@@ -844,8 +844,8 @@ samp.ban
         if (self.git_bash_process and self.git_bash_process.poll() is None):
             wx.MessageBox(_("Git Terminal is already running."),_("Information"))
             return
-
-        git_exe = self.ide_cfg.get("system.git.executable_path","")
+     
+        git_exe = PlatformUtils.resolve_executable(self.ide_cfg.get("system.git.executable_path", ""),"git")
         if not git_exe:
             return
 
@@ -1280,74 +1280,27 @@ samp.ban
 
         if not sampctl_ready:
             pass
-##            msg = _(u"Please provide the path to the SAMPCTL executable.")
-##            infobar.Hide()
-##            self.btn_sampctl.Show()
-##            
-##            if infobar.GetParent():
-##                infobar.GetParent().Layout()
-##            infobar.ShowMessage(msg, wx.ICON_WARNING)
-##            self.Layout()
-##            self.m_mgr.Update()
-##            return
 
         if not git_ready:
             pass
-##            msg = _(u"Please provide the path to the Git executable.")
-##            infobar.Hide()
-##            self.btn_git.Show()
-##            
-##            if infobar.GetParent():
-##                infobar.GetParent().Layout()
-##            infobar.ShowMessage(msg, wx.ICON_WARNING)
-##            self.Layout()
-##            self.m_mgr.Update()
-##            return
-##        infobar.Dismiss()
-        
 
-##    def on_infobar_action_click(self, event):
-##        btn_id = event.GetId()
-##        if btn_id == self.ID_INFOBAR_SETUP_SAMPCTL:
-##            if PlatformUtils.is_windows():
-##                wildcard = "SAMPCTL (*.exe)|sampctl.exe"
-##            else:
-##                wildcard = "All files (*)|*"
-##                
-##            exe_ext = PlatformUtils.executable_extension()
-##            with wx.FileDialog(self, _(u"Specify the path to the sampctl executable file."),
-##                               defaultFile=f"sampctl{exe_ext}", wildcard=wildcard,
-##                               style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
-##                if dlg.ShowModal() == wx.ID_OK:
-##                    if PlatformUtils.is_executable(dlg.GetPath()):
-##                        self.ide_cfg.set("system.sampctl.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
-##                        self.ide_cfg.save()
-##
-##                        self.check_environment_on_startup()
-##                    else:
-##                        wx.MessageBox(_("The selected SAMPCTL executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
-##                        return
-##                    
-##        elif btn_id == self.ID_INFOBAR_SETUP_GIT:
-##            if PlatformUtils.is_windows():
-##                wildcard = "Git (*.exe)|git.exe"
-##            else:
-##                wildcard = "All files (*)|*"
-##                
-##            exe_ext = PlatformUtils.executable_extension()
-##            with wx.FileDialog(self, _(u"Specify the path to the git executable file."),
-##                               defaultFile=f"git{exe_ext}", wildcard=wildcard,
-##                               style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST) as dlg:
-##                if dlg.ShowModal() == wx.ID_OK:
-##                    if PlatformUtils.is_executable(dlg.GetPath()):
-##                        self.ide_cfg.set("system.git.executable_path", PlatformUtils.normalize_path(dlg.GetPath()))
-##                        self.ide_cfg.save()
-##
-##                        self.check_environment_on_startup()
-##                    else:
-##                        wx.MessageBox(_("The selected Git executable is invalid or does not have execute permissions."),_("Error"),wx.OK | wx.ICON_ERROR)
-##                        return
-##        
+        if self.server_process_thread and self.server_process_thread.is_alive():
+            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
+
+            self.m_menuItem_Ensure.Enable(False)
+            self.m_menuItem_ProjectClose.Enable(False)
+            self.m_menuItem_CompileProject.Enable(False)
+            self.m_menuItem_NewProject.Enable(False)
+            self.m_menuItem_OpenProjectFolder.Enable(False)
+
+            # Run/Stop must remain enabled so the user can stop the server.
+            self.m_auiToolBar.EnableTool(
+                wx.ID_TOOLBAR_RUN_STOP_SERVER,
+                True
+            )
+            self.m_menuItem_RunStopServer.Enable(True)
+
+  
 
     def update_git_ui_controls_state(self):
         toolbar = self.m_auiToolBar_Git
