@@ -57,7 +57,9 @@ jobs:
             --include-data-dir=assets=assets \
             --assume-yes-for-downloads \
             --output-filename=Spawn \
-            --plugin-enable=pthreads \
+            --python-flag=no_site
+            --nofollow-import-to=tkinter,unittest,pydoc,email,distutils,multiprocessing \
+            --noinclude-dll-pattern=libX11*,libGL*,libmesa*,libfontconfig*,libfreetype*,libxcb* \
             --output-dir=dist \
             --include-package=wx \
             main.py
