@@ -58,7 +58,7 @@ jobs:
             --assume-yes-for-downloads \
             --output-filename=Spawn \
             --python-flag=no_site \
-            --nofollow-import-to=tkinter,unittest,pydoc,email,distutils,multiprocessing \
+            --nofollow-import-to=tkinter,unittest,pydoc,email,distutils \
             --output-dir=dist \
             --include-package=wx \
             main.py
