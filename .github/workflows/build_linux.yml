@@ -57,7 +57,7 @@ jobs:
             --include-data-dir=assets=assets \
             --assume-yes-for-downloads \
             --output-filename=Spawn \
-            --include-distribution-metadata=all \
+            --noinclude-custom-mode=importlib:nofollow \
             --output-dir=dist \
             --include-package=wx \
             main.py
