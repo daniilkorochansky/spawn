@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Linux x64
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -41,7 +41,7 @@ jobs:
       - name: Install wxPython
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "https://github.com/wxWidgets/Phoenix/releases/download/wxPython-4.2.5/wxpython-4.2.5+ubuntu2404-cp311-cp311-linux_x86_64.whl"
+          python -m pip install "https://github.com/wxWidgets/Phoenix/releases/download/wxPython-4.2.5/wxpython-4.2.5+ubuntu2204-cp311-cp311-linux_x86_64.whl"
 
       - name: Install dependencies
         run: |
@@ -62,10 +62,6 @@ jobs:
             --output-dir=dist \
             --include-package=wx \
             main.py
-
-      - name: Make executable
-        run: |
-          chmod +x dist/Spawn
 
       - name: Create archive
         run: |
