@@ -1,4 +1,4 @@
-![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue)
 ![Language](https://img.shields.io/badge/language-Python-yellow.svg)
 ![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
 [![build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
