@@ -206,7 +206,7 @@ When a new `.pwn` or `.inc` file is created, Spawn can automatically insert an e
 
 ## Development
 ### Requirements
-+ Python 3.12+
++ Python 3.11+
 + wxPython
 + GitPython
 + Markdown
