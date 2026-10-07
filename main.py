@@ -48,6 +48,7 @@ from ui.dependency_manager_dialog import DependencyManagerDialog
 from core.project_creator import ProjectCreateWorker
 from core.file_watcher import ProjectFileWatcher
 from core.platform_utils import PlatformUtils
+from core.pawn_indexer import PawnProjectIndexer
 from core.config_manager import ConfigManager
 from core.compiler import BackgroundCompiler
 from core.runner import BackgroundRunner
@@ -55,6 +56,7 @@ from core.logger import SpawnLogger
 import core.project_utils as pu
 
 from git import Repo
+
 from core.git_manager import GitManager
 from core.git_worker import GitCommitWorker
 from core.git_reset_worker import GitResetWorker
@@ -223,6 +225,7 @@ class SpawnIDE(SpawnFrame):
         
         self.current_project_path = None
         self.file_watcher = ProjectFileWatcher(self)
+        self.project_index = None
 
         
         #Init icons for Project and Git Tree
@@ -736,6 +739,7 @@ class SpawnIDE(SpawnFrame):
         dlg = SpawnAboutDialog(self)
         dlg.ShowModal()
                 
+
     def on_zoom_in_click(self, event):
         tab = self.m_auinotebook_Main.GetCurrentPage()
         if tab:
@@ -814,7 +818,7 @@ crashinfo.txt
 samp.ban
 
 # Common files
-pawn.lock
+*.lock
 .spawn/
     """
 
@@ -2615,6 +2619,10 @@ pawn.lock
         if hasattr(self, "server_process_thread") and self.server_process_thread and self.server_process_thread.is_alive():
             self.server_process_thread.stop_server()
             
+        if getattr(self, "project_index", None):
+            self.project_index.stop()
+            self.project_index = None
+
         if hasattr(self, "file_watcher"):
             self.file_watcher.stop()
         self.Freeze()
@@ -2710,6 +2718,10 @@ pawn.lock
                     self.m_auinotebook_Main.Freeze()
 
         self.m_auinotebook_Main.Thaw()
+
+        if getattr(self, "project_index", None):
+            self.project_index.stop()
+            self.project_index = None
 
         if hasattr(self, "file_watcher"):
             self.file_watcher.stop()
@@ -2967,13 +2979,40 @@ pawn.lock
         if pane.IsShown():
             self.m_auiToolBar.GetContainingSizer().Layout()
 
+    def _on_pawn_index_updated(self):
+        self.m_statusBar.SetStatusText(
+            _("Project index updated."),
+            0
+        )
+
+    def _set_pawn_index_status(self, status):
+        self.m_statusBar.SetStatusText(status, 0)
+
     def load_project(self,path):
         try:
+            if getattr(self, "project_index", None):
+                self.project_index.stop()
+                self.project_index = None
+
             self.current_project_path = path
             pu.ensure_project_gitignore(path)
             
             self.toggle_project_ui_state(True)
-       
+
+            # Pawn project index is independent of the normal project watcher.
+            # It is rebuilt asynchronously and cached in .spawn/index.sqlite3.
+            self.project_index = PawnProjectIndexer(
+                path,
+                on_updated=lambda: wx.CallAfter(
+                    self._on_pawn_index_updated
+                ),
+                on_status=lambda status: wx.CallAfter(
+                    self._set_pawn_index_status,
+                    status
+                ),
+            )
+            self.project_index.start()
+
             #self.load_build_targets()
             self.file_watcher.start(path)
             
@@ -3164,6 +3203,14 @@ pawn.lock
                 self.refresh_project_tree()
 
                 active_tab.m_scintilla_Editor.SetSavePoint()
+
+                if (
+                    getattr(self, "project_index", None)
+                    and active_tab.file_path
+                    and PlatformUtils.is_pawn_file(active_tab.file_path)
+                ):
+                    self.project_index.refresh_async([active_tab.file_path])
+
                 self.m_statusBar.SetStatusText(_(u"File saved successfully."), 0)
 
 ##                if self.git_enabled:
@@ -3210,6 +3257,14 @@ pawn.lock
                     active_tab.apply_lexer_by_extension()
 
                     active_tab.m_scintilla_Editor.SetSavePoint()
+
+                    if (
+                        getattr(self, "project_index", None)
+                        and active_tab.file_path
+                        and PlatformUtils.is_pawn_file(active_tab.file_path)
+                    ):
+                        self.project_index.refresh_async([active_tab.file_path])
+
                     #Git------------------
                     if self.git_enabled:
                         if getattr(self, 'git_manager', None) and self.git_manager.is_repo:
