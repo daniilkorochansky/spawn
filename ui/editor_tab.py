@@ -79,8 +79,22 @@ class CustomEditorTab(gui.EditorTabPanel):
         
         self.m_scintilla_Editor.Bind(stc.EVT_STC_MODIFIED, self.on_editor_modified_tracker)
 
-        self.m_scintilla_Editor.Bind(stc.EVT_STC_CHARADDED,self.on_editor_char_added)
-        self.m_scintilla_Editor.Bind(wx.EVT_KEY_DOWN,self.on_editor_key_down)
+        self.m_scintilla_Editor.Bind(stc.EVT_STC_CHARADDED, self.on_editor_char_added)
+        self.m_scintilla_Editor.Bind(wx.EVT_KEY_DOWN, self.on_editor_key_down)
+        if hasattr(stc, "EVT_STC_AUTOCOMP_SELECTION"):
+            self.m_scintilla_Editor.Bind(stc.EVT_STC_AUTOCOMP_SELECTION, self.on_pawn_autocomplete_selection)
+        if hasattr(stc, "EVT_STC_AUTOCOMP_CANCELLED"):
+            self.m_scintilla_Editor.Bind(stc.EVT_STC_AUTOCOMP_CANCELLED, self.on_pawn_autocomplete_cancelled)
+
+        self._pawn_completion_items = {}
+        self._pawn_completion_start = -1
+        self._pawn_completion_mode = ""
+        self._pawn_completion_image_types = {}
+        self._load_pawn_completion_icons()
+        self._calltip_signature = ""
+        self._calltip_open_pos = -1
+        self._last_calltip_caret = -1
+        self._calltip_request_id = 0
 
         if wx.Platform == '__WXMSW__':
             try:
@@ -276,22 +290,537 @@ class CustomEditorTab(gui.EditorTabPanel):
         return False
 
     def on_editor_key_down(self, event):
+        key = event.GetKeyCode()
+
+        # Escape should immediately close our logical call-tip as well as the
+        # native Scintilla window.
+        if key == wx.WXK_ESCAPE:
+            self._hide_pawn_calltip()
+            if self.m_scintilla_Editor.AutoCompActive():
+                self.m_scintilla_Editor.AutoCompCancel()
+                self._clear_pawn_completion_state()
+            event.Skip()
+            return
+
+        # Ctrl+Space explicitly requests Pawn completion.
+        if (
+            key == wx.WXK_SPACE
+            and event.ControlDown()
+            and not event.AltDown()
+        ):
+            wx.CallAfter(self.show_pawn_completion, True)
+            return
+
         event.Skip()
 
     def on_editor_char_added(self, event):
+        key = event.GetKey()
+        editor = self.m_scintilla_Editor
+
         if self.smart_indent:
-            editor = self.m_scintilla_Editor
-
-            ch = event.GetKey()
-
-            if ch == ord('\n'):
+            if key == ord("\n"):
                 self.smart_indent_newline(editor)
-
-            elif ch == ord('}'):
+            elif key == ord("}"):
                 self.smart_indent_closing_brace(editor)
 
-       
+        # Invalidate queued call-tip/completion work immediately. A deferred
+        # callback from the previous character must never be allowed to reopen
+        # an old call-tip after the user has typed the next character.
+        self._calltip_request_id += 1
+        request_id = self._calltip_request_id
+        pos = self.m_scintilla_Editor.GetCurrentPos()
+
+        # Update the call-tip first. Completion is deliberately suppressed while
+        # a callable argument list is active.
+        wx.CallAfter(self._update_pawn_calltip, request_id, pos)
+
+        if key:
+            try:
+                character = chr(key)
+            except (ValueError, TypeError):
+                character = ""
+
+            if character.isalnum() or character == "_":
+                # Delay completion until the call-tip state has been evaluated.
+                wx.CallAfter(self._show_completion_if_safe)
+
         event.Skip()
+
+    def _show_completion_if_safe(self):
+        editor = self.m_scintilla_Editor
+        if editor.CallTipActive() or self._get_call_context() is not None:
+            if editor.AutoCompActive():
+                editor.AutoCompCancel()
+                self._clear_pawn_completion_state()
+            return
+        self.show_pawn_completion(False)
+
+    def on_pawn_autocomplete_selection(self, event):
+        """Insert only the identifier/path while displaying a richer list row."""
+        display = ""
+        try:
+            display = event.GetString()
+        except Exception:
+            display = ""
+
+        # Scintilla may expose the selected entry either with or without its
+        # image type suffix. The visible text is always the identifier itself.
+        name = display.split("?", 1)[0].strip()
+        insert_text = self._pawn_completion_items.get(name)
+        if insert_text is None:
+            insert_text = name
+
+        editor = self.m_scintilla_Editor
+        start = self._pawn_completion_start
+        if start < 0 or start > editor.GetCurrentPos():
+            self._clear_pawn_completion_state()
+            event.Skip()
+            return
+
+        current = editor.GetCurrentPos()
+        editor.AutoCompCancel()
+        editor.SetTargetStart(start)
+        editor.SetTargetEnd(current)
+        editor.ReplaceTarget(insert_text)
+        editor.GotoPos(start + len(insert_text))
+        self._clear_pawn_completion_state()
+        # Re-evaluate call-tip context after inserting a completion.
+        wx.CallAfter(self._update_pawn_calltip)
+
+    def on_pawn_autocomplete_cancelled(self, event):
+        self._clear_pawn_completion_state()
+        event.Skip()
+
+    def _clear_pawn_completion_state(self):
+        self._pawn_completion_items = {}
+        self._pawn_completion_start = -1
+        self._pawn_completion_mode = ""
+
+    @staticmethod
+    def _get_completion_icon_filename(kind):
+        """Return preferred icon filenames for an autocomplete symbol kind."""
+        kind = str(kind or "symbol").lower()
+        aliases = {
+            "static": "variable",
+            "parameter": "parameter",
+            "enum_value": "enum_value",
+            "command": "command",
+        }
+        base = aliases.get(kind, kind)
+        return (
+            f"ac_{base}.png",
+            f"autocomplete_{base}.png",
+            f"{base}.png",
+        )
+
+    def _load_pawn_completion_icons(self):
+        """Load optional completion icons from assets/icons.
+
+        Missing icons are silently ignored. Symbol kinds without an icon simply
+        appear as text, so the completion system does not depend on the assets.
+        """
+        editor = self.m_scintilla_Editor
+        icons_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "assets",
+            "icons",
+        )
+        self._pawn_completion_image_types = {}
+
+        kinds = (
+            "function", "native", "stock", "public", "forward", "command",
+            "macro", "enum", "enum_value", "variable", "constant",
+            "parameter", "typedef",
+        )
+        image_type = 1
+        for kind in kinds:
+            for filename in self._get_completion_icon_filename(kind):
+                path = os.path.join(icons_dir, filename)
+                if not os.path.isfile(path):
+                    continue
+                try:
+                    image = wx.Image(path, wx.BITMAP_TYPE_PNG)
+                    if not image.IsOk():
+                        continue
+                    if image.GetWidth() != 16 or image.GetHeight() != 16:
+                        image = image.Scale(16, 16, wx.IMAGE_QUALITY_HIGH)
+                    bitmap = wx.Bitmap(image)
+                    if not bitmap.IsOk():
+                        continue
+                    editor.RegisterImage(image_type, bitmap)
+                    self._pawn_completion_image_types[kind] = image_type
+                    break
+                except Exception:
+                    continue
+            if kind in self._pawn_completion_image_types:
+                image_type += 1
+
+    @staticmethod
+    def _autocomplete_icon_kind(kind):
+        kind = str(kind or "symbol").lower()
+        if kind == "static":
+            return "variable"
+        return kind
+
+    def _get_completion_display(self, item):
+        name = str(item.get("name", "")).strip()
+        if not name:
+            return ""
+        kind = self._autocomplete_icon_kind(item.get("kind", "symbol"))
+        image_type = self._pawn_completion_image_types.get(kind)
+        if image_type is None:
+            return name
+        return f"{name}?{image_type}"
+
+    def _sanitize_call_context_text(self, text):
+        # Keep delimiters/identifiers while replacing strings and comments with
+        # spaces so that parentheses and commas inside them cannot affect the
+        # current call calculation.
+        return re.sub(
+            r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'',
+            lambda m: "".join("\n" if c == "\n" else " " for c in m.group(0)),
+            text,
+            flags=re.DOTALL,
+        )
+
+    def _get_call_context(self):
+        editor = self.m_scintilla_Editor
+        pos = editor.GetCurrentPos()
+        if not self._is_completion_code_position(pos):
+            return None
+
+        scan_start = max(0, pos - 16384)
+        text = editor.GetTextRange(scan_start, pos)
+        sanitized = self._sanitize_call_context_text(text)
+
+        depth = 0
+        open_pos = -1
+        for index in range(len(sanitized) - 1, -1, -1):
+            char = sanitized[index]
+            if char == ")":
+                depth += 1
+            elif char == "(":
+                if depth == 0:
+                    open_pos = index
+                    break
+                depth -= 1
+        if open_pos < 0:
+            return None
+
+        before_open = sanitized[:open_pos]
+        match = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*$", before_open)
+        if not match:
+            return None
+
+        name = match.group(1)
+        line = editor.LineFromPosition(pos) + 1
+        absolute_open_pos = scan_start + open_pos
+        args_text = sanitized[open_pos + 1 :]
+
+        # Count commas at the top level of this invocation. Nested calls and
+        # arrays do not advance the current argument index.
+        paren = bracket = brace = 0
+        commas = 0
+        for char in args_text:
+            if char == "(":
+                paren += 1
+            elif char == ")" and paren:
+                paren -= 1
+            elif char == "[":
+                bracket += 1
+            elif char == "]" and bracket:
+                bracket -= 1
+            elif char == "{":
+                brace += 1
+            elif char == "}" and brace:
+                brace -= 1
+            elif char == "," and paren == bracket == brace == 0:
+                commas += 1
+
+        argument_index = commas
+        return {
+            "name": name,
+            "open_pos": absolute_open_pos,
+            "argument_index": argument_index,
+            "line": line,
+            "pos": pos,
+        }
+
+    def _hide_pawn_calltip(self):
+        # In some Scintilla/wx builds CallTipActive() can briefly return False
+        # while the native call-tip window is still being displayed. Always
+        # issue CallTipCancel() instead of relying on CallTipActive().
+        self._calltip_request_id += 1
+        editor = self.m_scintilla_Editor
+        try:
+            editor.CallTipCancel()
+        except Exception:
+            pass
+        self._calltip_signature = ""
+        self._calltip_open_pos = -1
+
+    def _show_or_update_pawn_calltip(self, signature, open_pos, argument_index, caret_pos):
+        editor = self.m_scintilla_Editor
+        signature = signature.strip().rstrip(";").strip()
+        close = signature.find(")")
+        if close >= 0:
+            signature = signature[:close + 1]
+        if not signature:
+            self._hide_pawn_calltip()
+            return
+
+        # Highlight the current parameter between commas in the signature.
+        start_highlight = end_highlight = -1
+        open_sig = signature.find("(")
+        close_sig = signature.rfind(")")
+        if open_sig >= 0 and close_sig > open_sig:
+            body = signature[open_sig + 1 : close_sig]
+            parts = []
+            part_start = 0
+            nested = 0
+            for index, char in enumerate(body):
+                if char in "([{":
+                    nested += 1
+                elif char in ")]}":
+                    nested = max(0, nested - 1)
+                elif char == "," and nested == 0:
+                    parts.append((part_start, index))
+                    part_start = index + 1
+            parts.append((part_start, len(body)))
+            if parts:
+                selected = parts[min(argument_index, len(parts) - 1)]
+                start_highlight = open_sig + 1 + selected[0]
+                end_highlight = open_sig + 1 + selected[1]
+
+        try:
+            # Do not use CallTipActive() as the source of truth here. On some
+            # wxPython/Scintilla builds it is temporarily false immediately
+            # after CallTipShow(), which used to cause every queued UPDATEUI
+            # callback to create another native call-tip window. Track the
+            # current logical call-tip ourselves.
+            same_call = (
+                self._calltip_signature == signature
+                and self._calltip_open_pos == open_pos
+            )
+
+            if not same_call:
+                editor.AutoCompCancel()
+                editor.CallTipCancel()
+                self._calltip_signature = signature
+                self._calltip_open_pos = open_pos
+                editor.CallTipShow(caret_pos, signature)
+
+            if start_highlight >= 0 and end_highlight >= start_highlight:
+                editor.CallTipSetHighlight(start_highlight, end_highlight)
+        except Exception:
+            self._hide_pawn_calltip()
+
+    def _update_pawn_calltip(self, request_id=None, expected_pos=None):
+        if request_id is not None and request_id != self._calltip_request_id:
+            return
+        if expected_pos is not None and self.m_scintilla_Editor.GetCurrentPos() != expected_pos:
+            return
+        if not self._is_pawn_file():
+            return
+
+        editor = self.m_scintilla_Editor
+        pos = editor.GetCurrentPos()
+        context = self._get_call_context()
+        if context is None:
+            self._hide_pawn_calltip()
+            self._last_calltip_caret = pos
+            return
+
+        indexer = getattr(self.base_win, "project_index", None) if self.base_win else None
+        if indexer is None or not indexer.enabled or not indexer.ready:
+            self._hide_pawn_calltip()
+            return
+
+        try:
+            items = indexer.query_callable(
+                self.file_path,
+                context["name"],
+                line=context["line"],
+            )
+        except Exception:
+            self._hide_pawn_calltip()
+            return
+
+        if not items:
+            self._hide_pawn_calltip()
+            return
+
+        item = items[0]
+        signature = str(item.get("signature", "")).strip()
+        self._show_or_update_pawn_calltip(
+            signature,
+            int(context["open_pos"]),
+            int(context["argument_index"]),
+            int(context["pos"]),
+        )
+        self._last_calltip_caret = pos
+
+    def _is_pawn_file(self):
+        if not self.file_path:
+            return False
+        return os.path.splitext(self.file_path)[1].lower() in (".pwn", ".inc")
+
+    def _is_completion_code_position(self, pos):
+        editor = self.m_scintilla_Editor
+        if pos < 0:
+            return False
+
+        styles = {
+            getattr(stc, "STC_C_COMMENT", -1),
+            getattr(stc, "STC_C_COMMENTLINE", -1),
+            getattr(stc, "STC_C_COMMENTDOC", -1),
+            getattr(stc, "STC_C_STRING", -1),
+            getattr(stc, "STC_C_CHARACTER", -1),
+            getattr(stc, "STC_C_STRINGEOL", -1),
+        }
+
+        text_length = editor.GetTextLength()
+        if text_length:
+            for check_pos in (min(pos, text_length - 1), max(0, pos - 1)):
+                if editor.GetStyleAt(check_pos) in styles:
+                    return False
+
+        return True
+
+    def _get_pawn_completion_prefix(self):
+        editor = self.m_scintilla_Editor
+        pos = editor.GetCurrentPos()
+        line = editor.LineFromPosition(pos)
+        line_start = editor.PositionFromLine(line)
+        before = editor.GetTextRange(line_start, pos)
+
+        match = re.search(r"[A-Za-z_][A-Za-z0-9_]*$", before)
+        if not match:
+            return "", pos
+
+        return match.group(0), pos
+
+    def show_pawn_completion(self, force=False):
+        if not self._is_pawn_file():
+            return
+
+        base_win = self.base_win
+        indexer = getattr(base_win, "project_index", None) if base_win else None
+        if indexer is None or not indexer.enabled or not indexer.ready:
+            return
+
+        editor = self.m_scintilla_Editor
+        pos = editor.GetCurrentPos()
+
+        # Never show symbol completion while a function call is active. Scintilla
+        # itself also treats calltips and autocomplete as mutually exclusive.
+        if editor.CallTipActive() or self._get_call_context() is not None:
+            if editor.AutoCompActive():
+                editor.AutoCompCancel()
+                self._clear_pawn_completion_state()
+            return
+
+        if not self._is_completion_code_position(pos):
+            editor.AutoCompCancel()
+            self._clear_pawn_completion_state()
+            return
+
+        prefix, _ = self._get_pawn_completion_prefix()
+        if not force and len(prefix) < 2:
+            editor.AutoCompCancel()
+            self._clear_pawn_completion_state()
+            return
+
+        if editor.AutoCompActive() and self._pawn_completion_mode == "symbol":
+            return
+
+        line = editor.LineFromPosition(pos) + 1
+        try:
+            items = indexer.query_completion(
+                self.file_path,
+                prefix=prefix,
+                line=line,
+            )
+        except Exception:
+            editor.AutoCompCancel()
+            self._clear_pawn_completion_state()
+            return
+
+        if not items:
+            editor.AutoCompCancel()
+            self._clear_pawn_completion_state()
+            return
+
+        prefix_start = pos - len(prefix)
+        wx.CallAfter(
+            self._show_pawn_completion_popup,
+            editor,
+            pos,
+            prefix,
+            items,
+            prefix_start,
+            "symbol",
+        )
+
+    def _show_pawn_completion_popup(
+        self,
+        editor,
+        expected_pos,
+        prefix,
+        items,
+        start_pos,
+        mode,
+    ):
+        try:
+            if editor != self.m_scintilla_Editor:
+                return
+            if editor.GetCurrentPos() != expected_pos:
+                return
+            # A deferred completion request may reach this method after the
+            # calltip has become visible. Never replace a calltip with completion.
+            if editor.CallTipActive() or self._get_call_context() is not None:
+                return
+
+            display_to_insert = {}
+            display_items = []
+            seen = set()
+            for item in items:
+                name = str(item.get("insert", item.get("name", ""))).strip()
+                if not name:
+                    continue
+                display = self._get_completion_display(item)
+                if not display:
+                    continue
+                key = name.casefold()
+                if key in seen:
+                    continue
+                seen.add(key)
+                display_items.append(display)
+                display_to_insert[name] = name
+
+            if not display_items:
+                return
+
+            editor.SetFocus()
+            editor.AutoCompCancel()
+            editor.AutoCompSetSeparator(ord("|"))
+            editor.AutoCompSetTypeSeparator(ord("?"))
+            editor.AutoCompSetIgnoreCase(False)
+            editor.AutoCompSetChooseSingle(False)
+            editor.AutoCompSetAutoHide(True)
+            editor.AutoCompSetCancelAtStart(True)
+            editor.AutoCompSetDropRestOfWord(True)
+            editor.AutoCompStops("()[]{};,<>.\"'")
+            if hasattr(editor, "AutoCompSetMaxHeight"):
+                editor.AutoCompSetMaxHeight(12)
+
+            editor.GotoPos(expected_pos)
+            self._pawn_completion_items = display_to_insert
+            self._pawn_completion_start = start_pos
+            self._pawn_completion_mode = mode
+            editor.AutoCompShow(expected_pos - start_pos, "|".join(display_items))
+        except Exception:
+            self._clear_pawn_completion_state()
 
     def smart_indent_closing_brace(self, editor):
         pos = editor.GetCurrentPos()
@@ -805,6 +1334,12 @@ class CustomEditorTab(gui.EditorTabPanel):
         line = editor.LineFromPosition(pos) + 1
         col = editor.GetColumn(pos) + 1
         self.base_win.m_statusBar.SetStatusText(u"{strline} {line}, {cl} {col}".format(strline=_(u"Ln"),line=line, cl=_(u"Col"), col=col), 3)
+
+        if pos != self._last_calltip_caret:
+            self._calltip_request_id += 1
+            request_id = self._calltip_request_id
+            self._last_calltip_caret = pos
+            wx.CallAfter(self._update_pawn_calltip, request_id, pos)
 
         #Brace Matching
         if self.brace_matching:

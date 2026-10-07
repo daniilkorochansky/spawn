@@ -37,7 +37,7 @@ class ProjectHandler(FileSystemEventHandler):
         if self.is_paused:
             return
         
-        if any(folder in event.src_path for folder in [".git", "dependencies", "components", "plugins"]): #Which folders should you ignore?
+        if any(folder in event.src_path for folder in [".git", ".spawn", "dependencies", "components", "plugins"]): #Which folders should you ignore?
             return
 
         if event.is_directory and event.event_type == 'modified':
@@ -102,6 +102,11 @@ class ProjectFileWatcher:
                 self.main_window.refresh_project_tree()
             else:
                 self.stop()
+
+            # Keep the Pawn index synchronized with external project changes.
+            indexer = getattr(self.main_window, "project_index", None)
+            if indexer is not None:
+                indexer.refresh_async()
 
     def stop(self):
         if self.timer and self.timer.IsRunning():
