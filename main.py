@@ -37,7 +37,6 @@ import wx
 
 from ui.spawn_base import SpawnFrame
 from ui.editor_tab import CustomEditorTab
-from ui.support_dialog import SupportDialog
 from ui.about_dialog import SpawnAboutDialog
 from ui.settings_dialog import SettingsDialog
 from ui.project_tree import ProjectTreeManager
@@ -53,9 +52,9 @@ from core.config_manager import ConfigManager
 from core.compiler import BackgroundCompiler
 from core.runner import BackgroundRunner
 from core.logger import SpawnLogger
+import core.project_utils as pu
 
 from git import Repo
-
 from core.git_manager import GitManager
 from core.git_worker import GitCommitWorker
 from core.git_reset_worker import GitResetWorker
@@ -214,7 +213,6 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_zenmode_click, id=wx.ID_TOGGLE_ZEN_MODE)
         
         self.Bind(wx.EVT_MENU, self.on_bug_report_click, id=wx.ID_BUG_REPORT)
-        self.Bind(wx.EVT_MENU, self.on_donate_click, id=wx.ID_DONATE)
         self.Bind(wx.EVT_MENU, self.on_about_click, id=wx.ID_ABOUT)
 
         self.Bind(wx.EVT_MENU, self.on_close_current_file_click, id=wx.ID_CLOSE_CURRENT_FILE)
@@ -734,15 +732,10 @@ class SpawnIDE(SpawnFrame):
         dlg = BugReportDialog(self)
         dlg.ShowModal()
 
-    def on_donate_click(self, event):
-        dlg = SupportDialog(self)
-        dlg.ShowModal()
-
     def on_about_click(self, event):
         dlg = SpawnAboutDialog(self)
         dlg.ShowModal()
                 
-
     def on_zoom_in_click(self, event):
         tab = self.m_auinotebook_Main.GetCurrentPage()
         if tab:
@@ -821,7 +814,8 @@ crashinfo.txt
 samp.ban
 
 # Common files
-*.lock
+pawn.lock
+.spawn/
     """
 
         gitignore_path = os.path.join(self.current_project_path,".gitignore")
@@ -2976,7 +2970,7 @@ samp.ban
     def load_project(self,path):
         try:
             self.current_project_path = path
-            #self.ide_cfg.set_project(path)
+            pu.ensure_project_gitignore(path)
             
             self.toggle_project_ui_state(True)
        

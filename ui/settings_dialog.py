@@ -648,7 +648,7 @@ class SettingsDialog ( wx.Dialog ):
 
         bSizer_RecentFilesLimit = wx.BoxSizer( wx.HORIZONTAL )
 
-        self.m_staticText_RecentFilesLimit = wx.StaticText( self.m_scrolledWindow_Panel_System, wx.ID_ANY, _(u"Recent Files Limit:"), wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText_RecentFilesLimit = wx.StaticText( self.m_scrolledWindow_Panel_System, wx.ID_ANY, _(u"Recent files limit:"), wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_staticText_RecentFilesLimit.Wrap( -1 )
 
         bSizer_RecentFilesLimit.Add( self.m_staticText_RecentFilesLimit, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )

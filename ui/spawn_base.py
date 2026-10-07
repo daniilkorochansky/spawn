@@ -130,7 +130,6 @@ wx.ID_DELETE_LINE = 6096
 
 wx.ID_CLOSE_CURRENT_FILE = 6097
 
-
 wx.ID_BUG_REPORT = 6074
 
 def get_app_root_dir():
@@ -329,12 +328,6 @@ class SpawnFrame ( wx.Frame ):
         self.m_menuItem_ToggleOutputPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_OUTPUT_PANEL, _(u"Toggle Output Panel")+ u"\t" + u"Ctrl+4", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleOutputPanel )
 
-        #self.m_menuItem_ToggleMinimap = wx.MenuItem( self.m_view, wx.ID_TOGGLE_MINIMAP, _(u"Toggle Minimap"), wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_view.Append( self.m_menuItem_ToggleMinimap )
-
-        #self.m_menuItem_ToggleStatusBar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_STATUSBAR, _(u"Toggle Status Bar"), wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_view.Append( self.m_menuItem_ToggleStatusBar )
-
         self.m_view.AppendSeparator()
 
         self.m_menuItem_ZoomIn = wx.MenuItem( self.m_view, wx.ID_ZOOM_IN, _(u"Zoom In")+ u"\t" + u"Ctrl+=", wx.EmptyString, wx.ITEM_NORMAL )
@@ -354,9 +347,6 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_project.AppendSeparator()
 
-        #self.m_menuItem_ProjectSettings = wx.MenuItem( self.m_project, wx.ID_PROJECT_SETTINGS, _(u"Project Settings..."), wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_project.Append( self.m_menuItem_ProjectSettings )
-
         self.m_menuItem_ProjectClose = wx.MenuItem( self.m_project, wx.ID_CLOSE_PROJECT, _(u"Close Project"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_project.Append( self.m_menuItem_ProjectClose )
 
@@ -366,31 +356,14 @@ class SpawnFrame ( wx.Frame ):
         self.m_menuItem_CompileProject = wx.MenuItem( self.m_build, wx.ID_BUILD_PROJECT, _(u"Build Server")+ u"\t" + u"F5", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_build.Append( self.m_menuItem_CompileProject )
 
-        #self.m_menuItem_CompileAndRun = wx.MenuItem( self.m_build, wx.ID_BUILD_AND_RUN, _(u"Build and Run")+ u"\t" + u"Ctrl+F5", wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_build.Append( self.m_menuItem_CompileAndRun )
-
-##        self.m_build.AppendSeparator()
-##
-##        self.m_menuItem_CleanProject = wx.MenuItem( self.m_build, wx.ID_CLEAN_PROJECT, _(u"Clean Project"), wx.EmptyString, wx.ITEM_NORMAL )
-##        self.m_build.Append( self.m_menuItem_CleanProject )
-
         self.m_menubar.Append( self.m_build, _(u"Build") )
 
         self.m_server = wx.Menu()
         self.m_menuItem_RunStopServer = wx.MenuItem( self.m_server, wx.ID_RUN_STOP_SERVER, _(u"Run / Stop Server")+ u"\t" + u"F6", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_server.Append( self.m_menuItem_RunStopServer )
-        self.m_menubar.Append( self.m_server, _(u"Server") )
-
-        
+        self.m_menubar.Append( self.m_server, _(u"Server") )       
 
         self.m_tools = wx.Menu()
-
-##        language_submenu = wx.Menu()
-##        self.item_english = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_ENGLISH, u"English")
-##        self.item_russian = language_submenu.AppendRadioItem(wx.ID_LANGUAGE_RUSSIAN, u"Русский")
-##        self.m_tools.AppendSubMenu(language_submenu, _(u"Language"), wx.EmptyString)
-
-##        self.m_tools.AppendSeparator()
         
         self.m_menuItem_Settings = wx.MenuItem( self.m_tools, wx.ID_SETTINGS, _(u"Settings..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_tools.Append( self.m_menuItem_Settings )
@@ -403,9 +376,6 @@ class SpawnFrame ( wx.Frame ):
         self.m_help.Append( self.m_menuItem_BugReport )
 
         self.m_help.AppendSeparator()
-
-        self.m_menuItem_Donate = wx.MenuItem( self.m_help, wx.ID_DONATE, _(u"Donate"), wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_help.Append( self.m_menuItem_Donate )
 
         self.m_menuItem_About = wx.MenuItem( self.m_help, wx.ID_ABOUT, _(u"About"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_help.Append( self.m_menuItem_About )
@@ -443,19 +413,7 @@ class SpawnFrame ( wx.Frame ):
         bSizer_splitter_ProjectTools = wx.BoxSizer( wx.VERTICAL )
 
         self.m_auinotebook_splitter_ProjectTools = wx.aui.AuiNotebook( self.m_panel_splitter_ProjectTools, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-##        self.m_panel_SymbolsTab = wx.Panel( self.m_auinotebook_splitter_ProjectTools, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-##        bSizer_SymbolsTab = wx.BoxSizer( wx.VERTICAL )
-##
-##        self.m_treeCtrl_Symbols = wx.TreeCtrl( self.m_panel_SymbolsTab, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TR_DEFAULT_STYLE|wx.TR_TWIST_BUTTONS )
-##        self.m_treeCtrl_Symbols.Enable(False) #Временно
-##        bSizer_SymbolsTab.Add( self.m_treeCtrl_Symbols, 1, wx.EXPAND, 0 )
-##
-##
-##        self.m_panel_SymbolsTab.SetSizer( bSizer_SymbolsTab )
-##        self.m_panel_SymbolsTab.Layout()
-##        bSizer_SymbolsTab.Fit( self.m_panel_SymbolsTab )
-##        self.m_auinotebook_splitter_ProjectTools.AddPage( self.m_panel_SymbolsTab, _(u"Symbols"), False, wx.NullBitmap )
-##
+
         bSizer_splitter_ProjectTools.Add( self.m_auinotebook_splitter_ProjectTools, 1, wx.EXPAND, 0 )
 
         self.m_panel_splitter_ProjectTools.SetSizer( bSizer_splitter_ProjectTools )

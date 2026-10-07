@@ -450,7 +450,6 @@ class CustomEditorTab(gui.EditorTabPanel):
                 event.Skip()
                 return
             if mod_type & stc.STC_MOD_INSERTTEXT:
-                #If text was inserted, then we set line change markers, and erase Diff markers if there were any
                 pos = event.GetPosition()
                 length = event.GetLength()
                 start_line = editor.LineFromPosition(pos)
@@ -461,9 +460,37 @@ class CustomEditorTab(gui.EditorTabPanel):
 
                 for current_line in range(start_line, end_line + 1):
                     if current_line < editor.GetLineCount():
-                        new_paste_marker = editor.MarkerAdd(current_line, self.MARKER_MODIFIED_ID)
-                        self.modified_markers_handles.append(new_paste_marker)
-                        editor.MarkerDelete(current_line, self.MARKER_GIT_MODIFIED_ID)
+
+                
+                        if editor.MarkerGet(current_line) & (1 << self.MARKER_SAVED_ID):
+                            editor.MarkerDelete(
+                                current_line,
+                                self.MARKER_SAVED_ID
+                            )
+
+ 
+                            for h in list(self.saved_markers_handles):
+                                if editor.MarkerLineFromHandle(h) == current_line:
+                                    editor.MarkerDeleteHandle(h)
+                                    self.saved_markers_handles.remove(h)
+
+                        if not (
+                            editor.MarkerGet(current_line)
+                            & (1 << self.MARKER_MODIFIED_ID)
+                        ):
+                            new_paste_marker = editor.MarkerAdd(
+                                current_line,
+                                self.MARKER_MODIFIED_ID
+                            )
+                            self.modified_markers_handles.append(
+                                new_paste_marker
+                            )
+
+                        # Убираем Git diff marker.
+                        editor.MarkerDelete(
+                            current_line,
+                            self.MARKER_GIT_MODIFIED_ID
+                        )
                 #------------------------------------------------------------------------------------------------
             
             if mod_type & (stc.STC_MOD_INSERTTEXT | stc.STC_MOD_DELETETEXT):
