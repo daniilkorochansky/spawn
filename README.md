@@ -84,7 +84,7 @@ Spawn is built from scratch to deliver a modern, resource-efficient developer ex
 | **Encoding Detection** | 🔴 None | 🔴 None | 🟡 Basic | 🟢 **Smart (via Comment Rule)** |
 | **Built-in Color Picker** | 🔴 None | 🟢 Out of the Box | 🔴 Requires Extension | 🟢 **Out of the Box** |
 | **Package Manager (Pawndex)**| 🔴 None | 🔴 None | 🔴 None | 🟡 **In Roadmap (Native)** |
-| **IntelliSense & Autocomplete** | 🔴 None | 🟡 Basic (Slow) | 🟢 Good (High CPU Usage) | 🟡 **In Roadmap (Fast / Low CPU Usage)** |
+| **IntelliSense & Autocomplete** | 🔴 None | 🟡 Basic (Slow) | 🟢 Good (High CPU Usage) | 🟢 **Fast (Beta)** |
 | **Split Code Editor View** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Out of the Box (3+ tabs)** |
 | **Setup & Installation** | 🟢 Portable | 🟢 Portable | 🔴 Complex Manual Config | 🟢 **Portable** |
 
