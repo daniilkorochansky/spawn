@@ -10,7 +10,6 @@ Build and manage **open.mp** and **SA-MP** server projects with integrated SAMPC
 [![Python](https://img.shields.io/badge/language-Python-yellow.svg)](https://www.python.org/)
 [![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml)
 [![Build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
-![Status](https://img.shields.io/badge/status-active-success.svg)
 
 [Download Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Report a bug](https://github.com/daniilkorochansky/spawn/issues) · [Contribute](#contributing)
 
