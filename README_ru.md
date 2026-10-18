@@ -10,7 +10,6 @@
 [![Язык](https://img.shields.io/badge/language-Python-yellow.svg)](https://www.python.org/)
 [![Тесты](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml)
 [![Сборка](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
-![Статус](https://img.shields.io/badge/status-active-success.svg)
 
 [Скачать Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Сообщить об ошибке](https://github.com/daniilkorochansky/spawn/issues) · [Участвовать в разработке](#участие-в-разработке)
 
