@@ -10,7 +10,6 @@ Desenvolva e gerencie servidores **open.mp** e **SA-MP** com integração ao SAM
 [![Python](https://img.shields.io/badge/linguagem-Python-yellow.svg)](https://www.python.org/)
 [![Testes](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml)
 [![Build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
-![Status](https://img.shields.io/badge/status-ativo-success.svg)
 
 [Baixar Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Relatar um problema](https://github.com/daniilkorochansky/spawn/issues) · [Contribuir](#contribuição)
 
