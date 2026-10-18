@@ -142,7 +142,6 @@ class SettingsDialog ( wx.Dialog ):
         self.m_treeListCtrl.Bind(wx.EVT_TREE_ITEM_COLLAPSING, self.on_tree_collapsing)
 
         self.tree_images = wx.ImageList(16,16)
-        self.idx_profiles = self.tree_images.Add(wx.Bitmap(os.path.join(self.icons_folder,"settings_profile.png"),wx.BITMAP_TYPE_PNG))
         self.idx_pawn = self.tree_images.Add(wx.Bitmap(os.path.join(self.icons_folder,"settings_pawn.png"),wx.BITMAP_TYPE_PNG))
         self.idx_editor = self.tree_images.Add(wx.Bitmap(os.path.join(self.icons_folder,"settings_editor.png"),wx.BITMAP_TYPE_PNG))
         self.idx_git = self.tree_images.Add(wx.Bitmap(os.path.join(self.icons_folder,"settings_git.png"),wx.BITMAP_TYPE_PNG))
@@ -151,7 +150,6 @@ class SettingsDialog ( wx.Dialog ):
         self.m_treeListCtrl.AssignImageList(self.tree_images)
 
         self.icon_indices = {
-            "profiles": self.idx_profiles,
             "pawn": self.idx_pawn,
             "editor": self.idx_editor,
             "git": self.idx_git,
@@ -1078,10 +1076,6 @@ class SettingsDialog ( wx.Dialog ):
             path,
             value
         )
-
-        #
-        # Проверяем действительно ли изменилось
-        #
 
         old_value = self.ide_cfg._get_from_dict(
             self.original_config,

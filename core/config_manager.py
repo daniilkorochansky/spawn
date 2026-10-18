@@ -49,10 +49,10 @@ class ConfigManager:
             "system": {
                 "apps": {
                     "enable_open_last_server_folder" : (False, bool, {
-                        "title": _(u"Apps Auto Open Last Server Folder"), 
+                        "title": _(u"Auto Open Last Server Folder"), 
                         "description": _(u"Automaticallly open last server folder when opened apps"),
-                        "keywords": ["apps", "apps configuration"],
-                        "category": "System",
+                        "keywords": ["folder", "open server", "last server"],
+                        "category": _(u"System"),
                         "restart_required": False
                     }),
                     "last_server_folder_path" : ("", str, {
