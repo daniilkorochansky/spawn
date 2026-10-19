@@ -25,6 +25,8 @@ import wx.aui
 import wx.richtext
 import wx.stc
 
+from ui.ai_panel import AIDockPanel
+
 import os
 import sys
 
@@ -550,11 +552,37 @@ class SpawnFrame ( wx.Frame ):
         self.m_mgr.AddPane( self.m_auinotebook_Main, wx.aui.AuiPaneInfo() .Center() .CaptionVisible( False ).PinButton( True ).Movable( False ).Dock().Resizable().FloatingSize( wx.DefaultSize ).BottomDockable( False ).TopDockable( False ).LeftDockable( False ).RightDockable( False ).Floatable( False ).Row( 1 ) )
 
 
+        # Right-side tools notebook. Spawn AI is the first tab; additional tools can be added here later.
+        self.m_rightToolsPanel = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        right_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.m_auinotebook_RightTools = wx.aui.AuiNotebook(
+            self.m_rightToolsPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
+            wx.aui.AUI_NB_DEFAULT_STYLE | wx.aui.AUI_NB_TAB_MOVE
+        )
+        
+        self.m_panel_SpawnAI = AIDockPanel(
+            parent=self.m_auinotebook_RightTools,
+            config_getter=self._get_spawn_ai_settings,
+        )
+        self.m_auinotebook_RightTools.AddPage(self.m_panel_SpawnAI, _(u"Spawn AI"), True)
+        right_sizer.Add(self.m_auinotebook_RightTools, 1, wx.EXPAND, 0)
+        self.m_rightToolsPanel.SetSizer(right_sizer)
+        self.m_mgr.AddPane(
+            self.m_rightToolsPanel,
+            wx.aui.AuiPaneInfo().Right().Caption(_(u"Tools")).Dock().Resizable()
+            .BestSize(wx.Size(360, -1)).MinSize(wx.Size(280, 200))
+            .FloatingSize(wx.Size(420, 650)).Layer(5)
+        )
+
         self.m_mgr.Update()
         self.Centre( wx.BOTH )
 
     def __del__( self ):
         self.m_mgr.UnInit()
+
+    def _get_spawn_ai_settings(self):
+        editor = self.ide_cfg.global_config.get("editor", {})
+        return editor.get("ai", {})
 
 
     def m_splitter_ProjectPanelOnIdle( self, event ):

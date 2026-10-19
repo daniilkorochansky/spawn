@@ -23,10 +23,13 @@ import os
 import sys
 import copy
 import json
+import threading
 
 import wx
 import wx.xrc
 import wx.dataview
+
+from ai.service import AIService, AIClientError
 
 import gettext
 _ = gettext.gettext
@@ -721,6 +724,101 @@ class SettingsDialog ( wx.Dialog ):
         bSizer_Panel_System.Fit( self.m_panel_System )
         self.m_simplebook.AddPage( self.m_panel_System, _(u"System"), False )
 
+        # ------------------------------------------------------------------
+        # AI settings
+        # ------------------------------------------------------------------
+        self.m_panel_AI = wx.Panel(
+            self.m_simplebook, wx.ID_ANY, wx.DefaultPosition,
+            wx.DefaultSize, wx.TAB_TRAVERSAL
+        )
+        bSizer_Panel_AI = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_scrolledWindow_Panel_AI = wx.ScrolledWindow(
+            self.m_panel_AI, wx.ID_ANY, wx.DefaultPosition,
+            wx.DefaultSize, wx.VSCROLL
+        )
+        self.m_scrolledWindow_Panel_AI.SetScrollRate(5, 5)
+        bSizer_AI = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_staticText_AI_GeneralTitle = wx.StaticText(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"General")
+        )
+        self.m_staticText_AI_GeneralTitle.SetFont(
+            wx.Font(
+                wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD
+            )
+        )
+        bSizer_AI.Add(self.m_staticText_AI_GeneralTitle, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.m_staticText_AI_Description = wx.StaticText(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY,
+            _(u"Configure the AI assistant and local model connection.")
+        )
+        self.m_staticText_AI_Description.Wrap(650)
+        bSizer_AI.Add(self.m_staticText_AI_Description, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 5)
+        bSizer_AI.Add(wx.StaticLine(self.m_scrolledWindow_Panel_AI), 0, wx.EXPAND | wx.ALL, 5)
+
+        self.m_checkBox_AI_Enabled = wx.CheckBox(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"Enable Spawn AI")
+        )
+        bSizer_AI.Add(self.m_checkBox_AI_Enabled, 0, wx.ALL, 5)
+        self.register_setting(self.m_checkBox_AI_Enabled, "editor.ai.enabled", self.m_panel_AI)
+
+        label = wx.StaticText(self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"Provider"))
+        bSizer_AI.Add(label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+        self.m_choice_AI_Provider = wx.Choice(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY,
+            choices=[u"LM Studio"]
+        )
+        self.m_choice_AI_Provider.SetClientData(0, "lm_studio")
+        bSizer_AI.Add(self.m_choice_AI_Provider, 0, wx.ALL | wx.EXPAND, 5)
+        self.register_setting(self.m_choice_AI_Provider, "editor.ai.provider", self.m_panel_AI)
+
+        label = wx.StaticText(self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"Server URL"))
+        bSizer_AI.Add(label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+        self.m_textCtrl_AI_ServerURL = wx.TextCtrl(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY,
+            "http://localhost:1234/v1"
+        )
+        bSizer_AI.Add(self.m_textCtrl_AI_ServerURL, 0, wx.ALL | wx.EXPAND, 5)
+        self.register_setting(self.m_textCtrl_AI_ServerURL, "editor.ai.base_url", self.m_panel_AI)
+
+        label = wx.StaticText(self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"API Key (optional)"))
+        bSizer_AI.Add(label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+        self.m_textCtrl_AI_APIKey = wx.TextCtrl(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY, "", style=wx.TE_PASSWORD
+        )
+        bSizer_AI.Add(self.m_textCtrl_AI_APIKey, 0, wx.ALL | wx.EXPAND, 5)
+        self.register_setting(self.m_textCtrl_AI_APIKey, "editor.ai.api_key", self.m_panel_AI)
+
+        label = wx.StaticText(self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"Model"))
+        bSizer_AI.Add(label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+        model_row = wx.BoxSizer(wx.HORIZONTAL)
+        self.m_choice_AI_Model = wx.Choice(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY, choices=[]
+        )
+        model_row.Add(self.m_choice_AI_Model, 1, wx.ALL | wx.EXPAND, 5)
+        self.m_button_AI_RefreshModels = wx.Button(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"Refresh")
+        )
+        model_row.Add(self.m_button_AI_RefreshModels, 0, wx.ALL, 5)
+        bSizer_AI.Add(model_row, 0, wx.EXPAND)
+        self.register_setting(self.m_choice_AI_Model, "editor.ai.model", self.m_panel_AI)
+        self.m_button_AI_RefreshModels.Bind(wx.EVT_BUTTON, self.on_refresh_ai_models)
+
+        self.m_staticText_AI_ModelStatus = wx.StaticText(
+            self.m_scrolledWindow_Panel_AI, wx.ID_ANY, _(u"Refresh to load models from LM Studio.")
+        )
+        self.m_staticText_AI_ModelStatus.Wrap(650)
+        bSizer_AI.Add(self.m_staticText_AI_ModelStatus, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+
+        self.m_scrolledWindow_Panel_AI.SetSizer(bSizer_AI)
+        bSizer_Panel_AI.Add(self.m_scrolledWindow_Panel_AI, 1, wx.EXPAND)
+        self.m_panel_AI.SetSizer(bSizer_Panel_AI)
+        self.m_panel_AI.Layout()
+        self.m_simplebook.AddPage(self.m_panel_AI, _(u"AI"), False)
+
         bSizer_Settings_Main.Add( self.m_simplebook, 1, wx.EXPAND |wx.ALL, 5 )
 
 
@@ -778,6 +876,14 @@ class SettingsDialog ( wx.Dialog ):
         
         self.m_searchCtrl.AutoComplete(SettingsCompleter(self.ide_cfg))
         self.apply_config_to_controls()
+
+        # Keep the persisted model visible before the user refreshes the server list.
+        saved_model = str(
+            self.ide_cfg._get_from_dict(self.ide_cfg.global_config, "editor.ai.model") or ""
+        )
+        if saved_model and self.m_choice_AI_Model.FindString(saved_model) == wx.NOT_FOUND:
+            self.m_choice_AI_Model.Append(saved_model)
+            self.m_choice_AI_Model.SetStringSelection(saved_model)
 
         self.build_tree_ctrl(self.m_treeListCtrl)
         
@@ -839,6 +945,10 @@ class SettingsDialog ( wx.Dialog ):
         tree.SetItemImage(system, self.icon_indices["system"], wx.TreeItemIcon_Normal)
         self.register_tree_item(system, self.m_panel_System, self.m_staticText_System_GeneralTitle)
 
+        ai = tree.AppendItem(root, _(u"AI"))
+        tree.SetItemImage(ai, self.icon_indices["empty"], wx.TreeItemIcon_Normal)
+        self.register_tree_item(ai, self.m_panel_AI, self.m_staticText_AI_GeneralTitle)
+
         editor_general = tree.AppendItem(editor, _(u"General"))
         self.register_tree_item(editor_general, self.m_panel_Editor, self.m_staticText_Editor_GeneralTitle)
         tree.SetItemImage(editor_general, self.icon_indices["empty"], wx.TreeItemIcon_Normal)
@@ -875,6 +985,10 @@ class SettingsDialog ( wx.Dialog ):
         self.register_tree_item(paths, self.m_panel_System, self.m_staticText_PathsTitle)
         tree.SetItemImage(paths, self.icon_indices["empty"], wx.TreeItemIcon_Normal)
 
+        ai_general = tree.AppendItem(ai, _(u"General"))
+        self.register_tree_item(ai_general, self.m_panel_AI, self.m_staticText_AI_GeneralTitle)
+        tree.SetItemImage(ai_general, self.icon_indices["empty"], wx.TreeItemIcon_Normal)
+
         tree.ExpandAll()
         
 
@@ -897,6 +1011,125 @@ class SettingsDialog ( wx.Dialog ):
 
         self._loading_settings = False
 
+    def on_refresh_ai_models(self, event):
+        """Fetch available LM Studio models without blocking the settings dialog."""
+        base_url = str(self.m_textCtrl_AI_ServerURL.GetValue()).strip()
+        api_key = self.m_textCtrl_AI_APIKey.GetValue()
+        selected_model = self.m_choice_AI_Model.GetStringSelection()
+        if not selected_model:
+            selected_model = str(
+                self.ide_cfg._get_from_dict(self.working_config, "editor.ai.model") or ""
+            )
+
+        self.m_button_AI_RefreshModels.Enable(False)
+        self.m_button_AI_RefreshModels.SetLabel(_(u"Loading..."))
+        self.m_staticText_AI_ModelStatus.SetLabel(_(u"Connecting to LM Studio..."))
+
+        def worker():
+            try:
+                service = AIService({
+                    "base_url": base_url,
+                    "api_key": api_key,
+                    "timeout": 10,
+                })
+                models = service.list_models()
+                model_ids = [
+                    str(item["id"]) for item in models
+                    if item.get("id")
+                    and not any(token in str(item["id"]).lower()
+                                for token in ("embedding", "embed-", "rerank", "reranker"))
+                ]
+                selected_model_result = selected_model
+                if any(token in selected_model_result.lower()
+                       for token in ("embedding", "embed-", "rerank", "reranker")):
+                    selected_model_result = ""
+                wx.CallAfter(
+                    self._finish_ai_model_refresh,
+                    model_ids,
+                    selected_model_result,
+                    None,
+                )
+            except Exception as exc:
+                wx.CallAfter(
+                    self._finish_ai_model_refresh,
+                    [],
+                    selected_model,
+                    str(exc),
+                )
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _finish_ai_model_refresh(self, model_ids, selected_model, error):
+        if not self or self.IsBeingDeleted():
+            return
+
+        self.m_button_AI_RefreshModels.Enable(True)
+        self.m_button_AI_RefreshModels.SetLabel(_(u"Refresh"))
+
+        # Preserve current selection and config value even if the server does not
+        # return it (for example, the model may currently be unloaded).
+        self._loading_settings = True
+        self.m_choice_AI_Model.Clear()
+        for model_id in model_ids:
+            self.m_choice_AI_Model.Append(model_id)
+        if selected_model and not any(token in selected_model.lower()
+                                       for token in ("embedding", "embed-", "rerank", "reranker")):
+            if self.m_choice_AI_Model.FindString(selected_model) == wx.NOT_FOUND:
+                self.m_choice_AI_Model.Append(selected_model)
+        if selected_model:
+            self.m_choice_AI_Model.SetStringSelection(selected_model)
+        elif self.m_choice_AI_Model.GetCount():
+            self.m_choice_AI_Model.SetSelection(0)
+        self._loading_settings = False
+
+        # Keep the working config in sync when the user picks a newly loaded model.
+        chosen = self.m_choice_AI_Model.GetStringSelection()
+        if chosen:
+            self.ide_cfg._set_in_dict(self.working_config, "editor.ai.model", chosen)
+            original = self.ide_cfg._get_from_dict(self.original_config, "editor.ai.model")
+            if chosen != original:
+                self.modified_settings.add("editor.ai.model")
+            else:
+                self.modified_settings.discard("editor.ai.model")
+            self.update_buttons()
+
+        if error:
+            self.m_staticText_AI_ModelStatus.SetLabel(
+                _(u"Could not load models: {}").format(error)
+            )
+        elif not model_ids:
+            self.m_staticText_AI_ModelStatus.SetLabel(
+                _(u"Connected, but LM Studio returned no models.")
+            )
+        else:
+            self.m_staticText_AI_ModelStatus.SetLabel(
+                _(u"Loaded {} model(s).").format(len(model_ids))
+            )
+
+    def _refresh_spawn_ai_after_apply(self):
+        """Find the AI panel without assuming its exact parent/container."""
+        candidates = [
+            getattr(self.main_win, "m_panel_SpawnAI", None),
+            getattr(self.main_win, "ai_panel", None),
+            getattr(self.main_win, "m_ai_panel", None),
+        ]
+        for candidate in candidates:
+            if candidate is not None and hasattr(candidate, "refresh_settings"):
+                candidate.refresh_settings()
+                return
+
+        # The panel may be nested in a notebook or dock panel.
+        stack = list(self.main_win.GetChildren()) if hasattr(self.main_win, "GetChildren") else []
+        while stack:
+            child = stack.pop()
+            if hasattr(child, "refresh_settings") and callable(child.refresh_settings):
+                child.refresh_settings()
+                return
+            try:
+                stack.extend(child.GetChildren())
+            except Exception:
+                pass
+
     def on_cancel(self, event):
         if self.modified_settings:
 
@@ -912,33 +1145,70 @@ class SettingsDialog ( wx.Dialog ):
         self.EndModal(wx.ID_CANCEL)
 
     def on_ok(self, event):
-        self.on_apply(None)
-        self.EndModal(wx.ID_OK)
+        # Close only after settings have been saved successfully.
+        try:
+            if self.on_apply(None):
+                if self.IsModal():
+                    self.EndModal(wx.ID_OK)
+                else:
+                    self.Close()
+        except Exception:
+            import logging
+            logging.exception("Failed to apply settings before closing Settings dialog")
 
     def on_apply(self, event):
-        for path in self.modified_settings:
+        # Save settings first.
+        for path in list(self.modified_settings):
             value = self.ide_cfg._get_from_dict(
                 self.working_config,
                 path
             )
+            self.ide_cfg.set(path, value)
 
-            self.ide_cfg.set(path,value)
-
-        self.original_config = copy.deepcopy(
-            self.working_config
-        )
-
+        self.original_config = copy.deepcopy(self.working_config)
         self.modified_settings.clear()
         self.update_buttons()
-        self.main_win.check_environment_on_startup()
 
-        notebook = self.main_win.m_auinotebook_Main
-        if notebook.GetPageCount() > 0:
-            for i in reversed(range(notebook.GetPageCount())):
-                tab = notebook.GetPage(i)
-                tab.apply_settings()
+        # Apply settings to currently open editor tabs before environment checks.
+        # check_environment_on_startup() may rebuild/destroy the main notebook.
+        try:
+            notebook = getattr(self.main_win, "m_auinotebook_Main", None)
+            if notebook is not None:
+                try:
+                    page_count = notebook.GetPageCount()
+                except (RuntimeError, wx.PyDeadObjectError):
+                    page_count = 0
 
-        
+                for i in reversed(range(page_count)):
+                    try:
+                        tab = notebook.GetPage(i)
+                        if tab is not None and hasattr(tab, "apply_settings"):
+                            tab.apply_settings()
+                    except (RuntimeError, wx.PyDeadObjectError):
+                        # A page or notebook may have been destroyed during Apply.
+                        continue
+                    except Exception:
+                        import logging
+                        logging.exception("Failed to apply settings to an editor tab")
+        except Exception:
+            import logging
+            logging.exception("Failed to apply settings to editor tabs")
+
+        # Refresh AI using the newly persisted configuration.
+        try:
+            self._refresh_spawn_ai_after_apply()
+        except Exception:
+            import logging
+            logging.exception("Failed to refresh Spawn AI after applying settings")
+
+        # Run environment refresh last because it may recreate main-window controls.
+        try:
+            self.main_win.check_environment_on_startup()
+        except Exception:
+            import logging
+            logging.exception("Failed to refresh Spawn environment after applying settings")
+
+        return True
 
     def scroll_to_control(self, ctrl, margin=20):
         if ctrl is None or ctrl.IsBeingDeleted():
@@ -1028,7 +1298,24 @@ class SettingsDialog ( wx.Dialog ):
             ctrl.SetValue(str(value))
 
         elif isinstance(ctrl, wx.Choice):
-            ctrl.SetStringSelection(str(value))
+            # Provider choices display friendly labels but persist stable IDs.
+            if ctrl is getattr(self, "m_choice_AI_Provider", None):
+                selected = -1
+                for index in range(ctrl.GetCount()):
+                    if ctrl.GetClientData(index) == str(value):
+                        selected = index
+                        break
+                if selected >= 0:
+                    ctrl.SetSelection(selected)
+                elif ctrl.GetCount():
+                    ctrl.SetSelection(0)
+            else:
+                value = str(value)
+                if ctrl is getattr(self, "m_choice_AI_Model", None):
+                    if value and ctrl.FindString(value) == wx.NOT_FOUND:
+                        ctrl.Append(value)
+                if value:
+                    ctrl.SetStringSelection(value)
 
         elif isinstance(ctrl, wx.ColourPickerCtrl):
             ctrl.SetColour(wx.Colour(value))
@@ -1047,6 +1334,9 @@ class SettingsDialog ( wx.Dialog ):
             return ctrl.GetValue()
 
         if isinstance(ctrl, wx.Choice):
+            if ctrl is getattr(self, "m_choice_AI_Provider", None):
+                index = ctrl.GetSelection()
+                return ctrl.GetClientData(index) if index != wx.NOT_FOUND else "lm_studio"
             return ctrl.GetStringSelection()
 
         if isinstance(ctrl, wx.ColourPickerCtrl):

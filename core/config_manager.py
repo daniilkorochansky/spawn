@@ -136,6 +136,44 @@ class ConfigManager:
                         "restart_required": False
                         })
                 },
+                
+                "ai": {
+                    "enabled": (False, bool, {
+                        "title": _("Enable AI Assistant"),
+                        "description": _("Enable the Spawn AI assistant."),
+                        "keywords": ["ai", "assistant", "enable", "chat"],
+                        "category": _("AI"),
+                        "restart_required": False
+                    }),
+                    "provider": ("lm_studio", str, {
+                        "title": _("AI Provider"),
+                        "description": _("AI provider used by Spawn."),
+                        "keywords": ["ai", "provider", "lm studio"],
+                        "category": _("AI"),
+                        "restart_required": False
+                    }),
+                    "base_url": ("http://localhost:1234/v1", str, {
+                        "title": _("Server URL"),
+                        "description": _("Base URL of the LM Studio API."),
+                        "keywords": ["ai", "lm studio", "server", "url", "api"],
+                        "category": _("AI"),
+                        "restart_required": False
+                    }),
+                    "api_key": ("", str, {
+                        "title": _("API Key"),
+                        "description": _("Optional API key for the AI provider."),
+                        "keywords": ["ai", "api", "key", "token"],
+                        "category": _("AI"),
+                        "restart_required": False
+                    }),
+                    "model": ("", str, {
+                        "title": _("Model"),
+                        "description": _("Selected model identifier."),
+                        "keywords": ["ai", "model", "llm"],
+                        "category": _("AI"),
+                        "restart_required": False
+                    })
+                },
                 "features": {
                     "multicursor": {
                         "enable": (False, bool, {

@@ -95,6 +95,8 @@ class SpawnIDE(SpawnFrame):
         SpawnLogger.initialize()
 
         self.ide_cfg = ConfigManager()
+        self.m_panel_SpawnAI.set_config_getter(lambda: self.ide_cfg.get("editor.ai", {}))
+        self.m_panel_SpawnAI.set_config_setter(lambda path, value: self.ide_cfg.set(path, value))
 
         self._context_tab_idx = None
 

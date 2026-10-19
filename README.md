@@ -1,194 +1,312 @@
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue)
+![Language](https://img.shields.io/badge/language-Python-yellow.svg)
+![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)
+[![build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
+![Status](https://img.shields.io/badge/status-active-success.svg)
+
 <div align="center">
-
-# Spawn
-
-**A lightweight IDE for Pawn development**
-
-Build and manage **open.mp** and **SA-MP** server projects with integrated SAMPCTL, Git, dependency management, and a focused Pawn editor.
-
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue)](https://github.com/daniilkorochansky/spawn)
-[![Python](https://img.shields.io/badge/language-Python-yellow.svg)](https://www.python.org/)
-[![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml)
-[![Build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
-
-[Download Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Report a bug](https://github.com/daniilkorochansky/spawn/issues) · [Contribute](#contributing)
-
-[English](README.md) · [Русский](README_ru.md) · [Português](README_pt.md)
-
-<img width="900" alt="Spawn IDE overview" src="https://github.com/user-attachments/assets/505d6a46-33cc-45ae-bed3-f011474a4dc7" />
-
+  English
+  |
+  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_ru.md">Русский</a>
+  |
+  <a href="https://github.com/daniilkorochansky/spawn/blob/master/README_pt.md">Português</a>
 </div>
 
-## Why Spawn?
+# Spawn
+<img width="180" height="180" alt="spawn_new" src="https://github.com/user-attachments/assets/18435694-229c-468d-87af-11f9ed4d243e" />
 
-Spawn brings the tools commonly needed for Pawn server development into one lightweight, portable desktop IDE.
+A fast and modern development environment (IDE), created specifically for developing open.mp and SA-MP servers, in the Pawn programming language.
 
-- **Pawn editor** — syntax highlighting, brace matching, changed-line markers, and split editing.
-- **SAMPCTL integration** — create, build, and run server projects.
-- **Dependency Manager** — install, update, and check project dependencies.
-- **Git integration** — repository status, commit history, and source-control tools.
-- **Code-focused utilities** — RGBA/HEX color previews and a color picker for inserting values into code.
-- **Project navigation** — a project tree designed to work with large projects.
-- **Integrated output** — build output and server console in the IDE.
-- **Encoding support** — automatic detection and configurable encodings for Pawn source files.
-- **Portable workflow** — run Spawn without a traditional installation.
+It combines Pawn editing, SAMPCTL integration, dependency management, Git version control, and project navigation tools into a single development environment designed around the needs of multiplayer server developers.
+
+Portable, extensible, and focused on productivity, Spawn helps you build, manage and maintain Pawn projects without relying on generic code editors.
+
+## Overview
+<img width="1920" height="1049" alt="ui" src="https://github.com/user-attachments/assets/505d6a46-33cc-45ae-bed3-f011474a4dc7" />
+
+## Table of Contents
+- [Features](#features)
+- [Why Spawn IDE? (Comparison)](#why-spawn-ide-comparison)
+- [Screenshots](#screenshots)
+  - [Project Creation](#project-creation)
+  - [Split Code Editor View](#split-code-editor-view)
+  - [RGBA/HEX Color Preview](#rgbahex-color-preview)
+  - [Dependency Manager](#dependency-manager)
+  - [Git and Source Control](#git-and-source-control)
+  - [Project Tree](#project-tree)
+- [Installation](#installation)
+  - [Download](#download)
+  - [Optional Tools](#optional-tools)
+- [Quick Start](#quick-start)
+  - [Create a Project](#create-a-project)
+  - [Manage Dependencies](#manage-dependencies)
+  - [Build and Run Server](#build-and-run-server)
+  - [Working with Individual Files](#working-with-individual-files)
+  - [Encoding Detection](#encoding-detection)
+- [Development](#development)
+  - [Requirements](#requirements)
+  - [Clone the Repository](#clone-the-repository)
+  - [Install Dependencies](#install-dependencies)
+  - [Run](#run)
+  - [Build Executable (Windows)](#build-executable-windows)
+  - [Tests](#tests)
+- [Contributors](#contributors)
+  - [Bug Report](#bug-report)
+- [Donations](#donations)
+- [License](#license)
+
+## Features
++ Designed specifically for [open.mp](https://github.com/openmultiplayer) & SA-MP development.
++ Built-in [SAMPCTL](https://github.com/Southclaws/sampctl) integration for building, running and managing projects.
++ Dependency Manager for easy installation and updating of server packages and components.
++ Integrated Git support with repository status indicators and commit history.
++ Change History markers for tracking modified and saved lines.
++ Automatic brace matching and highlighting.
++ Color preview for RGBA and HEX values directly inside the editor.
++ Color Picker integration for quick color insertion into Pawn code.
++ Split Code Editor mode for working with multiple files simultaneously.
++ Project Tree optimized for large projects.
++ Integrated build output and server console panels.
++ Automatic project files monitoring and refresh.
++ Portable distribution (no installation required).
+
+### Why Spawn IDE? (Comparison)
+
+Spawn is built from scratch to deliver a modern, resource-efficient developer experience without the bloat of web-based editors or the rigid limitations of legacy tools.
+
+| Features & Capabilities | Pawno | Qawno (open.mp) | VS Code (with plugins) | Spawn IDE |
+| :--- | :---: | :---: | :---: | :---: |
+| **RAM Usage** | 🟢 ~10-20 MB | 🟢 ~40-60 MB | 🔴 ~300-800+ MB (Electron) | 🟢 **~30-50 MB (Native UI)** |
+| **Cross-Platform Support** | 🔴 Windows Only | 🔴 Windows Only | 🟢 Linux, Windows, macOS | 🟢 **Linux & Windows (Native)** |
+| **Git / Source Control** | 🔴 None | 🔴 None | 🟡 Via Plugins (Heavy) | 🟢 **Built-in (Lightweight)** |
+| **SAMPCTL** | 🔴 None | 🔴 None | 🟡 Via Third-Party Plugins | 🟢 **Built-in Integration** |
+| **EOL Conversion (LF/CRLF)** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Built-in** |
+| **Encoding Detection** | 🔴 None | 🔴 None | 🟡 Basic | 🟢 **Smart (via Comment Rule)** |
+| **Built-in Color Picker** | 🔴 None | 🟢 Out of the Box | 🔴 Requires Extension | 🟢 **Out of the Box** |
+| **Package Manager (Pawndex)**| 🔴 None | 🔴 None | 🔴 None | 🟡 **In Roadmap (Native)** |
+| **IntelliSense & Autocomplete** | 🔴 None | 🟡 Basic (Slow) | 🟢 Good (High CPU Usage) | 🟡 **In Roadmap (Fast / Low CPU Usage)** |
+| **Split Code Editor View** | 🔴 None | 🔴 None | 🟢 Built-in | 🟢 **Out of the Box (3+ tabs)** |
+| **Setup & Installation** | 🟢 Portable | 🟢 Portable | 🔴 Complex Manual Config | 🟢 **Portable** |
+
+## Screenshots
+### Project Creation
+<img width="1920" height="1080" alt="Project Creation" src="https://github.com/user-attachments/assets/14b70c29-96b4-4d7d-94ff-6307cfa35cac" />
+
+### Split Code Editor View
+<img width="1920" height="1080" alt="Split Code Editor" src="https://github.com/user-attachments/assets/f0caa6e9-607b-48f1-8b58-ae95ef12f7b1" />
+
+### RGBA/HEX Color Preview
+<img width="1920" height="1080" alt="Color Preview" src="https://github.com/user-attachments/assets/ae6a367a-3b04-4a23-a6ad-71ae51b0edc8" />
+
+### Dependency Manager
+<img width="1920" height="1080" alt="Dependency Manager" src="https://github.com/user-attachments/assets/e60a1bad-9a9d-43da-938d-fa94d43401b7" />
+
+### Git and Source Control
+<img width="1920" height="1080" alt="Git and Source Control" src="https://github.com/user-attachments/assets/b6198ac3-97b4-4392-b29a-87ab6bdfc818" />
+
+### Project Tree
+<img width="1920" height="1080" alt="Project Tree" src="https://github.com/user-attachments/assets/c942516b-6e18-406d-b9be-cb8e24d54a94" />
 
 ## Installation
+### Download
+1. Download the latest release from the Releases page.
+2. Extract the archive to any location
+3. Run 'Spawn.exe'.
 
-1. Open the [latest release](https://github.com/daniilkorochansky/spawn/releases).
-2. Download and extract the archive.
-3. Run `Spawn.exe`.
+### Optional Tools
+To use all features of Spawn, you may also install:
++ Git
++ [SAMPCTL](https://github.com/Southclaws/sampctl)
 
-For the full workflow, install [Git](https://git-scm.com/downloads) and [SAMPCTL](https://github.com/Southclaws/sampctl). You can configure both later in Spawn's Settings.
+These tools can be configured later in Settings.
 
-## Quick start
+## Quick Start
+### Create a Project
+1. Select 'File' → 'New Project...'.
+2. Enter project name and choose a project location.
+3. After clicking 'Create', the SAMPCTL command-line tool will be launched. Follow the on-screen instructions to complete project creation.
+4. Once the process is complete, close the SAMPCTL command-line tool. Spawn will pick up the new project.
 
-### Create a project
+### Manage Dependencies
+1. Select 'Project' → 'Dependency Manager...'.
+2. Enter the package name in the 'Dependency' field
+3. Click 'Install'.
 
-1. Select **File → New Project…**.
-2. Enter a project name and location.
-3. Click **Create** and follow the instructions in the SAMPCTL command-line window.
-4. When project creation finishes, close the command-line window. Spawn will detect the new project.
-
-### Build and run a server
-
-1. Select **File → Open Server Folder…** and choose the server folder containing the `pawn.json` file generated by SAMPCTL.
-2. Select **Build → Build Server**.
-3. Use **Server → Run / Stop Server** to start or stop the server.
-4. Monitor the output in the integrated console.
-
-### Manage dependencies
-
-Open **Project → Dependency Manager…**, enter a package name, and select **Install**. Select an installed dependency to uninstall it, or use **Ensure** to check dependencies.
++ To uninstall a dependency, select the one you want from the list and click 'Uninstall'.
++ To verify that all dependencies are in order, click the button labeled 'Ensure'.
 
 ### Use Git
+1. Right-click the root folder in the Project Tree → choose 'Initialize Repository'. (If the repository wasn't on the server)
+2. Create your first commit.
+3. Track changes directly from the IDE.
 
-Right-click the project root in the Project Tree and select **Initialize Repository** if the project is not already a Git repository. You can then create commits and track changes from Spawn. Existing repositories are detected when Git integration is enabled in Settings.
+If the repository is already on the server, Spawn will automatically detect it (provided Git is enabled in the settings)
 
-### Edit individual files
+### Build and Run Server
+1. Open the root folder containing the server by selecting 'File' → 'Open Server Folder...' (The server must contain the 'pawn.json' file generated via [SAMPCTL](https://github.com/Southclaws/sampctl))
+2. Go to 'Build' → 'Build Server' or click the corresponding button on the toolbar.
+3. Start your server by going to 'Server' → 'Run / Stop Server' or by clicking the corresponding button on the toolbar.
+4. Monitor output in the integrated console.
 
-You can open files through **File → Open File…** without opening a project. Editor features such as syntax highlighting, color previews, brace matching, split view, and changed-line markers remain available. Project-specific tools—including the Project Tree, Git integration, Dependency Manager, and SAMPCTL—require an opened project.
+You're ready to develop open.mp and SA-MP servers with Spawn.
 
-## Pawn file encodings
+### Working with Individual Files
+Spawn can also be used without opening a project.
 
-Spawn detects file encodings when opening files. For `.pwn` and `.inc` files, you can specify an encoding at the beginning of a file:
+To edit a multiple file:
+1. Select 'File' → 'Open File...'.
+2. Choose a files.
+3. Start editing immediately.
+
+When working with individual files, editor features such as syntax highlighting, color previews, brace matching, split view, and change history markers remain fully available.
+
+Project-specific functionality such as the Project Tree, Git integration, Dependency Manager, and SAMPCTL tools requires an opened project.
+
+### Encoding Detection
+
+Spawn automatically detects file encodings when opening files.
+
+For Pawn source files (`.pwn` and `.inc`), you can explicitly specify the encoding using an encoding directive at the beginning of the file:
 
 ```pawn
 // -*- coding: cp1251 -*-
 ```
 
-If a file displays incorrectly, reopen it with another encoding via **Edit → Encoding → Reopen**. This changes how the file is displayed in the editor; it does not modify the file on disk.
+When present, Spawn will use the specified encoding when opening and saving the file.
 
-Supported encodings include UTF-8 and Windows code pages 1250–1257. The default encoding for newly created Pawn files can be configured in Settings; Spawn can insert the corresponding encoding directive automatically.
+If no encoding directive is found, Spawn will attempt to detect the file encoding automatically.
 
-## Screenshots
+#### Reopening Files with a Different Encoding
 
-<details>
-<summary>View feature screenshots</summary>
+In some cases, automatic detection may not correctly identify the file encoding.
 
-### Project creation
-<img width="900" alt="Project creation" src="https://github.com/user-attachments/assets/14b70c29-96b4-4d7d-94ff-6307cfa35cac" />
+If a file is displayed incorrectly, you can reopen it using a different encoding:
 
-### Split editor
-<img width="900" alt="Split code editor" src="https://github.com/user-attachments/assets/f0caa6e9-607b-48f1-8b58-ae95ef12f7b1" />
+`Edit → Encoding → Reopen`
 
-### RGBA/HEX color preview
-<img width="900" alt="Color preview" src="https://github.com/user-attachments/assets/ae6a367a-3b04-4a23-a6ad-71ae51b0edc8" />
+This operation does not modify the file on disk and only affects how the file is displayed in the editor.
 
-### Dependency Manager
-<img width="900" alt="Dependency Manager" src="https://github.com/user-attachments/assets/e60a1bad-9a9d-43da-938d-fa94d43401b7" />
+#### Supported Encodings
 
-### Git and source control
-<img width="900" alt="Git and source control" src="https://github.com/user-attachments/assets/b6198ac3-97b4-4392-b29a-87ab6bdfc818" />
+* UTF-8 (Unicode)
+* Windows-1250 (Central European)
+* Windows-1251 (Cyrillic)
+* Windows-1252 (Western European)
+* Windows-1253 (Greek)
+* Windows-1254 (Turkish)
+* Windows-1255 (Hebrew)
+* Windows-1256 (Arabic)
+* Windows-1257 (Baltic)
 
-### Project Tree
-<img width="900" alt="Project Tree" src="https://github.com/user-attachments/assets/c942516b-6e18-406d-b9be-cb8e24d54a94" />
+#### Default Pawn Encoding
 
-</details>
+You can configure the default encoding used for newly created Pawn source files.
 
-## Contributing
+When a new `.pwn` or `.inc` file is created, Spawn can automatically insert an encoding directive based on the selected default encoding.
 
-Bug reports, feature requests, UI/UX suggestions, code contributions, testing, and feedback are welcome.
-
-To report a bug from Spawn:
-
-1. Select **Help → Bug Report**.
-2. Copy the generated report. If **Log Output** is empty, describe the issue yourself.
-3. Select **Open GitHub Issue** and paste the report into the issue description.
-
-You can also [open an issue on GitHub](https://github.com/daniilkorochansky/spawn/issues).
-
-## Support development
-
-Spawn is free and open source. If you would like to support its development, you can donate through:
-
-- [Ko-fi](https://ko-fi.com/Y4L421BNPH)
-- [Boosty (Russia / international)](https://boosty.to/daniilkorochansky)
-
-## License
-
-Spawn is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.
-
----
-
-<details>
-<summary>Development setup</summary>
-
+## Development
 ### Requirements
++ Python 3.11+
++ wxPython
++ GitPython
++ Markdown
++ watchdog
++ platformdirs
 
-- Python 3.11+
-- wxPython
-- GitPython
-- Markdown
-- watchdog
-- platformdirs
-
-### Clone and run
-
+### Clone the Repository
+```
+https://github.com/daniilkorochansky/spawn.git
+```
+or
 ```bash
-git clone https://github.com/daniilkorochansky/spawn.git
-cd spawn
+gh repo clone daniilkorochansky/spawn
+```
+
+### Install Dependencies
+In the root folder, run:
+```bash
 pip install -r requirements.txt
+```
+### Run
+Also in the root folder, run:
+```bash
 python main.py
 ```
 
-### Run tests
+### Build Executable (Windows)
+Spawn uses Nuitka to create standalone executable builds.
 
-Install pytest:
-
-```bash
-pip install pytest
-```
-
-If the repository does not already contain a `pytest.ini`, create one in the project root:
-
-```ini
-[pytest]
-pythonpath = .
-```
-
-Then run:
-
-```bash
-pytest -v
-```
-
-All tests should pass before submitting changes.
-
-### Build on Windows
-
-Spawn uses Nuitka to build a standalone executable. Install [Microsoft Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) with the C++ workload and Windows SDK, then install Nuitka:
-
+1. Install Microsoft Visual Studio Build Tools with the C++ workload and Windows SDK:
+https://visualstudio.microsoft.com/downloads/
+2. Restart your computer
+3. Install Nuitka:
 ```bash
 pip install nuitka
 ```
-
-For a 64-bit build:
-
+4. Open a command prompt in the root folder and build the executable:
 ```bash
-python -m nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
 ```
+or (Windows x86):
+```bash
+nuitka --standalone --onefile --include-data-dir=assets=assets --windows-console-mode=disable --assume-yes-for-downloads --target=x86 --company-name="Spawn Project" --product-name="Spawn" --copyright="Copyright (C) 2026 Daniil Korochansky" --output-filename=Spawn.exe --file-version="1.0.0" --product-version="1.0.0" --file-description="IDE for open.mp and SA-MP development" --windows-icon-from-ico=assets/spawn.ico --output-dir=dist --include-package=wx main.py
+```
+If you are unsuccessful on a 32-bit system, try adding the option: ```--msvc=latest``` (as a last resort, instead of this option, add: ```--mingw64```)
 
-For a 32-bit build, add `--target=x86`. The generated executable is placed in `dist`. If compilation fails on a 32-bit system, try `--msvc=latest`; as a last resort, try `--mingw64`.
+The order of actions is **important**!
 
-</details>
+*The generated executable will be available in the dist directory.*
+
+### Tests
+You can conduct tests to verify the functionality of new features or changes to key system components.
+To run the tests, follow these steps:
+1. Install pytest
+```bash
+pip install pytest
+```   
+2. Create a file named `pytest.ini` in the root folder with the following contents (if it doesn't already exist)
+```
+[pytest]
+pythonpath = .
+```
+3. Open a command prompt in the root folder
+4. Execute the following command: ```pytest -v```
+
+All tests must return a ‘PASSED’ result.
+Otherwise, you need to find and fix the error or bug in the code, and then run the tests again.
+
+## Contributors
+Spawn is an open-source project built for the open.mp and SA-MP community.
+
+Contributions of all sizes are welcome, including:
++ Bug reports
++ Feature requests
++ UI/UX suggestions
++ Code contributions
++ Testing and feedback
+
+Thank you for helping make Spawn better for everyone.
+
+### Bug Report
+If you encounter an error or bug while using Spawn, follow these steps:
+1. Select 'Help' → 'Bug Report'
+2. Click the ‘Copy’ button (If 'Log Output' is empty, proceed immediately to the next step.)
+3. Click the ‘Open GitHub Issue’ button
+4. Paste the completed report into the description and enter a title (If the ‘Log Output’ field was empty, please describe the error or bug yourself.)
+
+## Donations
+Spawn is developed in free time and will always remain free and open source.
+
+If you enjoy using Spawn and would like to support its future development, you can make a donation.
+Every contribution helps improve the IDE and keep the project moving forward.
+
+Thank you for your support ❤️
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y4L421BNPH)
+
+[Donate via Boosty (Россия / International)](https://boosty.to/daniilkorochansky)
+
+## License
+Spawn is licensed under the GNU General Public License v3.0.
+
+See the [LICENSE](https://github.com/daniilkorochansky/spawn/blob/master/LICENSE) file for details.
