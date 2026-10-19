@@ -4,7 +4,7 @@
 
 **A lightweight IDE for Pawn development**
 
-Build and manage **open.mp** and **SA-MP** server projects with integrated SAMPCTL, Git, dependency management, and a focused Pawn editor.
+Build and manage **open.mp** and **SA-MP** server projects with integrated SAMPCTL, Git, dependency management, **AI Assistant (Experimental)** and a focused Pawn editor.
 
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue)](https://github.com/daniilkorochansky/spawn)
 [![Python](https://img.shields.io/badge/language-Python-yellow.svg)](https://www.python.org/)
