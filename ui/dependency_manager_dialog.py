@@ -29,6 +29,7 @@ import re
 
 import markdown
 
+from core.pawn_config import find_config, load_config
 from core.dependency_worker import DependencyDownloadWorker
 from core.logger import SpawnLogger
 
@@ -254,14 +255,12 @@ class DependencyManagerDialog ( wx.Dialog ):
             clean_folder_name = clean_repo
             
         dep_folder_path = os.path.join(self.project_path, "dependencies", clean_folder_name)
-        
 
-        dep_json_path = os.path.join(dep_folder_path, "pawn.json")
-       
-        if os.path.exists(dep_json_path):
-            try:
-                with open(dep_json_path, 'r', encoding='utf-8') as f:
-                    dep_data = json.load(f)
+        try:
+            dep_config_path = find_config(dep_folder_path)
+
+            if dep_config_path:
+                dep_data = load_config(dep_folder_path)
 
                 user_name = dep_data.get("user", "-")
                 self.m_staticText_UserInfo.SetLabel(user_name)
@@ -271,8 +270,8 @@ class DependencyManagerDialog ( wx.Dialog ):
                 if "contributors" in dep_data and isinstance(dep_data["contributors"], list):
                     contributors = ", ".join(dep_data["contributors"])
                     self.m_staticText_ContributorsInfo.SetLabel(contributors)
-            except Exception as e:
-                SpawnLogger.error(f"Parsing Selected Item (Dependency Manager): {e}")
+        except Exception as e:
+            SpawnLogger.error(f"Parsing Selected Item (Dependency Manager): {e}")
                 
         readme_html_content = ""
         for name in ["README.md", "readme.md", "Readme.md", "ReadMe.md", "readMe.md"]:
@@ -425,17 +424,11 @@ class DependencyManagerDialog ( wx.Dialog ):
         deps_list = self.m_listBox_Dependency
         deps_list.Clear()
         
-        pawn_json_path = os.path.join(self.project_path, "pawn.json")
         dependencies_folder = os.path.join(self.project_path, "dependencies")
-        
-        if not os.path.exists(pawn_json_path):
-            return
-        
         try:
-            with open(pawn_json_path, 'r', encoding="utf-8", errors="replace") as f:
-                pawn_data = json.load(f)
-
+            pawn_data = load_config(self.project_path)
             json_dependencies = pawn_data.get("dependencies", [])
+            
             if not isinstance(json_dependencies, list):
                 return
 
@@ -465,7 +458,11 @@ class DependencyManagerDialog ( wx.Dialog ):
 
                 actual_dep_dir = os.path.normpath(os.path.join(dependencies_folder, repo_name))
                 
-                is_installed = os.path.exists(actual_dep_dir) and os.path.isdir(actual_dep_dir) and os.path.exists(os.path.join(actual_dep_dir, "pawn.json"))
+                try:
+                    is_installed = (os.path.isdir(actual_dep_dir) and find_config(actual_dep_dir) is not None)
+                except ValueError as e:
+                    SpawnLogger.error(f"Dependency Configuration: {actual_dep_dir}: {e}")
+                    is_installed = False
               
                 if is_installed:
                     deps_list.Append(raw_string)

@@ -45,6 +45,7 @@ from ui.new_project_dialog import NewProjectDialog
 from ui.git_commit_history_dialog import GitCommitHistoryDialog
 from ui.dependency_manager_dialog import DependencyManagerDialog
 
+from core.pawn_config import find_config, load_config, save_config
 from core.project_creator import ProjectCreateWorker
 from core.file_watcher import ProjectFileWatcher
 from core.platform_utils import PlatformUtils
@@ -2382,12 +2383,13 @@ pawn.lock
         clean_json_entry_path = relative_path.replace('\\', '/')
 
         try:
-            with open(pawn_json_path, 'r', encoding="utf-8") as f:
-                config_data = json.load(f)
+            config_data = load_config(self.current_project_path)
             config_data["entry"] = clean_json_entry_path
 
-            with open(pawn_json_path, 'w', encoding="utf-8") as f:
-                json.dump(config_data, f, indent=4, ensure_ascii=False)
+            config_path = save_config(
+                self.current_project_path,
+                config_data
+            )
 
             wx.MessageBox(f"Файл '{clean_json_entry_path}' успешно назначен главным файлом сборки сервера!", u"Точка входа изменена", wx.OK | wx.ICON_INFORMATION)
         except Exception as e:
@@ -2799,9 +2801,13 @@ pawn.lock
     def on_new_project_async_finished(self, success, target_path, error_message=None):
         self.Enable(True)
         self.Raise()
-        target_pawn_json = os.path.join(target_path, "pawn.json")
-        print(success)
-        if not success or not os.path.exists(target_pawn_json):
+        try:
+            config_path = find_config(target_path)
+        except ValueError as e:
+            config_path = None
+            SpawnLogger.error(f"New Project Configuration: {e}")
+    
+        if not success or not config_path:
             if error_message:
                 SpawnLogger.error(
                     f"New Project Creation: {error_message}"
@@ -2815,7 +2821,7 @@ pawn.lock
                 except Exception as e:
                     SpawnLogger.error(f"New Project: {e}")
                 
-            wx.MessageBox(_(u"Server initialization aborted: 'pawn.json' file not found."),
+            wx.MessageBox(_(u"Server initialization aborted: 'pawn.json' or 'pawn.yaml' file not found."),
                           _(u"Server initialization"), wx.OK | wx.ICON_WARNING, self)
             return
 
@@ -2889,8 +2895,18 @@ pawn.lock
                 return
 
             chosen_path = dirDialog.GetPath()
-            if not os.path.exists(os.path.join(chosen_path, "pawn.json")):
-                wx.MessageBox(_(u"The file 'pawn.json' was not found in the selected folder!\n\nMake sure the folder is a server."),_(u"Opening the server folder"), wx.OK|wx.ICON_ERROR)
+            try:
+                config_path = find_config(chosen_path)
+            except ValueError as e:
+                wx.MessageBox(
+                    str(e),
+                    _(u"Opening the server folder"),
+                    wx.OK | wx.ICON_ERROR
+                )
+                return
+
+            if not config_path:
+                wx.MessageBox(_(u"The file 'pawn.json' or 'pawn.yaml' was not found in the selected folder!\n\nMake sure the folder is a server."),_(u"Opening the server folder"), wx.OK|wx.ICON_ERROR)
                 return
             
             if self.current_project_path != chosen_path:
