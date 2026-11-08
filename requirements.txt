@@ -2,5 +2,6 @@ GitPython==3.1.50
 Markdown==3.10.2
 watchdog==6.0.0
 wxpython==4.2.5
-platformdirs
-requests
+platformdirs==4.10.0
+requests==2.33.1
+ruamel.yaml==0.19.1
