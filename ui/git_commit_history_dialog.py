@@ -164,7 +164,7 @@ class GitCommitHistoryDialog(wx.Dialog):
         commit_hash = self.hash_map.get(short_hash)
 
         if not commit_hash:
-            SpawnLogger.error(f"Hash Not Found (Commit History): {e}")
+            SpawnLogger.error(f"Hash Not Found (Commit History): {short_hash}")
             return
         
 

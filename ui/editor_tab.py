@@ -53,6 +53,8 @@ class CustomEditorTab(gui.EditorTabPanel):
 
         self.COLOR_PREVIEW_MARKER_ID = 4
 
+        self._last_color_indicator_range = None
+
         self.m_scintilla_Editor.RGBAImageSetWidth(12)
         self.m_scintilla_Editor.RGBAImageSetHeight(12)
 
@@ -61,6 +63,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.ide_cfg = self.base_win.ide_cfg
 
         self.file_path = file_path
+        self.load_failed = False
         self.is_untitled = (file_path == "")
         self.current_encoding = ""
         self.native_eol = "LF"
@@ -85,7 +88,7 @@ class CustomEditorTab(gui.EditorTabPanel):
         if wx.Platform == '__WXMSW__':
             try:
                 self.m_scintilla_Editor.SetTechnology(stc.STC_TECHNOLOGY_DIRECTWRITE)
-            except:
+            except Exception as e:
                 SpawnLogger.error(f"Editor Set Technology: {e}")
 
         #Initialize Editor Settings
@@ -297,25 +300,13 @@ class CustomEditorTab(gui.EditorTabPanel):
         pos = editor.GetCurrentPos()
 
         line_num = editor.LineFromPosition(pos)
+        line_start = editor.PositionFromLine(line_num)
+        text_before = editor.GetTextRange(line_start,pos)
 
-        line_start = editor.PositionFromLine(
-            line_num
-        )
-
-        text_before = editor.GetTextRange(
-            line_start,
-            pos
-        )
-
-        # строка должна содержать
-        # только табы и }
         if text_before.strip() != "}":
             return
 
-        level = self.get_indent_level(
-            editor,
-            line_num
-        )
+        level = self.get_indent_level(editor,line_num)
 
         indent = "\t" * max(0, level - 1)
 
@@ -829,9 +820,16 @@ class CustomEditorTab(gui.EditorTabPanel):
                 editor.BraceHighlight(-1, -1)
         #--------------
 
-        total_chars = editor.GetTextLength()
-        editor.SetIndicatorCurrent(self.COLOR_PREVIEW_INDICATOR_ID)
-        editor.IndicatorClearRange(0, total_chars)
+        if self._last_color_indicator_range:
+            start, length = self._last_color_indicator_range
+
+            editor.SetIndicatorCurrent(
+                self.COLOR_PREVIEW_INDICATOR_ID
+            )
+
+            editor.IndicatorClearRange(start, length)
+
+            self._last_color_indicator_range = None
 
         current_pos = editor.GetCurrentPos()
 
@@ -893,6 +891,10 @@ class CustomEditorTab(gui.EditorTabPanel):
                     editor.IndicatorSetForeground(self.COLOR_PREVIEW_INDICATOR_ID, wx.Colour(detected_html_color))
 
                     editor.IndicatorFillRange(highlight_start, highlight_length)
+                    self._last_color_indicator_range = (
+                        highlight_start,
+                        highlight_length
+                    )
                     
                     self.update_color_preview_marker(editor,line_num,detected_html_color)
                 except Exception as e:
@@ -1066,7 +1068,12 @@ class CustomEditorTab(gui.EditorTabPanel):
 
             #self.current_encoding = "utf-8"
         except Exception as e:
+            self.load_failed = True
+
             SpawnLogger.error(f"Load File: {e}")
-            self.m_scintilla_Editor.SetText(f"// Disk buffer error")
+
+            self.m_scintilla_Editor.SetText("// Disk buffer error")
+            self.m_scintilla_Editor.SetReadOnly(True)
+            return False
             
     

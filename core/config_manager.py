@@ -55,13 +55,7 @@ class ConfigManager:
                         "category": _(u"System"),
                         "restart_required": False
                     }),
-                    "last_server_folder_path" : ("", str, {
-                        "title": _(u"Last Server Folder"), 
-                        "description": _(u"Last Server Folder Path"),
-                        "keywords": ["apps", "path", "apps configuration"],
-                        "category": _(u"System"),
-                        "restart_required": False
-                        })
+                    "last_server_folder_path" : ("", str)
                 },
                 "git": {
                     "enable": (False, bool, {
@@ -308,6 +302,8 @@ class ConfigManager:
 
     #For searching settings
     def build_settings_index(self):
+        self.settings_index.clear()
+        
         def walk(schema, prefix=""):
 
             for key, value in schema.items():

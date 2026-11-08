@@ -84,6 +84,206 @@ class ProjectTreeManager:
         tree_ctrl.Expand(root_node)
         tree_ctrl.Thaw()
 
+
+    @staticmethod
+    def sync_tree(tree_ctrl, root_path, icon_indices):
+        """Synchronizes the existing tree with the filesystem without rebuilding it."""
+        root_path = os.path.normpath(os.path.abspath(root_path))
+        root_node = tree_ctrl.GetRootItem()
+
+        if not root_node.IsOk():
+            ProjectTreeManager.populate_tree(
+                tree_ctrl, root_path, icon_indices
+            )
+            return
+
+        root_data = tree_ctrl.GetItemData(root_node)
+        current_root = (
+            root_data.GetPath()
+            if hasattr(root_data, "GetPath")
+            else str(root_data)
+        ) if root_data else ""
+
+        if os.path.normcase(os.path.abspath(current_root)) != os.path.normcase(root_path):
+            ProjectTreeManager.populate_tree(
+                tree_ctrl, root_path, icon_indices
+            )
+            return
+
+        tree_ctrl.SetItemText(root_node, os.path.basename(root_path) or root_path)
+
+        ProjectTreeManager._sync_directory(
+            tree_ctrl, root_node, root_path, icon_indices
+        )
+
+
+    @staticmethod
+    def _sync_directory(tree_ctrl, parent_node, directory_path, icon_indices):
+        main_win = wx.GetTopLevelParent(tree_ctrl)
+
+        try:
+            entries = []
+
+            for name in os.listdir(directory_path):
+                if (
+                    name.startswith(".")
+                    or name.lower() in ("dependencies", "components", "plugins")
+                    or name == "sampctl_build_file.inc"
+                ):
+                    continue
+
+                full_path = os.path.normpath(
+                    os.path.join(directory_path, name)
+                )
+
+                if os.path.isdir(full_path):
+                    entries.append((name, full_path, True))
+
+                elif name.lower().endswith(
+                    (".pwn", ".inc", ".json", ".txt", ".cfg",
+                     ".ini", ".yaml", ".lock")
+                ):
+                    entries.append((name, full_path, False))
+
+            dirs = sorted(
+                [entry for entry in entries if entry[2]],
+                key=lambda x: x[0].lower()
+            )
+
+            files = sorted(
+                [entry for entry in entries if not entry[2]],
+                key=lambda x: x[0].lower()
+            )
+
+            entries = dirs + files
+
+            # Collect existing child nodes.
+            existing = {}
+
+            child, cookie = tree_ctrl.GetFirstChild(parent_node)
+
+            while child.IsOk():
+                data = tree_ctrl.GetItemData(child)
+
+                if data:
+                    path = (
+                        data.GetPath()
+                        if hasattr(data, "GetPath")
+                        else str(data)
+                    )
+
+                    key = os.path.normcase(os.path.abspath(path))
+                    existing[key] = child
+
+                child, cookie = tree_ctrl.GetNextChild(
+                    parent_node, cookie
+                )
+
+            desired_paths = {
+                os.path.normcase(os.path.abspath(entry[1]))
+                for entry in entries
+            }
+
+            # Remove nodes that no longer exist or are no longer visible.
+            for key, item in list(existing.items()):
+                if key not in desired_paths:
+                    tree_ctrl.Delete(item)
+                    del existing[key]
+
+            previous_item = 0
+
+            for name, path, is_directory in entries:
+                key = os.path.normcase(os.path.abspath(path))
+                item = existing.get(key)
+
+                if is_directory:
+                    image = icon_indices["folder"]
+                else:
+                    image = icon_indices["file"]
+
+                    lower_name = name.lower()
+
+                    if lower_name.endswith(".pwn"):
+                        image = icon_indices["pawn"]
+                    elif lower_name.endswith(".inc"):
+                        image = icon_indices["pawn_inc"]
+                    elif lower_name.endswith(
+                        (".json", ".ini", ".cfg", ".yaml", ".lock")
+                    ):
+                        image = icon_indices["cfg"]
+
+                # Create only missing nodes.
+                if item is None:
+                    item = tree_ctrl.InsertItem(
+                        parent_node,
+                        previous_item,
+                        name,
+                        image=image
+                    )
+
+                    tree_ctrl.SetItemData(item, path)
+
+                    if is_directory:
+                        tree_ctrl.SetItemImage(
+                            item,
+                            icon_indices["folder_opened"],
+                            wx.TreeItemIcon_Expanded
+                        )
+
+                        if main_win and hasattr(
+                            main_win, "apply_git_status_to_tree_item"
+                        ):
+                            main_win.apply_git_status_to_tree_item(
+                                tree_ctrl, item, path
+                            )
+
+                        ProjectTreeManager._scan_directory(
+                            tree_ctrl, item, path, icon_indices
+                        )
+
+                else:
+                    # Update existing node without recreating it.
+                    tree_ctrl.SetItemText(item, name)
+                    tree_ctrl.SetItemImage(item, image)
+                    tree_ctrl.SetItemData(item, path)
+
+                    if is_directory:
+                        tree_ctrl.SetItemImage(
+                            item,
+                            icon_indices["folder_opened"],
+                            wx.TreeItemIcon_Expanded
+                        )
+
+                        if main_win and hasattr(
+                            main_win, "apply_git_status_to_tree_item"
+                        ):
+                            main_win.apply_git_status_to_tree_item(
+                                tree_ctrl, item, path
+                            )
+
+                        ProjectTreeManager._sync_directory(
+                            tree_ctrl, item, path, icon_indices
+                        )
+
+                    elif tree_ctrl.ItemHasChildren(item):
+                        # The path changed from a directory to a file.
+                        tree_ctrl.DeleteChildren(item)
+
+                    if not is_directory and main_win and hasattr(
+                        main_win, "apply_git_status_to_tree_item"
+                    ):
+                        main_win.apply_git_status_to_tree_item(
+                            tree_ctrl, item, path
+                        )
+
+                previous_item = item
+
+        except Exception as e:
+            SpawnLogger.error(
+                f"Sync Directory (Project Tree): {e}"
+            )
+
+
     @staticmethod
     def _scan_directory(tree_ctrl, parent_node, current_path, icon_indices):
         main_win = wx.GetTopLevelParent(tree_ctrl)
@@ -96,10 +296,18 @@ class ProjectTreeManager:
                     continue
                     
                 full_path = os.path.join(current_path, item)
+
+                if os.path.islink(full_path):
+                    continue
+                
                 if os.path.isdir(full_path):
                     dirs.append((item, full_path))
                 else:
-                    if item.endswith(('.pwn', '.inc', '.json', '.txt', '.cfg', '.ini', '.yaml', '.lock')):
+                    lower_name = item.lower()
+                    if lower_name.endswith((
+                        '.pwn', '.inc', '.json', '.txt',
+                        '.cfg', '.ini', '.yaml', '.lock'
+                    )):
                         files.append((item, full_path))
             
             dirs.sort(key=lambda x: x[0].lower())
@@ -135,5 +343,5 @@ class ProjectTreeManager:
                 tree_ctrl.SetItemData(node, path)
 
                 
-        except Exception:
+        except Exception as e:
             SpawnLogger.error(f"Scan Directory (Project Tree): {e}")

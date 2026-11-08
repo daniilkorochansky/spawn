@@ -1664,7 +1664,7 @@ pawn.lock
             notebook = self.m_auinotebook_Main
             total_pages = notebook.GetPageCount()
 
-            for page_idx in range(total_pages):
+            for page_idx in reversed(range(total_pages)):
                 tab = notebook.GetPage(page_idx)
 
                 if tab and hasattr(tab, 'file_path') and tab.file_path:
@@ -1856,7 +1856,7 @@ pawn.lock
     
     def apply_git_status_to_tree_item(self, tree_ctrl, item_id, absolute_path):
 
-        if not item_id.IsOk or not self.current_project_path:
+        if not item_id.IsOk() or not self.current_project_path:
             return
 
         tree_ctrl.SetItemTextColour(item_id, wx.NullColour)
@@ -2056,8 +2056,6 @@ pawn.lock
         if not self.current_project_path:
             return
 
-        # На Windows дополнительно завершаем запущенные серверы,
-        # которые могли быть запущены вне Spawn.
         if PlatformUtils.is_windows():
             for exe_name in ["samp-server.exe", "omp-server.exe"]:
                 subprocess.run(
@@ -2069,7 +2067,6 @@ pawn.lock
 
         tb = self.m_auiToolBar
 
-        # Если сервер, запущенный Spawn, уже работает — останавливаем его.
         if self.server_process_thread and self.server_process_thread.is_alive():
             self.m_statusBar.SetStatusText(
                 _(u"Stopping the server..."),
@@ -2084,7 +2081,6 @@ pawn.lock
             "sampctl"
         )
 
-        # Проверяем именно возможность запуска.
         if not PlatformUtils.is_executable(sampctl_bin_path):
             self.check_environment_on_startup()
             return
@@ -2193,11 +2189,13 @@ pawn.lock
             self.ide_cfg.get("system.sampctl.executable_path", ""),
             "sampctl"
         )
-        if not os.path.exists(sampctl_bin_path):
+        if not os.path.exists(sampctl_bin_path) or not PlatformUtils.is_executable(sampctl_bin_path):
             self.check_environment_on_startup()
             return
 
-        self.on_save_all_files(None)
+        if not self.on_save_all_files(None):
+            return
+        
         self.toggle_project_ui_state(False)
         self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
         self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
@@ -2694,7 +2692,7 @@ pawn.lock
                         else:
                             msg = _(u"File '{file_name}' changed. Save it before exiting?").format(file_name=file_name)
 
-                    res = wx.MessageBox(msg, _(u"Saving a project"), wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
+                    res = wx.MessageBox(msg, _(u"Saving"), wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION)
                     if res == wx.YES:
                         self.on_save_current_file(None)
                         if tab.m_scintilla_Editor.GetModify() or (hasattr(tab,"file_path") and not os.path.exists(tab.file_path)):
@@ -2798,19 +2796,23 @@ pawn.lock
             SpawnLogger.error(f"Server Initialization: {e}")
             wx.MessageBox(u"{msg}".format(msg=_('Failed to start server initialization process')), _(u"Server initialization"), wx.OK|wx.ICON_ERROR, self)
 
-    def on_new_project_async_finished(self, success, target_path):
+    def on_new_project_async_finished(self, success, target_path, error_message=None):
         self.Enable(True)
         self.Raise()
         target_pawn_json = os.path.join(target_path, "pawn.json")
         print(success)
         if not success or not os.path.exists(target_pawn_json):
+            if error_message:
+                SpawnLogger.error(
+                    f"New Project Creation: {error_message}"
+                )
             self.m_statusBar.SetStatusText(_(u"Project creation was interrupted or canceled."), 0)
 
             if not getattr(self, "folder_existed_before_create", False) and os.path.exists(target_path):
                 try:
                     if not os.listdir(target_path):
                         os.rmdir(target_path)
-                except Exception:
+                except Exception as e:
                     SpawnLogger.error(f"New Project: {e}")
                 
             wx.MessageBox(_(u"Server initialization aborted: 'pawn.json' file not found."),
@@ -2822,64 +2824,40 @@ pawn.lock
         self.m_statusBar.SetStatusText(_(u"The new project has been successfully created and opened."), 0)      
 
     def refresh_project_tree(self):
-        if not self.current_project_path or not os.path.exists(self.current_project_path):
+        if not self.current_project_path or not os.path.exists(
+            self.current_project_path
+        ):
             return
-   
-        if self.git_enabled:
-            if getattr(self, 'git_manager', None) and self.git_manager and self.git_manager.is_repo:
-                self.git_manager.update_statuses_cache()
-                #branch_name = self.git_manager.get_active_branch_name()
-                #print(f"Git: {branch_name}")
-       
-            
-        tree = self.m_treeCtrl_ProjectTree
-        expanded_paths = set()
 
-        def save_expanded_state(item_id):
-            if not item_id.IsOk():
-                return
-            if tree.IsExpanded(item_id):
-                item_data = tree.GetItemData(item_id)
-                if item_data:
-                    path = item_data.GetPath() if hasattr(item_data, 'GetPath') else str(item_data)
-                    expanded_paths.add(path)
-            child_id, cookie = tree.GetFirstChild(item_id)
-            while child_id.IsOk():
-                save_expanded_state(child_id)
-                child_id, cookie = tree.GetNextChild(item_id, cookie)
-        root_id = tree.GetRootItem()
-        if root_id.IsOk():
-            save_expanded_state(root_id)
+        if (
+            self.git_enabled
+            and getattr(self, "git_manager", None)
+            and self.git_manager.is_repo
+        ):
+            self.git_manager.update_statuses_cache()
+
+        tree = self.m_treeCtrl_ProjectTree
 
         tree.Freeze()
+
         try:
-            tree.DeleteAllItems()
-            ProjectTreeManager.populate_tree(self.m_treeCtrl_ProjectTree, self.current_project_path, self.icon_indices)
+            ProjectTreeManager.sync_tree(
+                tree,
+                self.current_project_path,
+                self.icon_indices
+            )
 
-            def restore_expanded_state(item_id):
-                if not item_id.IsOk():
-                    return
-
-                item_data = tree.GetItemData(item_id)
-                if item_data:
-                    path = item_data.GetPath() if hasattr(item_data, 'GetPath') else str(item_data)
-                    if path in expanded_paths:
-                        tree.Expand(item_id)
-                        
-                child_id, cookie = tree.GetFirstChild(item_id)
-                while child_id.IsOk():
-                    restore_expanded_state(child_id)
-                    child_id, cookie = tree.GetNextChild(item_id, cookie)
-            new_root_id = tree.GetRootItem()
-            if new_root_id.IsOk():
-                restore_expanded_state(new_root_id)
         except Exception as e:
             SpawnLogger.error(f"Refresh (Project Tree): {e}")
+
         finally:
             tree.Thaw()
+
             if self.git_enabled and self.git_manager:
                 self.rebuild_git_changes_tree()
+
             self.update_git_ui_controls_state()
+
 
         
     def find_actual_file_path_in_tree(self, parent_item, old_absolute_path):
@@ -3074,18 +3052,38 @@ pawn.lock
         event.Skip()
 
     def on_save_all_files(self, event):
-        original_selection = self.m_auinotebook_Main.GetSelection()
-        self.m_auinotebook_Main.Freeze()
+        notebook = self.m_auinotebook_Main
+        original_selection = notebook.GetSelection()
+        all_saved = True
 
-        for i in range(self.m_auinotebook_Main.GetPageCount()):
-            self.m_auinotebook_Main.SetSelection(i)
-            self.on_save_current_file(None)
+        notebook.Freeze()
 
-        if original_selection != wx.NOT_FOUND:
-            self.m_auinotebook_Main.SetSelection(original_selection)
+        try:
+            for i in range(notebook.GetPageCount()):
+                notebook.SetSelection(i)
 
-        self.m_auinotebook_Main.Thaw()
-        self.m_statusBar.SetStatusText(_(u"All open files were saved successfully."), 0)
+                if not self.on_save_current_file(None):
+                    all_saved = False
+                    break
+
+        finally:
+            if original_selection != wx.NOT_FOUND:
+                notebook.SetSelection(original_selection)
+
+            notebook.Thaw()
+
+        if all_saved:
+            self.m_statusBar.SetStatusText(
+                _(u"All open files were saved successfully."),
+                0
+            )
+        else:
+            self.m_statusBar.SetStatusText(
+                _(u"Save All was interrupted or failed."),
+                0
+            )
+
+        return all_saved
 
     @property
     def git_enabled(self):
@@ -3101,6 +3099,17 @@ pawn.lock
         active_tab = self.m_auinotebook_Main.GetCurrentPage()
         if not active_tab:
             return
+
+        saved_successfully = False
+
+        if getattr(active_tab, "load_failed", False):
+            wx.MessageBox(
+                _(u"Cannot save this file because it could not be read."),
+                _(u"File error"),
+                wx.OK | wx.ICON_ERROR,
+                self
+            )
+            return False
 
         if hasattr(self, "file_watcher"):
             self.file_watcher.pause()
@@ -3164,6 +3173,7 @@ pawn.lock
                 self.refresh_project_tree()
 
                 active_tab.m_scintilla_Editor.SetSavePoint()
+                saved_successfully = True
                 self.m_statusBar.SetStatusText(_(u"File saved successfully."), 0)
 
 ##                if self.git_enabled:
@@ -3189,19 +3199,32 @@ pawn.lock
                         
                     disk_text = active_tab.m_scintilla_Editor.GetText()
 
+                    raw_bytes = PlatformUtils.encode_text(
+                        disk_text,
+                        chosen_encoding
+                    )
+
+                    if raw_bytes is None:
+                        wx.MessageBox(
+                            _(u"Unable to encode the file using {enc}.").format(
+                                enc=chosen_encoding.upper()
+                            ),
+                            _(u"Save error"),
+                            wx.OK | wx.ICON_ERROR,
+                            self
+                        )
+                        return False
+
+                    with open(actual_path, "wb") as f:
+                        f.write(raw_bytes)
+
                     active_tab.file_path = actual_path
                     active_tab.is_untitled = False
                     active_tab.current_encoding = chosen_encoding
 
-                    raw_bytes = PlatformUtils.encode_text(disk_text,chosen_encoding)
-                    
-                    with open(actual_path, "wb") as f:
-                        f.write(raw_bytes)
-
                     enc_status = chosen_encoding.upper()
                     default_eol = (PlatformUtils.default_eol())
                     self.m_statusBar.SetStatusText(f"{enc_status} | {default_eol}", 2)
-
 
                     page_idx = self.m_auinotebook_Main.GetPageIndex(active_tab)
                     self.m_auinotebook_Main.SetPageText(page_idx, Path(actual_path).name)
@@ -3210,6 +3233,7 @@ pawn.lock
                     active_tab.apply_lexer_by_extension()
 
                     active_tab.m_scintilla_Editor.SetSavePoint()
+                    saved_successfully = True
                     #Git------------------
                     if self.git_enabled:
                         if getattr(self, 'git_manager', None) and self.git_manager.is_repo:
@@ -3220,37 +3244,39 @@ pawn.lock
         except Exception as f:
             SpawnLogger.error(f"Save Current File: {f}")
         finally:
-            active_tab.convert_modified_markers_to_saved()
-            #Apply saves IDE settings
-            global_config_path = getattr(self.ide_cfg, "config_path", "")
-            if active_tab.file_path == global_config_path:
-                self.ide_cfg.load()
+            if saved_successfully:
+                active_tab.convert_modified_markers_to_saved()
+                #Apply saves IDE settings
+                global_config_path = getattr(self.ide_cfg, "config_path", "")
+                if active_tab.file_path == global_config_path:
+                    self.ide_cfg.load_global()
 
-                for i in range(self.m_auinotebook_Main.GetPageCount()):
-                    loop_tab = self.m_auinotebook_Main.GetPage(i)
-                    if hasattr(loop_tab, "apply_pawn_styles") and PlatformUtils.is_pawn_file(loop_tab.file_path):
-                        loop_tab.apply_pawn_styles()
-                    elif hasattr(loop_tab, "apply_json_styles") and loop_tab.file_path.endswith(".json"):
-                        loop_tab.apply_json_styles()
-                self.check_environment_on_startup()
-                self.m_statusBar.SetStatusText(_(u"Settings saved successfully."), 0)
+                    for i in range(self.m_auinotebook_Main.GetPageCount()):
+                        loop_tab = self.m_auinotebook_Main.GetPage(i)
+                        if hasattr(loop_tab, "apply_pawn_styles") and PlatformUtils.is_pawn_file(loop_tab.file_path):
+                            loop_tab.apply_pawn_styles()
+                        elif hasattr(loop_tab, "apply_json_styles") and loop_tab.file_path.endswith(".json"):
+                            loop_tab.apply_json_styles()
+                    self.check_environment_on_startup()
+                    self.m_statusBar.SetStatusText(_(u"Settings saved successfully."), 0)
 
-                if not self.git_enabled:
-                    # 1. We're deleting the manager so background processes don't touch Git.
-                    if getattr(self, 'git_manager', None) and hasattr(self.git_manager, 'status_cache'):
-                        self.git_manager.status_cache.clear()
-                        self.git_manager.is_repo = False
-                        self.git_manager.repo = None
-                        self.git_manager = None
-                        
-                    self.git_source_control_toggle_ui(False)
-                    # 2. Clearing the Git history tree in the interface
-                    self.m_treeCtrl_GitHistory.DeleteAllItems()
-                
-            #------------------------
-            if hasattr(self, "file_watcher"):
-                self.file_watcher.resume()
-            self.refresh_project_tree()
+                    if not self.git_enabled:
+                        # 1. We're deleting the manager so background processes don't touch Git.
+                        if getattr(self, 'git_manager', None) and hasattr(self.git_manager, 'status_cache'):
+                            self.git_manager.status_cache.clear()
+                            self.git_manager.is_repo = False
+                            self.git_manager.repo = None
+                            self.git_manager = None
+                            
+                        self.git_source_control_toggle_ui(False)
+                        # 2. Clearing the Git history tree in the interface
+                        self.m_treeCtrl_GitHistory.DeleteAllItems()
+                    
+                #------------------------
+                if hasattr(self, "file_watcher"):
+                    self.file_watcher.resume()
+                self.refresh_project_tree()
+        return saved_successfully
 
                 
                 

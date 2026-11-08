@@ -881,21 +881,19 @@ class SettingsDialog ( wx.Dialog ):
     def apply_config_to_controls(self):
         self._loading_settings = True
 
-        config = self.ide_cfg.global_config
+        try:
+            config = self.ide_cfg.global_config
 
-        for path, ctrl in self.setting_controls.items():
+            for path, ctrl in self.setting_controls.items():
+                value = self.ide_cfg._get_from_dict(config, path)
 
-            value = self.ide_cfg._get_from_dict(
-                config,
-                path
-            )
+                if value is None:
+                    continue
 
-            if value is None:
-                continue
+                self._set_control_value(ctrl, value)
 
-            self._set_control_value(ctrl, value)
-
-        self._loading_settings = False
+        finally:
+            self._loading_settings = False
 
     def on_cancel(self, event):
         if self.modified_settings:

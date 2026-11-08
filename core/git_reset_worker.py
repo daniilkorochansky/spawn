@@ -28,10 +28,34 @@ class GitResetWorker(threading.Thread):
         self.repo = repo_obj
         self.on_finished = on_finished_callback
 
+
     def run(self):
         try:
-            self.repo.index.reset(commit='HEAD', working_tree=True)
-            self.repo.git.checkout('.', force=True)
+            # Discard all tracked changes and staged changes.
+            self.repo.git.reset("--hard", "HEAD")
+
             wx.CallAfter(self.on_finished, True, "")
+
         except Exception as e:
-            wx.CallAfter(self.on_finished, False, str(e))
+            error_message = str(e)
+
+            # Verify whether the reset actually completed.
+            try:
+                if (
+                    self.repo.head.is_valid()
+                    and not self.repo.is_dirty(untracked_files=False)
+                ):
+                    wx.CallAfter(self.on_finished, True, "")
+                    return
+
+            except Exception as verification_error:
+                error_message += (
+                    f"; verification failed: {verification_error}"
+                )
+
+            wx.CallAfter(
+                self.on_finished,
+                False,
+                error_message
+            )
+

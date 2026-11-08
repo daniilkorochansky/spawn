@@ -100,9 +100,9 @@ class BackgroundCompiler(threading.Thread):
         if not PlatformUtils.is_executable(self.sampctl_bin):
             wx.CallAfter(self.append_to_rich_console,_("Invalid SAMPCTL executable.\n"))
 
-##        if self.on_finished:
-##            wx.CallAfter(self.on_finished, False)
-##            return
+            if self.on_finished:
+                wx.CallAfter(self.on_finished, False)
+            return
 
         cmd = [self.sampctl_bin, "build"]
         if self.extra_flags:
@@ -145,6 +145,9 @@ class BackgroundCompiler(threading.Thread):
 
         except PermissionError:
             wx.CallAfter(self.append_to_rich_console,_("Permission denied while launching SAMPCTL.\nLinux users may need to run:\nchmod +x <path-to-sampctl>\n"))
+
+            if self.on_finished:
+                wx.CallAfter(self.on_finished, False)
              
         except Exception as e:
             SpawnLogger.error(f"Compiler Call: {e}")

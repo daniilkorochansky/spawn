@@ -51,6 +51,11 @@ class ProjectCreateWorker(threading.Thread):
                 )
             process.wait()
 
-            wx.CallAfter(self.on_finished, True, self.target_path)
+            if process.returncode != 0:
+                raise RuntimeError(
+                    f"SAMPCTL initialization failed: {process.returncode}"
+                )
+
+            wx.CallAfter(self.on_finished, True, self.target_path, None)
         except Exception as e:
             wx.CallAfter(self.on_finished, False, self.target_path, str(e))

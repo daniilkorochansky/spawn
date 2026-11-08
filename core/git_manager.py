@@ -85,15 +85,18 @@ class GitManager:
             self.is_repo = False
             return
 
-        git_dir = os.path.join(self.project_path, ".git")
-        if os.path.exists(git_dir) and os.path.isdir(git_dir):
-            try:
-                self.repo = Repo(self.project_path)
-                self.is_repo = True
-            except Exception as e:
-                SpawnLogger.warning(f"Open Repository (Git Manager): {e}")
-                self.is_repo = False
-        else:
+        try:
+            self.repo = Repo(
+                self.project_path,
+                search_parent_directories=False
+            )
+            self.is_repo = True
+
+        except Exception as e:
+            SpawnLogger.warning(
+                f"Open Repository (Git Manager): {e}"
+            )
+            self.repo = None
             self.is_repo = False
 
         return self.is_repo
@@ -112,10 +115,10 @@ class GitManager:
         self.status_cache.clear()
         if not self.is_repo or not self.repo:
             return
-        try:
-            self.repo.git.status(porcelain=True)
-        except Exception as e:
-            SpawnLogger.error(f"Get Statuses (Git Manager): {e}")
+##        try:
+##            self.repo.git.status(porcelain=True)
+##        except Exception as e:
+##            SpawnLogger.error(f"Get Statuses (Git Manager): {e}")
         
         try:
             for diff_item in self.repo.index.diff(None):
