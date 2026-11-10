@@ -134,15 +134,6 @@ Spawn is licensed under the **GNU General Public License v3.0**. See [LICENSE](L
 <details>
 <summary>Development setup</summary>
 
-### Requirements
-
-- Python 3.11+
-- wxPython
-- GitPython
-- Markdown
-- watchdog
-- platformdirs
-
 ### Clone and run
 
 ```bash
