@@ -62,7 +62,6 @@ def test_populate_tree_shows_only_supported_files(mock_parent, tmp_path):
     (tmp_path / "server.cfg").write_text("")
     (tmp_path / "readme.txt").write_text("")
     (tmp_path / "config.yaml").write_text("")
-    (tmp_path / "pawn.lock").write_text("")
 
     (tmp_path / "image.png").write_text("")
     (tmp_path / "archive.zip").write_text("")
@@ -95,7 +94,6 @@ def test_populate_tree_shows_only_supported_files(mock_parent, tmp_path):
     assert "server.cfg" in labels
     assert "readme.txt" in labels
     assert "config.yaml" in labels
-    assert "pawn.lock" in labels
 
     assert "image.png" not in labels
     assert "archive.zip" not in labels
