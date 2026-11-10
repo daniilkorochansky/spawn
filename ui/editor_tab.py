@@ -46,6 +46,8 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.m_scintilla_Editor.Bind(stc.EVT_STC_MARGINCLICK, self.on_editor_margin_click)
         self.m_scintilla_Editor.Bind(stc.EVT_STC_ZOOM, self.on_zoom_changed)
 
+        self.ID_EDITOR_FIND_DOCUMENTATION = 7012
+
         self._multiselect_text = None
         self._multiselect_last_end = None
 
@@ -634,8 +636,9 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.m_menuItem_Editor_SelectAll = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_SELECT_ALL, _(u"Select All"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_SelectAll )
         self.m_menuEditor.AppendSeparator()
-        #self.m_menuItem_Editor_GoToDefinition = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_GO_TO_DEFINITION, _(u"Go to Definition")+ u"\t" + u"F12", wx.EmptyString, wx.ITEM_NORMAL )
-        #self.m_menuEditor.Append( self.m_menuItem_Editor_GoToDefinition )
+        self.m_menuItem_Editor_FindDocumentation = wx.MenuItem(self.m_menuEditor, self.ID_EDITOR_FIND_DOCUMENTATION, _(u"Find in Documentation"), wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menuEditor.Append(self.m_menuItem_Editor_FindDocumentation)
+        self.m_menuEditor.AppendSeparator()
         self.m_menuItem_Editor_ColorizeSelection = wx.MenuItem( self.m_menuEditor, wx.ID_EDITOR_COLORIZE_SELECTION, _(u"Colorize Selected Text..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menuEditor.Append( self.m_menuItem_Editor_ColorizeSelection )
         self.m_menuEditor.AppendSeparator()
@@ -666,8 +669,51 @@ class CustomEditorTab(gui.EditorTabPanel):
         self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_paste_click, id=wx.ID_EDITOR_PASTE)
         self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_editor_select_all_click, id=wx.ID_EDITOR_SELECT_ALL)
 
+        editor = self.m_scintilla_Editor
+        self._documentation_search_term = ""
+
+        # Get actual mouse position in editor coordinates.
+        screen_position = wx.GetMousePosition()
+        point = editor.ScreenToClient(screen_position)
+
+        mouse_position = editor.PositionFromPointClose(point.x,point.y)
+
+        if mouse_position >= 0:
+            selection_start, selection_end = editor.GetSelection()
+
+            # Use selected text if the mouse is inside selection.
+            if (
+                selection_start != selection_end
+                and selection_start <= mouse_position < selection_end
+            ):
+                term = editor.GetSelectedText().strip()
+
+            else:
+                # Otherwise extract the identifier under mouse.
+                word_start = editor.WordStartPosition(mouse_position, True)
+                word_end = editor.WordEndPosition(mouse_position, True)
+
+                term = editor.GetTextRange(word_start,word_end).strip()
+
+            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", term):
+                self._documentation_search_term = term
+
+        #print(self._documentation_search_term)
+
+        # Enable/disable documentation search.
+        self.m_menuItem_Editor_FindDocumentation.Enable(
+            bool(self._documentation_search_term)
+        )
+
+        self.m_scintilla_Editor.Bind(wx.EVT_MENU, self.on_find_in_documentation_click, id=self.ID_EDITOR_FIND_DOCUMENTATION)
+
         self.m_scintilla_Editor.PopupMenu( self.m_menuEditor, event.GetPosition() )
         self.m_menuEditor.Destroy()
+
+    def on_find_in_documentation_click(self, event):
+        term = getattr(self, "_documentation_search_term", "").strip()
+        if term:
+            self.base_win.find_in_documentation(term)
 
     def on_editor_cut_click(self, event):
         self.m_scintilla_Editor.Cut()

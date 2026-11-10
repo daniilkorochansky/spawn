@@ -127,7 +127,7 @@ class PlatformUtils:
 
     @staticmethod
     def get_config_dir():
-        return str(Path(user_config_dir("Spawn")))
+        return str(Path(user_config_dir("Spawn",appauthor=False)))
 
     @staticmethod
     def normalize_path(path):

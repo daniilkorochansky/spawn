@@ -44,8 +44,11 @@ from ui.bug_report_dialog import BugReportDialog
 from ui.new_project_dialog import NewProjectDialog
 from ui.git_commit_history_dialog import GitCommitHistoryDialog
 from ui.dependency_manager_dialog import DependencyManagerDialog
+from ui.documentation_panel import DocumentationPanel
 
+from core.documentation_manager import (OpenMPDocumentationManager,DocumentationNetworkError)
 from core.pawn_config import find_config, load_config, save_config
+from core.documentation_worker import DocumentationWorker
 from core.project_creator import ProjectCreateWorker
 from core.file_watcher import ProjectFileWatcher
 from core.platform_utils import PlatformUtils
@@ -96,6 +99,16 @@ class SpawnIDE(SpawnFrame):
         SpawnLogger.initialize()
 
         self.ide_cfg = ConfigManager()
+
+        self.documentation_manager = OpenMPDocumentationManager()
+        self.documentation_worker = None
+        self._documentation_worker_purpose = None
+        self._documentation_pending_term = None
+        self._closing = False
+        self._zen_tools_was_visible = False
+
+        self._create_tools_panel()
+        self._create_documentation_menu()
 
         self._context_tab_idx = None
 
@@ -177,6 +190,9 @@ class SpawnIDE(SpawnFrame):
 
         self.Bind(wx.EVT_MENU, self.on_menu_convert_eol_crlf, id=wx.ID_EOL_CRLF)
         self.Bind(wx.EVT_MENU, self.on_menu_convert_eol_lf, id=wx.ID_EOL_LF)
+
+        self.Bind(wx.EVT_MENU,self.on_toggle_tools_panel,id=self.ID_TOGGLE_TOOLS_PANEL)
+        self.Bind(wx.EVT_MENU,self.on_openmp_documentation,id=self.ID_OPENMP_DOCUMENTATION)
 
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_utf8, id=wx.ID_REOPEN_TO_UTF8)
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1250, id=wx.ID_REOPEN_TO_CP1250)
@@ -268,6 +284,312 @@ class SpawnIDE(SpawnFrame):
             if path != "" :
                 if os.path.exists(path):
                     self.load_project(path)
+
+    def on_toggle_tools_panel(self, event):
+        if self.zen_mode:
+            self.on_zenmode_click(None)
+        pane = self.m_mgr.GetPane(self.m_toolsPanel)
+        visible = not pane.IsShown()
+        pane.Show(visible)
+        if visible:
+            self._ensure_documentation_panel_loaded()
+        self.m_mgr.Update()
+
+
+    def show_tools_panel(self):
+        if self.zen_mode:
+            self.on_zenmode_click(None)
+        pane = self.m_mgr.GetPane(self.m_toolsPanel)
+        pane.Show(True)
+        self._ensure_documentation_panel_loaded()
+        self.m_mgr.Update()
+
+
+    def _ensure_documentation_panel_loaded(self):
+        if self.documentation_panel.index is None and self.documentation_manager.is_installed():
+            self.documentation_panel.set_documentation(self.documentation_manager.docset_path)
+
+
+    def set_documentation_status(self, message):
+        if hasattr(self, "m_statusBar") and self.m_statusBar:
+            self.m_statusBar.SetStatusText(str(message), 0)
+
+
+    def _activate_documentation(self, term=None, force_reload=False):
+        if force_reload or self.documentation_panel.index is None:
+            opened = self.documentation_panel.set_documentation(
+                self.documentation_manager.docset_path,
+                initial_term=term,
+            )
+            if term and not opened:
+                self.set_documentation_status(
+                    _(u"Documentation for a '{term}' not found.").format(term=term)
+                )
+                return False
+        elif term:
+            if not self.documentation_panel.find_and_open(term):
+                self.set_documentation_status(
+                    _(u"Documentation for a '{term}' not found.").format(term=term)
+                )
+                return False
+
+        self.show_tools_panel()
+        self.m_auinotebook_Tools.SetSelection(0)
+        return True
+
+
+    def find_in_documentation(self, term):
+        term = (term or "").strip()
+        if not term:
+            return
+
+        if self.documentation_manager.is_installed():
+            # Do not check for updates during editor context-menu searches.
+            self._activate_documentation(term=term)
+            return
+
+        # No local docset: the only network operation needed is to obtain the feed
+        # metadata and the archive size before asking the user to download it.
+        self._start_documentation_check("find", term)
+
+
+    def on_openmp_documentation(self, event=None):
+        # Opening through Help checks the feed for a newer version.
+        self._start_documentation_check("help", None)
+
+
+    def _start_documentation_check(self, purpose, term=None):
+        if self.documentation_worker and self.documentation_worker.is_alive():
+            if purpose == "find":
+                self._documentation_pending_term = term
+                if getattr(self.documentation_worker, "mode", None) == "check":
+                    self._documentation_worker_purpose = "find"
+                self.set_documentation_status(
+                    _(u"Documentation is already being prepared. The requested item will open when ready.")
+                )
+            else:
+                self.set_documentation_status(_(u"A documentation operation is already running."))
+            return
+
+        self._documentation_worker_purpose = purpose
+        self._documentation_pending_term = term
+        self.set_documentation_status(_(u"Checking open.mp documentation..."))
+        self.documentation_worker = DocumentationWorker(
+            self.documentation_manager,
+            mode="check",
+            on_complete=self._on_documentation_check_complete,
+        )
+        self.documentation_worker.start()
+
+
+    def _on_documentation_check_complete(self, success, release, error):
+        self.documentation_worker = None
+        if self._closing:
+            return
+
+        purpose = self._documentation_worker_purpose
+        term = self._documentation_pending_term
+
+        if not success:
+            if self.documentation_manager.is_installed():
+                # Feed is unavailable, but local documentation exists.
+                # Open it silently without displaying network errors.
+                self._activate_documentation(term=term if purpose == "find" else None)
+                return
+
+            if isinstance(error, DocumentationNetworkError):
+                message = _(
+                    u"No internet connection is available. "
+                    u"The documentation cannot be downloaded."
+                )
+            else:
+                message = _(
+                    u"Unable to retrieve the documentation feed."
+                )
+
+            wx.MessageBox(
+                message,
+                _(u"Documentation"),
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        installed = self.documentation_manager.is_installed()
+        if installed and purpose == "find":
+            # A context-menu request that arrived while a Help check was running
+            # must not unexpectedly trigger an update prompt.
+            self._activate_documentation(term=term)
+            return
+
+        if not installed:
+            message = _(
+                u"The documentation is not installed.\n\n"
+                u"Download size: {size}\n\n"
+                u"Would you like to download and install it now?"
+            ).format(size=release.size_text)
+            result = wx.MessageBox(
+                message,
+                _(u"Download documentation"),
+                wx.YES_NO | wx.ICON_QUESTION,
+            )
+            if result == wx.YES:
+                self._start_documentation_install(release, term)
+            elif purpose == "find":
+                self.set_documentation_status(_(u"Documentation is not installed."))
+            return
+
+        if self.documentation_manager.is_update_available(release):
+            installed_version = self.documentation_manager.get_installed_version() or _(u"Unknown")
+            message = _(
+                u"A new version of the documentation is available.\n\n"
+                u"Installed version: {installed}\n"
+                u"Latest version: {latest}\n"
+                u"Download size: {size}\n\n"
+                u"Would you like to update now?"
+            ).format(
+                installed=installed_version,
+                latest=release.version,
+                size=release.size_text,
+            )
+            result = wx.MessageBox(
+                message,
+                _(u"Update documentation"),
+                wx.YES_NO | wx.ICON_QUESTION,
+            )
+            if result == wx.YES:
+                self._start_documentation_install(release, None)
+                return
+
+        # Either there is no update or the user declined it.
+        self._activate_documentation()
+
+
+    def _start_documentation_install(self, release, term=None):
+        if self.documentation_worker and self.documentation_worker.is_alive():
+            self.set_documentation_status(_(u"A documentation operation is already running."))
+            return
+
+        self._documentation_pending_term = term
+        if self.documentation_manager.is_installed():
+            self.documentation_panel.prepare_for_update()
+        self.SetTitle(_(u"Spawn - Downloading documentation..."))
+        self.set_documentation_status(_(u"Downloading documentation..."))
+        self.documentation_worker = DocumentationWorker(
+            self.documentation_manager,
+            mode="install",
+            release=release,
+            on_progress=self._on_documentation_download_progress,
+            on_complete=self._on_documentation_install_complete,
+        )
+        self.documentation_worker.start()
+
+
+    def _on_documentation_download_progress(self, downloaded, total, percent):
+        if self._closing:
+            return
+        if percent is None:
+            title = _(u"Spawn - Downloading documentation")
+        else:
+            title = _(u"Spawn - Downloading documentation ({percent}%)").format(percent=percent)
+        self.SetTitle(title)
+
+
+    def _on_documentation_install_complete(self, success, result, error):
+        self.documentation_worker = None
+        if self._closing:
+            return
+        self.SetTitle(_(u"Spawn"))
+
+        term = self._documentation_pending_term
+        self._documentation_pending_term = None
+
+        if not success:
+            wx.MessageBox(
+                _(u"Unable to install documentation. Your previous documentation, if any, has been kept."),
+                _(u"Documentation"),
+                wx.OK | wx.ICON_ERROR,
+            )
+            if self.documentation_manager.is_installed():
+                self._activate_documentation()
+            return
+
+        self._activate_documentation(term=term, force_reload=True)
+        self.set_documentation_status(_(u"Documentation installed successfully."))
+
+    def _create_documentation_menu(self):
+        # Insert the panel toggle immediately after "Toggle Output Panel".
+        view_items = self.m_view.GetMenuItems()
+        output_position = next(
+            (i for i, item in enumerate(view_items) if item.GetId() == wx.ID_TOGGLE_OUTPUT_PANEL),
+            len(view_items) - 1,
+        )
+
+        self.m_menuItem_ToggleToolsPanel = wx.MenuItem(
+            self.m_view,
+            wx.ID_ANY,
+            _(u"Toggle Tools Panel") + u"\t" + u"Ctrl+5",
+            wx.EmptyString,
+            wx.ITEM_NORMAL,
+        )
+        self.m_view.Insert(output_position + 1, self.m_menuItem_ToggleToolsPanel)
+        self.ID_TOGGLE_TOOLS_PANEL = self.m_menuItem_ToggleToolsPanel.GetId()
+
+        # Add documentation to Help, above Bug Report.
+        self.m_menuItem_OpenMPDocumentation = wx.MenuItem(
+            self.m_help,
+            wx.ID_ANY,
+            _(u"Documentation"),
+            wx.EmptyString,
+            wx.ITEM_NORMAL,
+        )
+        self.m_help.Insert(0, self.m_menuItem_OpenMPDocumentation)
+        self.m_help.InsertSeparator(1)
+        self.ID_OPENMP_DOCUMENTATION = self.m_menuItem_OpenMPDocumentation.GetId()
+
+
+    def _create_tools_panel(self):
+        panel_width = max(300, 420)
+        tree_height = max(100, 250)
+        panel_visible = False
+
+        self.m_toolsPanel = wx.Panel(self, wx.ID_ANY)
+        self.m_auinotebook_Tools = wx.aui.AuiNotebook(
+            self.m_toolsPanel,
+            wx.ID_ANY,
+            style=wx.aui.AUI_NB_TOP,
+        )
+
+        self.documentation_panel = DocumentationPanel(
+            self.m_auinotebook_Tools,
+            self,
+            initial_tree_height=tree_height,
+        )
+        self.m_auinotebook_Tools.AddPage(
+            self.documentation_panel,
+            _(u"Documentation"),
+            True,
+        )
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.m_auinotebook_Tools, 1, wx.EXPAND)
+        self.m_toolsPanel.SetSizer(sizer)
+
+        self.m_mgr.AddPane(
+            self.m_toolsPanel,
+            wx.aui.AuiPaneInfo()
+            .Right()
+            .Name("ToolsPanel")
+            .Caption(_(u"Tools"))
+            .BestSize(wx.Size(panel_width, -1))
+            .MinSize(wx.Size(280, -1))
+            .Resizable()
+            .CloseButton(False)
+            .Layer(5),
+        )
+        self.m_mgr.GetPane(self.m_toolsPanel).Show(panel_visible)
+        if panel_visible and self.documentation_manager.is_installed():
+            self.documentation_panel.set_documentation(self.documentation_manager.docset_path)
+        self.m_mgr.Update()
         
 
     def on_close_current_file_click(self, event):
@@ -480,6 +802,10 @@ class SpawnIDE(SpawnFrame):
             pane = self.m_mgr.GetPane(self.m_auiToolBar)
             pane.Show(False)
 
+            self._zen_tools_was_visible = self.m_mgr.GetPane(self.m_toolsPanel).IsShown()
+            self.m_mgr.GetPane(self.m_toolsPanel).Show(False)
+ 
+
             self.m_statusBar.Hide()
             #self.SetMenuBar(None)
 
@@ -507,6 +833,8 @@ class SpawnIDE(SpawnFrame):
 
                 pane = self.m_mgr.GetPane(self.m_outputPanel)
                 pane.Show(True)
+
+            self.m_mgr.GetPane(self.m_toolsPanel).Show(self._zen_tools_was_visible)
             
             self.m_mgr.Update()
             self.Layout()
@@ -775,6 +1103,12 @@ class SpawnIDE(SpawnFrame):
         pane.Show(not pane.IsShown())
         self.m_mgr.Update()
 
+    def select_output_page(self, page):
+        index = self.m_auinotebook_Output.GetPageIndex(page)
+
+        if index != wx.NOT_FOUND:
+            self.m_auinotebook_Output.SetSelection(index)
+
     def create_gitignore(self):
         gitignore_content = """
 # Compiled Bytecode, precompiled output and assembly
@@ -817,6 +1151,7 @@ samp.ban
 # Common files
 pawn.lock
 .spawn/
+.editorconfig
     """
 
         gitignore_path = os.path.join(self.current_project_path,".gitignore")
@@ -2099,7 +2434,7 @@ pawn.lock
         self.m_menuItem_NewProject.Enable(False)
         self.m_menuItem_OpenProjectFolder.Enable(False)
 
-        self.m_auinotebook_Output.SetSelection(1)
+        self.select_output_page(self.m_panel_ServerTab)
 
         self.m_mgr.Update()
 
@@ -2209,7 +2544,7 @@ pawn.lock
         self.m_menuItem_OpenProjectFolder.Enable(False)
         self.m_mgr.Update()
         
-        self.m_auinotebook_Output.SetSelection(0)
+        self.select_output_page(self.m_panel_BuildTab)
         
         self.m_richText_BuildOutput.Clear()
 
@@ -2711,6 +3046,10 @@ pawn.lock
 
         self.m_auinotebook_Main.Thaw()
 
+        self._closing = True
+        if self.documentation_worker and self.documentation_worker.is_alive():
+            self.documentation_worker.cancel()
+
         if hasattr(self, "file_watcher"):
             self.file_watcher.stop()
 
@@ -2801,33 +3140,68 @@ pawn.lock
     def on_new_project_async_finished(self, success, target_path, error_message=None):
         self.Enable(True)
         self.Raise()
+
         try:
             config_path = find_config(target_path)
         except ValueError as e:
             config_path = None
             SpawnLogger.error(f"New Project Configuration: {e}")
-    
-        if not success or not config_path:
-            if error_message:
-                SpawnLogger.error(
-                    f"New Project Creation: {error_message}"
-                )
-            self.m_statusBar.SetStatusText(_(u"Project creation was interrupted or canceled."), 0)
 
-            if not getattr(self, "folder_existed_before_create", False) and os.path.exists(target_path):
-                try:
-                    if not os.listdir(target_path):
-                        os.rmdir(target_path)
-                except Exception as e:
-                    SpawnLogger.error(f"New Project: {e}")
-                
-            wx.MessageBox(_(u"Server initialization aborted: 'pawn.json' or 'pawn.yaml' file not found."),
-                          _(u"Server initialization"), wx.OK | wx.ICON_WARNING, self)
+        # If the configuration exists, the project was created.
+        # The terminal process return code is not authoritative.
+        if config_path:
+            if not success:
+                SpawnLogger.warning(
+                    "SAMPCTL returned a non-zero exit code, "
+                    "but the project configuration was successfully created."
+                )
+
+            self.on_close_project_click(None)
+            self.load_project(target_path)
+            self.m_statusBar.SetStatusText(
+                _(u"The new project has been successfully created and opened."),
+                0
+            )
             return
 
-        self.on_close_project_click(None)
-        self.load_project(target_path)
-        self.m_statusBar.SetStatusText(_(u"The new project has been successfully created and opened."), 0)      
+        # Configuration was not created.
+        if error_message:
+            SpawnLogger.error(f"New Project Creation: {error_message}")
+
+        if not success:
+            self.m_statusBar.SetStatusText(
+                _(u"Project creation was interrupted or canceled."),
+                0
+            )
+            message = _(
+                u"SAMPCTL project creation failed or was interrupted."
+            )
+        else:
+            self.m_statusBar.SetStatusText(
+                _(u"Project configuration was not found."),
+                0
+            )
+            message = _(
+                u"Server initialization finished, but 'pawn.json' "
+                u"or 'pawn.yaml' was not found."
+            )
+
+        if (
+            not getattr(self, "folder_existed_before_create", False)
+            and os.path.exists(target_path)
+        ):
+            try:
+                if not os.listdir(target_path):
+                    os.rmdir(target_path)
+            except Exception as e:
+                SpawnLogger.error(f"New Project: {e}")
+
+        wx.MessageBox(
+            message,
+            _(u"Server initialization"),
+            wx.OK | wx.ICON_WARNING,
+            self
+    ) 
 
     def refresh_project_tree(self):
         if not self.current_project_path or not os.path.exists(

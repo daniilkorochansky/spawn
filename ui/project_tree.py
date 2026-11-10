@@ -128,7 +128,7 @@ class ProjectTreeManager:
                 if (
                     name.startswith(".")
                     or name.lower() in ("dependencies", "components", "plugins")
-                    or name == "sampctl_build_file.inc"
+                    or name == "sampctl_build_file.inc" or name == "pawn.lock"
                 ):
                     continue
 
@@ -141,7 +141,7 @@ class ProjectTreeManager:
 
                 elif name.lower().endswith(
                     (".pwn", ".inc", ".json", ".txt", ".cfg",
-                     ".ini", ".yaml", ".lock")
+                     ".ini", ".yaml")
                 ):
                     entries.append((name, full_path, False))
 
@@ -208,7 +208,7 @@ class ProjectTreeManager:
                     elif lower_name.endswith(".inc"):
                         image = icon_indices["pawn_inc"]
                     elif lower_name.endswith(
-                        (".json", ".ini", ".cfg", ".yaml", ".lock")
+                        (".json", ".ini", ".cfg", ".yaml")
                     ):
                         image = icon_indices["cfg"]
 
@@ -306,7 +306,7 @@ class ProjectTreeManager:
                     lower_name = item.lower()
                     if lower_name.endswith((
                         '.pwn', '.inc', '.json', '.txt',
-                        '.cfg', '.ini', '.yaml', '.lock'
+                        '.cfg', '.ini', '.yaml'
                     )):
                         files.append((item, full_path))
             
