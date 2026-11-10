@@ -24,8 +24,9 @@ Build and manage **open.mp** and **SA-MP** server projects with integrated SAMPC
 Spawn brings the tools commonly needed for Pawn server development into one lightweight, portable desktop IDE.
 
 - **Pawn editor** — syntax highlighting, brace matching, changed-line markers, and split editing.
+- **Offline Documentation** — Read the documentation on open.mp and pawn scripting offline.
 - **SAMPCTL integration** — create, build, and run server projects.
-- **Dependency Manager** — install, update, and check project dependencies.
+- **Package Manager** — install, update, and check project dependencies.
 - **Git integration** — repository status, commit history, and source-control tools.
 - **Code-focused utilities** — RGBA/HEX color previews and a color picker for inserting values into code.
 - **Project navigation** — a project tree designed to work with large projects.
