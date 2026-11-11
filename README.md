@@ -134,8 +134,7 @@ The following is a development plan for **Spawn**, which focuses on the basic us
 - [ ] **Custom Hotkeys:** Fully rebindable keyboard shortcuts.
 - [ ] **Redesigning the Status Bar:** Complete redesign of the status bar to provide a dedicated, clear space for real-time Git statuses (current branch, uncommitted changes, sync state).
 - [ ] **Code Polish:** Refactoring the main modules to improve the responsiveness of the user interface. Bug fixes.
-
-**...**
+- [ ] **Translation** Translation of `Spawn` into Russian, Portuguese, Spanish, Indonesian, Romanian, and Turkish.
 
 ## Contributing
 
