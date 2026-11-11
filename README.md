@@ -11,7 +11,7 @@ Build and manage **open.mp** and **SA-MP** server projects with integrated SAMPC
 [![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml)
 [![Build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
 
-[Download Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Report a bug](https://github.com/daniilkorochansky/spawn/issues) · [Contribute](#contributing)
+[Download Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Report a bug](https://github.com/daniilkorochansky/spawn/issues) · [Roadmap](#roadmap) · [Contribute](#contributing)
 
 [English](README.md) · [Русский](README_ru.md) · [Português](README_pt.md)
 
@@ -60,7 +60,7 @@ For the full workflow, install [Git](https://git-scm.com/downloads) and [SAMPCTL
 
 ### Manage dependencies
 
-Open **Project → Dependency Manager…**, enter a package name, and select **Install**. Select an installed dependency to uninstall it, or use **Ensure** to check dependencies.
+Open **Project → Package Manager…**, enter a package name, and select **Install**. Select an installed package to uninstall it, or use **Ensure** to check dependencies.
 
 ### Use Git
 
