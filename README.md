@@ -65,7 +65,7 @@ For the full workflow, install [Git](https://git-scm.com/downloads) and [SAMPCTL
 
 1. Select **File → New Project…**.
 2. Enter a project name and location.
-3. Click **Create** and follow the instructions in the SAMPCTL command-line window.
+3. Click **Create** and follow the recommended instructions in the SAMPCTL command-line window.
 4. When project creation finishes, close the command-line window. Spawn will detect the new project.
 
 ### Build and run a server
