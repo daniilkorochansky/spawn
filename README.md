@@ -78,7 +78,7 @@ chmod +x Spawn
 ./Spawn
 ```
 
-For the full workflow, install [Git](https://git-scm.com/downloads) and [SAMPCTL](https://github.com/Southclaws/sampctl). You can configure both later in Spawn's Settings.
+For the full workflow, install [Git](https://git-scm.com/downloads) and [SAMPCTL](https://github.com/Southclaws/sampctl). You can configure both later in Spawn's Settings(or it will happen automatically if they are present in the system environment).
 
 ## Quick start
 
