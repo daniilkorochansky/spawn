@@ -62,6 +62,11 @@ jobs:
             --include-package=wx \
             main.py
 
+      - name: Convert application icon
+        run: |
+         python -m pip install Pillow
+         python -c "from PIL import Image; Image.open('assets/spawn.ico').convert('RGBA').save('spawn.png')"
+
       - name: Create .deb package
         run: |
           VERSION="${{ inputs.version }}"
