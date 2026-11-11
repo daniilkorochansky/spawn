@@ -79,7 +79,7 @@ jobs:
 
           cat > "${PACKAGE}/usr/share/applications/spawn.desktop" <<EOF
           [Desktop Entry]
-          Name=Spawn IDE
+          Name=Spawn
           Comment=IDE for open.mp and SA-MP development
           Exec=spawn
           Icon=spawn
