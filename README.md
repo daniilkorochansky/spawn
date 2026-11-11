@@ -107,6 +107,17 @@ Supported encodings include UTF-8 and Windows code pages 1250–1257. The defaul
 
 </details>
 
+## Roadmap
+
+The following is a development plan for **Spawn**, which focuses on the basic user experience and user interface convenience for the near future.
+
+- [x] **Integrated Offline Documentation:** Fully functional right-panel offline open.mp documentation.
+- [ ] **Custom Hotkeys:** Fully rebindable keyboard shortcuts.
+- [ ] **Redesigning the Status Bar:** Complete redesign of the status bar to provide a dedicated, clear space for real-time Git statuses (current branch, uncommitted changes, sync state).
+- [ ] **Code Polish:** Refactoring the main modules to improve the responsiveness of the user interface. Bug fixes.
+
+**...**
+
 ## Contributing
 
 Bug reports, feature requests, UI/UX suggestions, code contributions, testing, and feedback are welcome.
@@ -125,25 +136,6 @@ Spawn is free and open source. If you would like to support its development, you
 
 - [Ko-fi](https://ko-fi.com/Y4L421BNPH)
 - [Boosty (Russia / international)](https://boosty.to/daniilkorochansky)
-
-## Roadmap
-
-The following is a development plan for **Spawn**, which focuses on the basic user experience and user interface convenience for the near future.
-
-### 🟢 Phase 1: Developer Experience & UI
-- [x] **Integrated Offline Docs:** Fully functional right-panel documentation powered by rolling updates from the `openmp-docset` repository.
-- [ ] **Custom Hotkeys:** Fully rebindable keyboard shortcuts so developers can easily transition from Pawno, VS Code, or Sublime Text.
-- [ ] **Status Bar Overhaul:** Complete redesign of the status bar to provide a dedicated, clear space for real-time Git statuses (current branch, uncommitted changes, sync state).
-
-### 🟡 Phase 2: Optimization & Stabilization
-- [ ] **Code Polish:** Refactoring core modules to improve UI responsiveness and reduce RAM consumption.
-- [ ] **Nuitka Compilation Tuning:** Optimizing the production compilation pipeline to achieve faster startup times and cleaner standalone execution.
-- [ ] **LSP-lite Autocomplete:** Integrating a lightweight auto-completion engine directly reading from the local Docset SQLite index.
-
-### 🔵 Phase 3: Deployment & Size Optimization (For open.mp Bundling)
-- [ ] **Lightweight Web Installer (Rust):** Creating a 3-5 MB standalone GUI installer using Rust + egui to download the full IDE on demand, solving the server bundle size limitation.
-- [ ] **Universal Linux Formats:** Automating the generation of official `.deb` and universal `Flatpak` packages via GitHub Actions.
-
 
 ## License
 
