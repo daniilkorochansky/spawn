@@ -92,6 +92,10 @@ Spawn detects file encodings when opening files. For `.pwn` and `.inc` files, yo
 ```pawn
 // -*- coding: cp1251 -*-
 ```
+or
+```pawn
+// coding: cp1251
+```
 
 If a file displays incorrectly, reopen it with another encoding via **Edit → Encoding → Reopen**. This changes how the file is displayed in the editor; it does not modify the file on disk.
 
