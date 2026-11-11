@@ -49,7 +49,7 @@ jobs:
           python -m pip install zstandard
           python -m pip install nuitka
 
-      - name: Build with Nuitka
+      - name: Build
         run: |
           python -m nuitka \
             --standalone \
@@ -62,6 +62,45 @@ jobs:
             --include-package=wx \
             main.py
 
+      - name: Create .deb package
+        run: |
+          VERSION="${{ inputs.version }}"
+          PACKAGE="spawn-${VERSION}-amd64"
+
+          mkdir -p "${PACKAGE}/DEBIAN"
+          mkdir -p "${PACKAGE}/usr/bin"
+          mkdir -p "${PACKAGE}/usr/share/applications"
+          mkdir -p "${PACKAGE}/usr/share/icons/hicolor/256x256/apps"
+
+          cp dist/Spawn "${PACKAGE}/usr/bin/spawn"
+          chmod 755 "${PACKAGE}/usr/bin/spawn"
+
+          cp assets/spawn.png "${PACKAGE}/usr/share/icons/hicolor/256x256/apps/spawn.png"
+
+          cat > "${PACKAGE}/usr/share/applications/spawn.desktop" <<EOF
+          [Desktop Entry]
+          Name=Spawn IDE
+          Comment=IDE for open.mp and SA-MP development
+          Exec=spawn
+          Icon=spawn
+          Terminal=false
+          Type=Application
+          Categories=Development;IDE;
+          EOF
+
+          cat > "${PACKAGE}/DEBIAN/control" <<EOF
+          Package: spawn
+          Version: ${VERSION}
+          Section: devel
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Spawn IDE
+          Description: IDE for open.mp and SA-MP development
+          EOF
+
+          dpkg-deb --build --root-owner-group "${PACKAGE}" \
+            "Spawn_${VERSION}_Linux_amd64.deb"
+
       - name: Create archive
         run: |
           tar -czf "Spawn_${{ inputs.version }}_Linux_x64.tar.gz" \
@@ -71,5 +110,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Spawn_${{ inputs.version }}_Linux_x64
-          path: Spawn_${{ inputs.version }}_Linux_x64.tar.gz
+          path: |
+            Spawn_${{ inputs.version }}_Linux_x64.tar.gz
+            Spawn_${{ inputs.version }}_Linux_amd64.deb
           if-no-files-found: error
