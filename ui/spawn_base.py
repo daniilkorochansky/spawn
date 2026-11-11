@@ -342,7 +342,7 @@ class SpawnFrame ( wx.Frame ):
         self.m_menubar.Append( self.m_view, _(u"View") )
 
         self.m_project = wx.Menu()
-        self.m_menuItem_Ensure = wx.MenuItem( self.m_project, wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, _(u"Dependency Manager..."), wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Ensure = wx.MenuItem( self.m_project, wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, _(u"Package Manager..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_project.Append( self.m_menuItem_Ensure )
 
         self.m_project.AppendSeparator()
@@ -374,8 +374,6 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_menuItem_BugReport = wx.MenuItem( self.m_help, wx.ID_BUG_REPORT, _(u"Bug Report"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_help.Append( self.m_menuItem_BugReport )
-
-        self.m_help.AppendSeparator()
 
         self.m_menuItem_About = wx.MenuItem( self.m_help, wx.ID_ABOUT, _(u"About"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_help.Append( self.m_menuItem_About )

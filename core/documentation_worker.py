@@ -18,7 +18,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Spawn.  If not, see <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------------------------------------------------
-
 """Background feed check and safe open.mp docset download/installation."""
 
 from __future__ import annotations

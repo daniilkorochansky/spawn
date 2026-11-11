@@ -39,8 +39,6 @@ class DocumentationPanel(wx.Panel):
         self.index: DocumentationIndex | None = None
         self._populating_tree = False
 
-        
-
         self.button_back = wx.Button(self, wx.ID_ANY, "←", size=wx.Size(30, 27))
         self.button_back.SetToolTip("Back")
         self.button_forward = wx.Button(self, wx.ID_ANY, "→", size=wx.Size(30, 27))

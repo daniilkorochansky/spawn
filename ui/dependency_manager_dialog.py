@@ -44,7 +44,7 @@ wx.ID_CLOSE_DEP_MANAGER = 9004
 class DependencyManagerDialog ( wx.Dialog ):
 
     def __init__( self, parent, project_path, sampctl_bin):
-        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"Dependency Manager"), pos = wx.DefaultPosition, size = wx.Size( 800,635 ), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
+        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"Package Manager"), pos = wx.DefaultPosition, size = wx.Size( 800,635 ), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
 
         self.SetSizeHints( wx.Size( 800,600 ), wx.DefaultSize )
 
@@ -58,7 +58,7 @@ class DependencyManagerDialog ( wx.Dialog ):
 
         bSizer_DependencyInstall = wx.BoxSizer( wx.HORIZONTAL )
 
-        self.m_staticText_Dependency = wx.StaticText( self, wx.ID_ANY, _(u"Dependency:"), wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText_Dependency = wx.StaticText( self, wx.ID_ANY, _(u"Package:"), wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_staticText_Dependency.Wrap( -1 )
 
         bSizer_DependencyInstall.Add( self.m_staticText_Dependency, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, 5 )
@@ -222,8 +222,8 @@ class DependencyManagerDialog ( wx.Dialog ):
     def close_dialog_clicked(self, event):
         if self.download_worker and self.download_worker.is_alive():
             res = wx.MessageBox(
-                _(u"A dependency is being processed! Are you sure you want to abort the operation?"),
-                _(u"Working with dependency"),
+                _(u"A package is being processed! Are you sure you want to abort the operation?"),
+                _(u"Working with package"),
                 wx.YES_NO | wx.ICON_WARNING,
                 self
                 )
@@ -271,7 +271,7 @@ class DependencyManagerDialog ( wx.Dialog ):
                     contributors = ", ".join(dep_data["contributors"])
                     self.m_staticText_ContributorsInfo.SetLabel(contributors)
         except Exception as e:
-            SpawnLogger.error(f"Parsing Selected Item (Dependency Manager): {e}")
+            SpawnLogger.error(f"Parsing Selected Item (Package Manager): {e}")
                 
         readme_html_content = ""
         for name in ["README.md", "readme.md", "Readme.md", "ReadMe.md", "readMe.md"]:
@@ -284,7 +284,7 @@ class DependencyManagerDialog ( wx.Dialog ):
                     readme_html_content = markdown.markdown(md_text, extensions=['tables', 'fenced_code'])
                     break
                 except Exception as e:
-                    SpawnLogger.error(f"Read README.md (Dependency Manager): {e}")
+                    SpawnLogger.error(f"Read README.md (Package Manager): {e}")
 
         style = """
         <style>
@@ -321,8 +321,8 @@ class DependencyManagerDialog ( wx.Dialog ):
     def on_close_dialog(self, event):
         if self.download_worker and self.download_worker.is_alive():
             res = wx.MessageBox(
-                _(u"A dependency is being processed! Are you sure you want to abort the operation?"),
-                _(u"Working with dependency"),
+                _(u"A package is being processed! Are you sure you want to abort the operation?"),
+                _(u"Working with package"),
                 wx.YES_NO | wx.ICON_WARNING,
                 self
                 )
@@ -336,12 +336,12 @@ class DependencyManagerDialog ( wx.Dialog ):
             wx.Bell()
             return
 
-        res = wx.MessageBox(_(u"Do you really want to remove the dependency {selection} from the project?").format(selection=selection),
+        res = wx.MessageBox(_(u"Do you really want to remove the package {selection} from the project?").format(selection=selection),
                             _(u"Deletion confirmation"), wx.YES_NO | wx.ICON_QUESTION)
         if res == wx.NO: return
 
         self.m_gaugeProgress.SetValue(0)
-        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Removing a dependency {selection}").format(selection=selection))
+        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Removing a package {selection}").format(selection=selection))
 
         self.m_textCtrl_Dependency.Enable(False)
         self.m_button_DependencyInstall.Enable(False)
@@ -359,7 +359,7 @@ class DependencyManagerDialog ( wx.Dialog ):
 
     def on_ensure_all(self, event):
         self.m_gaugeProgress.SetValue(0)
-        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Start checking dependencies..."))
+        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Start checking packages..."))
 
         self.download_worker = DependencyDownloadWorker(
             project_path=self.project_path,
@@ -382,7 +382,7 @@ class DependencyManagerDialog ( wx.Dialog ):
         self.m_buttonUninstall.Enable(False)
        
 
-        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Installing dependency..."))
+        self.m_staticText_CurrentDownStatus.SetLabel(_(u"Installing package..."))
         self.download_worker = DependencyDownloadWorker(
             project_path=self.project_path,
             sampctl_bin=self.sampctl_bin,
@@ -461,13 +461,13 @@ class DependencyManagerDialog ( wx.Dialog ):
                 try:
                     is_installed = (os.path.isdir(actual_dep_dir) and find_config(actual_dep_dir) is not None)
                 except ValueError as e:
-                    SpawnLogger.error(f"Dependency Configuration: {actual_dep_dir}: {e}")
+                    SpawnLogger.error(f"Package Configuration: {actual_dep_dir}: {e}")
                     is_installed = False
               
                 if is_installed:
                     deps_list.Append(raw_string)
         except Exception as e:
-            SpawnLogger.error(f"Load Dependencies (Dependency Manager): {e}")
+            SpawnLogger.error(f"Load Packages (Package Manager): {e}")
         
     def __del__( self ):
         pass

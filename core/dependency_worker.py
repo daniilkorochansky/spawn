@@ -46,7 +46,7 @@ class DependencyDownloadWorker(threading.Thread):
 
         cmd = [self.sampctl_bin,self.add_command, self.package_url]
         try:
-            wx.CallAfter(self.ui_callback, 10, _(u"Preparing to work with dependency..."))
+            wx.CallAfter(self.ui_callback, 10, _(u"Preparing to work with package..."))
 
             process = subprocess.Popen(
                 cmd,
@@ -80,5 +80,5 @@ class DependencyDownloadWorker(threading.Thread):
                 
                 wx.CallAfter(self.ui_callback, -1, _(u"The process has been interrupted."))
         except Exception as e:
-            SpawnLogger.error(f"Run (Dependency Worker): {e}")
+            SpawnLogger.error(f"Run (Package Worker): {e}")
             wx.CallAfter(self.ui_callback, -1, f"{e}")
