@@ -11,7 +11,7 @@ Build and manage **open.mp** and **SA-MP** server projects with integrated SAMPC
 [![Tests](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml)
 [![Build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
 
-[Download Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Report a bug](https://github.com/daniilkorochansky/spawn/issues) · [Roadmap](#roadmap) · [Contribute](#contributing)
+[Download Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Roadmap](#roadmap)  · [Report a bug](https://github.com/daniilkorochansky/spawn/issues) · [Contribute](#contributing)
 
 [English](README.md) · [Русский](README_ru.md) · [Português](README_pt.md)
 
