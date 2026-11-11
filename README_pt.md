@@ -24,6 +24,7 @@ Desenvolva e gerencie servidores **open.mp** e **SA-MP** com integração ao SAM
 O Spawn reúne as ferramentas essenciais para desenvolvimento de servidores Pawn em uma IDE desktop leve e portátil.
 
 - **Editor Pawn** — realce de sintaxe, correspondência de chaves, marcadores de linhas alteradas e edição dividida.
+- **Documentação offline** — Leia a documentação sobre o open.mp e a programação de scripts do Pawn sem conexão com a internet.
 - **Integração com SAMPCTL** — crie, compile e execute projetos de servidor.
 - **Gerenciador de pacotes** — instale, atualize e verifique dependências do projeto.
 - **Integração com Git** — status do repositório, histórico de commits e ferramentas de controle de versão.
