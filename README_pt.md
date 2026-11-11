@@ -11,7 +11,7 @@ Desenvolva e gerencie servidores **open.mp** e **SA-MP** com integração ao SAM
 [![Testes](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml/badge.svg)](https://github.com/daniilkorochansky/spawn/actions/workflows/tests.yml)
 [![Build](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/daniilkorochansky/spawn/actions/workflows/build.yml)
 
-[Baixar Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Relatar um problema](https://github.com/daniilkorochansky/spawn/issues) · [Contribuir](#contribuição)
+[Baixar Spawn](https://github.com/daniilkorochansky/spawn/releases) · [Plano de desenvolvimento](#plano-de-desenvolvimento) · [Relatar um problema](https://github.com/daniilkorochansky/spawn/issues) · [Contribuir](#contribuição)
 
 [English](README.md) · [Русский](README_ru.md) · [Português](README_pt.md)
 
@@ -25,7 +25,7 @@ O Spawn reúne as ferramentas essenciais para desenvolvimento de servidores Pawn
 
 - **Editor Pawn** — realce de sintaxe, correspondência de chaves, marcadores de linhas alteradas e edição dividida.
 - **Integração com SAMPCTL** — crie, compile e execute projetos de servidor.
-- **Gerenciador de dependências** — instale, atualize e verifique dependências do projeto.
+- **Gerenciador de pacotes** — instale, atualize e verifique dependências do projeto.
 - **Integração com Git** — status do repositório, histórico de commits e ferramentas de controle de versão.
 - **Ferramentas para o código** — pré-visualização de cores RGBA/HEX e seletor de cores para inserir valores no código.
 - **Navegação pelo projeto** — árvore de arquivos projetada para projetos grandes.
@@ -34,10 +34,27 @@ O Spawn reúne as ferramentas essenciais para desenvolvimento de servidores Pawn
 - **Portabilidade** — use o Spawn sem uma instalação tradicional.
 
 ## Instalação
-
+### Windows
 1. Acesse a [versão mais recente](https://github.com/daniilkorochansky/spawn/releases).
 2. Baixe e extraia o arquivo.
 3. Execute `Spawn.exe`.
+
+### Linux
+1. Abra a página [da versão mais recente](https://github.com/daniilkorochansky/spawn/releases).
+2. Baixe e descompacte o arquivo `Spawn_X.X.X_Linux_x64.tar.gz`.
+3. Abra o terminal no diretório que contém o arquivo compactado e descompacte-o.
+```bash
+tar -xzf Spawn_X.X.X_Linux_x64.tar.gz
+```
+4. Conceda permissão de execução ao arquivo executável `Spawn`.
+```bash
+cd Spawn_X.X.X_Linux_x64
+chmod +x Spawn
+```
+5. Execute o `Spawn`
+```bash
+./Spawn
+```
 
 Para usar todos os recursos, instale também o [Git](https://git-scm.com/downloads) e o [SAMPCTL](https://github.com/Southclaws/sampctl). Ambos podem ser configurados posteriormente nas configurações do Spawn.
 
@@ -52,14 +69,14 @@ Para usar todos os recursos, instale também o [Git](https://git-scm.com/downloa
 
 ### Compilar e executar um servidor
 
-1. Selecione **File → Open Server Folder…** e escolha a pasta do servidor que contém o arquivo `pawn.json` gerado pelo SAMPCTL.
+1. Selecione **File → Open Server Folder…** e escolha a pasta do servidor que contém o arquivo `pawn.json` ou `pawn.yaml` gerado pelo SAMPCTL.
 2. Selecione **Build → Build Server**.
 3. Use **Server → Run / Stop Server** para iniciar ou parar o servidor.
 4. Acompanhe a saída no console integrado.
 
 ### Gerenciar dependências
 
-Abra **Project → Dependency Manager…**, informe o nome do pacote e clique em **Install**. Para remover uma dependência, selecione-a e clique em **Uninstall**. Use **Ensure** para verificar as dependências.
+Abra **Project → Package Manager…**, informe o nome do pacote e clique em **Install**. Para remover uma pacote, selecione-a e clique em **Uninstall**. Use **Ensure** para verificar as dependências.
 
 ### Usar Git
 
@@ -75,6 +92,10 @@ O Spawn detecta a codificação dos arquivos ao abri-los. Nos arquivos `.pwn` e 
 
 ```pawn
 // -*- coding: cp1251 -*-
+```
+ou
+```pawn
+// coding: cp1251
 ```
 
 Se o arquivo for exibido incorretamente, abra-o novamente com outra codificação em **Edit → Encoding → Reopen**. Isso altera apenas a forma como o arquivo é exibido no editor; o arquivo no disco não é modificado.
@@ -95,8 +116,8 @@ As codificações compatíveis incluem UTF-8 e as páginas de código Windows 12
 ### Pré-visualização de cores RGBA/HEX
 <img width="900" alt="Pré-visualização de cores" src="https://github.com/user-attachments/assets/ae6a367a-3b04-4a23-a6ad-71ae51b0edc8" />
 
-### Gerenciador de dependências
-<img width="900" alt="Gerenciador de dependências" src="https://github.com/user-attachments/assets/e60a1bad-9a9d-43da-938d-fa94d43401b7" />
+### Gerenciador de pacotes
+<img width="900" alt="Gerenciador de pacotes" src="https://github.com/user-attachments/assets/e60a1bad-9a9d-43da-938d-fa94d43401b7" />
 
 ### Git e controle de versão
 <img width="900" alt="Git e controle de versão" src="https://github.com/user-attachments/assets/b6198ac3-97b4-4392-b29a-87ab6bdfc818" />
@@ -105,6 +126,15 @@ As codificações compatíveis incluem UTF-8 e as páginas de código Windows 12
 <img width="900" alt="Árvore do projeto" src="https://github.com/user-attachments/assets/c942516b-6e18-406d-b9be-cb8e24d54a94" />
 
 </details>
+
+## Plano de desenvolvimento
+A seguir, apresentamos o plano de desenvolvimento do **Spawn**, que se concentra principalmente na experiência básica do usuário e na facilidade de uso da interface no curto prazo.
+
+- [x] **Documentação offline integrada:** Documentação offline totalmente funcional sobre o open.mp e o sa-mp, disponível no painel direito.
+- [ ] **Teclas de atalho personalizáveis:** Capacidade total de reatribuir teclas de atalho.
+- [ ] **Reestruturação do painel de status:** Reestruturação completa do painel de status com o objetivo de destacar um espaço separado e claro para exibir os status do Git em tempo real (ramo atual, alterações não confirmadas, status de sincronização).
+- [ ] **Otimização de código:** refatoração dos módulos principais para aumentar a responsividade da interface do usuário. Correção de erros.
+- [ ] **Localização:** tradução do `Spawn` para o russo, português, espanhol, indonésio, romeno e turco.
 
 ## Contribuição
 
@@ -133,16 +163,6 @@ O Spawn é distribuído sob a licença **GNU General Public License v3.0**. Cons
 
 <details>
 <summary>Configuração para desenvolvimento</summary>
-
-### Requisitos
-
-- Python 3.13+
-- wxPython
-- GitPython
-- Markdown
-- watchdog
-- platformdirs
-- requests
 
 ### Clonar e executar
 
