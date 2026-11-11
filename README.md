@@ -41,7 +41,7 @@ Spawn brings the tools commonly needed for Pawn server development into one ligh
 3. Run `Spawn.exe`.
 
 ### Linux
-1. Open the [latest release](https://github.com/daniilkorochansky/spawn/releases) page.
+1. Open the [latest release](https://github.com/daniilkorochansky/spawn/releases).
 2. Download and extract the `Spawn_X.X.X_Linux_x64.tar.gz` archive.
 3. Open a terminal in the directory containing the archive and extract the archive.
 ```bash
