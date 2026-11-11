@@ -70,7 +70,7 @@ chmod +x Spawn
 
 ### Сборка и запуск сервера
 
-1. Выберите **File → Open Server Folder…** и откройте папку сервера с файлом `pawn.json`, созданным SAMPCTL.
+1. Выберите **File → Open Server Folder…** и откройте папку сервера с файлом `pawn.json` или `pawn.yaml`, созданным SAMPCTL.
 2. Выберите **Build → Build Server**.
 3. Используйте **Server → Run / Stop Server**, чтобы запустить или остановить сервер.
 4. Следите за выводом во встроенной консоли.
