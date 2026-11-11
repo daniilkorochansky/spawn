@@ -42,17 +42,38 @@ Spawn brings the tools commonly needed for Pawn server development into one ligh
 
 ### Linux
 1. Open the [latest release](https://github.com/daniilkorochansky/spawn/releases).
+2. Download the `.deb` package.
+3. Open the terminal in the folder where the `.deb` package is located and install the package:
+```bash
+sudo apt install ./Spawn_X.X.X_Linux_amd64.deb
+```
+
+#### Manual
+1. Open the [latest release](https://github.com/daniilkorochansky/spawn/releases).
 2. Download and extract the `Spawn_X.X.X_Linux_x64.tar.gz` archive.
-3. Open a terminal in the directory containing the archive and extract the archive.
+3. Install the dependencies:
+* **Ubuntu / Debian / Linux Mint:**
+  ```bash
+  sudo apt update && sudo apt install -y libwebkit2gtk-4.1-0 libjavascriptcoregtk-4.1-0
+  ```
+* **Arch Linux / Manjaro:**
+  ```bash
+  sudo pacman -Syu webkit2gtk-4.1
+  ```
+* **Fedora:**
+  ```bash
+  sudo dnf install webkit2gtk4.1
+  ```
+4. Open a terminal in the directory containing the downloaded archive and extract the archive.
 ```bash
 tar -xzf Spawn_X.X.X_Linux_x64.tar.gz
 ```
-4. Give the `Spawn` executable permission to execute.
+5. Give the `Spawn` executable permission to execute.
 ```bash
 cd Spawn_X.X.X_Linux_x64
 chmod +x Spawn
 ```
-5. Launch `Spawn`
+6. Launch `Spawn`
 ```bash
 ./Spawn
 ```
