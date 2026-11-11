@@ -40,23 +40,44 @@ O Spawn reúne as ferramentas essenciais para desenvolvimento de servidores Pawn
 3. Execute `Spawn.exe`.
 
 ### Linux
-1. Abra a página [da versão mais recente](https://github.com/daniilkorochansky/spawn/releases).
-2. Baixe e descompacte o arquivo `Spawn_X.X.X_Linux_x64.tar.gz`.
-3. Abra o terminal no diretório que contém o arquivo compactado e descompacte-o.
+1. Acesse a [versão mais recente](https://github.com/daniilkorochansky/spawn/releases).
+2. Baixe o pacote `.deb`.
+3. Abra o terminal na pasta onde o pacote `.deb` está localizado e instale o pacote:
+```bash
+sudo apt install ./Spawn_X.X.X_Linux_amd64.deb
+```
+
+#### Instalação manual
+1. Abra a [versão mais recente](https://github.com/daniilkorochansky/spawn/releases).
+2. Baixe e extraia o arquivo `Spawn_X.X.X_Linux_x64.tar.gz`.
+3. Instale as dependências:
+* **Ubuntu / Debian / Linux Mint:**
+  ```bash
+  sudo apt update && sudo apt install -y libwebkit2gtk-4.1-0 libjavascriptcoregtk-4.1-0
+  ```
+* **Arch Linux / Manjaro:**
+  ```bash
+  sudo pacman -Syu webkit2gtk-4.1
+  ```
+* **Fedora:**
+  ```bash
+  sudo dnf install webkit2gtk4.1
+  ```
+4. Abra um terminal no diretório que contém o arquivo compactado baixado e extraia-o.
 ```bash
 tar -xzf Spawn_X.X.X_Linux_x64.tar.gz
 ```
-4. Conceda permissão de execução ao arquivo executável `Spawn`.
+5. Conceda permissão de execução ao executável `Spawn`.
 ```bash
 cd Spawn_X.X.X_Linux_x64
 chmod +x Spawn
 ```
-5. Execute o `Spawn`
+6. Inicie o `Spawn`
 ```bash
 ./Spawn
 ```
 
-Para usar todos os recursos, instale também o [Git](https://git-scm.com/downloads) e o [SAMPCTL](https://github.com/Southclaws/sampctl). Ambos podem ser configurados posteriormente nas configurações do Spawn.
+Para o fluxo de trabalho completo, instale o [Git](https://git-scm.com/downloads) e o [SAMPCTL](https://github.com/Southclaws/sampctl). Você pode configurar ambos posteriormente nas Configurações do Spawn (ou isso ocorrerá automaticamente se eles estiverem presentes no ambiente do sistema).
 
 ## Introdução rápida
 
