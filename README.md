@@ -48,7 +48,7 @@ Spawn brings the tools commonly needed for Pawn server development into one ligh
 sudo apt install ./Spawn_X.X.X_Linux_amd64.deb
 ```
 
-#### Manual
+#### Manual installation
 1. Open the [latest release](https://github.com/daniilkorochansky/spawn/releases).
 2. Download and extract the `Spawn_X.X.X_Linux_x64.tar.gz` archive.
 3. Install the dependencies:
