@@ -41,16 +41,18 @@ Spawn brings the tools commonly needed for Pawn server development into one ligh
 3. Run `Spawn.exe`.
 
 ### Linux
-1. Open a terminal in the directory containing the archive and extract the archive.
+1. Open the [latest release](https://github.com/daniilkorochansky/spawn/releases) page.
+2. Download and extract the `Spawn_X.X.X_Linux_x64.tar.gz` archive.
+3. Open a terminal in the directory containing the archive and extract the archive.
 ```bash
 tar -xzf Spawn_X.X.X_Linux_x64.tar.gz
 ```
-2. Give the `Spawn` executable permission to execute.
+4. Give the `Spawn` executable permission to execute.
 ```bash
 cd Spawn_X.X.X_Linux_x64
 chmod +x Spawn
 ```
-3. Launch `Spawn`
+5. Launch `Spawn`
 ```bash
 ./Spawn
 ```
@@ -134,7 +136,7 @@ The following is a development plan for **Spawn**, which focuses on the basic us
 - [ ] **Custom Hotkeys:** Fully rebindable keyboard shortcuts.
 - [ ] **Redesigning the Status Bar:** Complete redesign of the status bar to provide a dedicated, clear space for real-time Git statuses (current branch, uncommitted changes, sync state).
 - [ ] **Code Polish:** Refactoring the main modules to improve the responsiveness of the user interface. Bug fixes.
-- [ ] **Translation** Translation of `Spawn` into Russian, Portuguese, Spanish, Indonesian, Romanian, and Turkish.
+- [ ] **Translation:** Translation of `Spawn` into Russian, Portuguese, Spanish, Indonesian, Romanian, and Turkish.
 
 ## Contributing
 
