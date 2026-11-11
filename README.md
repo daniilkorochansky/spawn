@@ -126,7 +126,7 @@ Supported encodings include UTF-8 and Windows code pages 1250–1257. The defaul
 
 The following is a development plan for **Spawn**, which focuses on the basic user experience and user interface convenience for the near future.
 
-- [x] **Integrated Offline Documentation:** Fully functional right-panel offline open.mp documentation.
+- [x] **Integrated Offline Documentation:** Fully functional right-panel offline open.mp and sa-mp documentation.
 - [ ] **Custom Hotkeys:** Fully rebindable keyboard shortcuts.
 - [ ] **Redesigning the Status Bar:** Complete redesign of the status bar to provide a dedicated, clear space for real-time Git statuses (current branch, uncommitted changes, sync state).
 - [ ] **Code Polish:** Refactoring the main modules to improve the responsiveness of the user interface. Bug fixes.
