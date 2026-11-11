@@ -135,6 +135,12 @@ A seguir, apresentamos o plano de desenvolvimento do **Spawn**, que se concentra
 - [ ] **Reestruturação do painel de status:** Reestruturação completa do painel de status com o objetivo de destacar um espaço separado e claro para exibir os status do Git em tempo real (ramo atual, alterações não confirmadas, status de sincronização).
 - [ ] **Otimização de código:** refatoração dos módulos principais para aumentar a responsividade da interface do usuário. Correção de erros.
 - [ ] **Localização:** tradução do `Spawn` para o russo, português, espanhol, indonésio, romeno e turco.
+  - [ ] Russo
+  - [ ] Português
+  - [ ] Espanhol
+  - [ ] Indonésio
+  - [ ] Romeno
+  - [ ] Turco
 
 ## Contribuição
 
