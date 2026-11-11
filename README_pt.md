@@ -162,7 +162,7 @@ O Spawn é distribuído sob a licença **GNU General Public License v3.0**. Cons
 ---
 
 <details>
-<summary>Configuração para desenvolvimento</summary>
+<summary>Desenvolvimento</summary>
 
 ### Clonar e executar
 
