@@ -15,7 +15,7 @@ Desenvolva e gerencie servidores **open.mp** e **SA-MP** com integração ao SAM
 
 [English](README.md) · [Русский](README_ru.md) · [Português](README_pt.md)
 
-<img width="900" alt="Visão geral do Spawn IDE" src="https://github.com/user-attachments/assets/505d6a46-33cc-45ae-bed3-f011474a4dc7" />
+<img width="1000" height="547" alt="overview_v125" src="https://github.com/user-attachments/assets/6c1ccbbc-f737-4b1f-b660-329fa16dff62" />
 
 </div>
 
