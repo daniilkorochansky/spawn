@@ -41,23 +41,44 @@ Spawn объединяет основные инструменты для раз
 3. Запустите `Spawn.exe`.
 
 ### Linux
-1. Откройте страницу [последнего релиза](https://github.com/daniilkorochansky/spawn/releases).
-2. Скачайте и распакуйте архив `Spawn_X.X.X_Linux_x64.tar.gz`.
-3. Откройте терминал в каталоге, содержащем архив, и распакуйте его.
+1. Перейдите на страницу [последней версии](https://github.com/daniilkorochansky/spawn/releases).
+2. Загрузите пакет `.deb`.
+3. Откройте терминал в папке, где находится пакет `.deb`, и установите пакет:
+```bash
+sudo apt install ./Spawn_X.X.X_Linux_amd64.deb
+```
+
+#### Установка вручную
+1. Откройте [последнюю версию](https://github.com/daniilkorochansky/spawn/releases).
+2. Загрузите и распакуйте архив `Spawn_X.X.X_Linux_x64.tar.gz`.
+3. Установите зависимости:
+* **Ubuntu / Debian / Linux Mint:**
+  ```bash
+  sudo apt update && sudo apt install -y libwebkit2gtk-4.1-0 libjavascriptcoregtk-4.1-0
+  ```
+* **Arch Linux / Manjaro:**
+  ```bash
+  sudo pacman -Syu webkit2gtk-4.1
+  ```
+* **Fedora:**
+  ```bash
+  sudo dnf install webkit2gtk4.1
+  ```
+4. Откройте терминал в каталоге, содержащем загруженный архив, и распакуйте его.
 ```bash
 tar -xzf Spawn_X.X.X_Linux_x64.tar.gz
 ```
-4. Присвойте исполняемому файлу `Spawn` права на выполнение.
+5. Присвойте исполняемому файлу `Spawn` права на запуск.
 ```bash
 cd Spawn_X.X.X_Linux_x64
 chmod +x Spawn
 ```
-5. Запустите `Spawn`
+6. Запустите `Spawn`
 ```bash
 ./Spawn
 ```
 
-Для использования всех возможностей установите [Git](https://git-scm.com/downloads) и [SAMPCTL](https://github.com/Southclaws/sampctl). Их можно настроить позже в параметрах Spawn.
+Для полного цикла работы установите [Git](https://git-scm.com/downloads) и [SAMPCTL](https://github.com/Southclaws/sampctl). Обе программы можно настроить позже в настройках Spawn (или это произойдет автоматически, если они присутствуют в переменной среде).
 
 ## Быстрый старт
 
