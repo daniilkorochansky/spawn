@@ -64,6 +64,7 @@ class NewProjectDialog ( wx.Dialog ):
 
 
         bSizer_SubMain.Add( bSizer_ProjectLocation, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 15 )
+        
 
         bSizer_ProjectResult = wx.BoxSizer( wx.HORIZONTAL )
 
@@ -82,6 +83,8 @@ class NewProjectDialog ( wx.Dialog ):
         self.m_staticTextSampctlInfo.Wrap( -1 )
 
         bSizer_SubMain.Add( self.m_staticTextSampctlInfo, 1, wx.ALL, 20 )
+
+
 
 
         bSizer_Main.Add( bSizer_SubMain, 1, wx.EXPAND, 5 )

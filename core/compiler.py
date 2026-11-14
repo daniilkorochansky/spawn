@@ -105,6 +105,9 @@ class BackgroundCompiler(threading.Thread):
             return
 
         cmd = [self.sampctl_bin, "build"]
+        if self.build_target and self.build_target != "Default":
+            cmd.append(self.build_target)
+            
         if self.extra_flags:
             cmd.extend(["--", self.extra_flags])
 

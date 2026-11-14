@@ -22,13 +22,28 @@
 from __future__ import annotations
 
 import webbrowser
+import os
+import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
 import wx
 import wx.html2
 
+import gettext
+_ = gettext.gettext
+
 from core.documentation_index import DocumentationEntry, DocumentationIndex
+
+def get_app_root_dir():
+    if 'NUITKA_ONEFILE_PARENT' in os.environ or getattr(sys, 'frozen', False):
+        return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+
+    ui_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.dirname(ui_dir)
+
+APP_ROOT = get_app_root_dir()
+
 
 class DocumentationPanel(wx.Panel):
     """Search tree + embedded HTML viewer for the open.mp documentation."""
@@ -39,17 +54,19 @@ class DocumentationPanel(wx.Panel):
         self.index: DocumentationIndex | None = None
         self._populating_tree = False
 
-        self.button_back = wx.Button(self, wx.ID_ANY, "←", size=wx.Size(30, 27))
-        self.button_back.SetToolTip("Back")
-        self.button_forward = wx.Button(self, wx.ID_ANY, "→", size=wx.Size(30, 27))
-        self.button_forward.SetToolTip("Forward")
+        self.icons_folder = os.path.join(APP_ROOT, "assets", "icons")
+
+        self.button_back = wx.BitmapButton(self, wx.ID_ANY, bitmap=wx.Bitmap(os.path.join(self.icons_folder,"btn_chevron_left.png"), wx.BITMAP_TYPE_PNG), size=wx.Size(30, 27))
+        self.button_back.SetToolTip(_(u"Back"))
+        self.button_forward = wx.BitmapButton(self, wx.ID_ANY, bitmap=wx.Bitmap(os.path.join(self.icons_folder,"btn_chevron_right.png"), wx.BITMAP_TYPE_PNG), size=wx.Size(30, 27))
+        self.button_forward.SetToolTip(_(u"Forward"))
         self.search_ctrl = wx.SearchCtrl(
             self,
             wx.ID_ANY,
             style=wx.TE_PROCESS_ENTER,
             size=wx.DefaultSize,
         )
-        self.search_ctrl.SetDescriptiveText("Search documentation...")
+        self.search_ctrl.SetDescriptiveText(_(u"Search documentation..."))
         self.search_ctrl.ShowSearchButton(True)
         self.search_ctrl.Bind(wx.EVT_CHAR, self._on_search_char)
 
@@ -90,6 +107,8 @@ class DocumentationPanel(wx.Panel):
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self._on_tree_selection)
         self.web_view.Bind(wx.html2.EVT_WEBVIEW_NAVIGATING, self._on_webview_navigating)
         self.web_view.Bind(wx.html2.EVT_WEBVIEW_NAVIGATED, self._on_webview_navigated)
+
+        self.splitter.SetSashPosition(90)
 
         self._refresh_navigation_buttons()
         self.show_not_installed()

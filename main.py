@@ -42,11 +42,13 @@ from ui.settings_dialog import SettingsDialog
 from ui.project_tree import ProjectTreeManager
 from ui.bug_report_dialog import BugReportDialog
 from ui.new_project_dialog import NewProjectDialog
+from ui.documentation_panel import DocumentationPanel
 from ui.git_commit_history_dialog import GitCommitHistoryDialog
 from ui.dependency_manager_dialog import DependencyManagerDialog
-from ui.documentation_panel import DocumentationPanel
+from ui.action_choice_ctrl import (EVT_SPLIT_CHOICE_SELECT,EVT_SPLIT_CHOICE_ACTION)
 
 from core.documentation_manager import (OpenMPDocumentationManager,DocumentationNetworkError)
+from core.sampctl_profiles import (DEFAULT_PROFILE, load_sampctl_profiles)
 from core.pawn_config import find_config, load_config, save_config
 from core.documentation_worker import DocumentationWorker
 from core.project_creator import ProjectCreateWorker
@@ -95,7 +97,6 @@ class SpawnFileDropTarget(wx.FileDropTarget):
 class SpawnIDE(SpawnFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
-
         SpawnLogger.initialize()
 
         self.ide_cfg = ConfigManager()
@@ -132,10 +133,6 @@ class SpawnIDE(SpawnFrame):
         self.m_statusBar.SetStatusText(u"---", 1)
         self.m_statusBar.SetStatusText(u"---", 2)
         self.m_statusBar.SetStatusText(u"---", 3)
-
-       #test
-##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_ENGLISH)
-##        self.Bind(wx.EVT_MENU, self.on_language_click, id=wx.ID_LANGUAGE_RUSSIAN)
 
         self.Bind(wx.EVT_CLOSE, self.on_ide_close_request)
         self.Bind(wx.EVT_SHOW, self.on_frame_first_show)
@@ -204,10 +201,10 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1256, id=wx.ID_REOPEN_TO_CP1256)
         self.Bind(wx.EVT_MENU, self.on_menu_reopen_enc_cp1257, id=wx.ID_REOPEN_TO_CP1257)
         
-        self.Bind(wx.EVT_TOOL, self.on_build_project_execute, id=wx.ID_TOOLBAR_BUILD_PROJECT)
+        self.m_choice_Builds.Bind(EVT_SPLIT_CHOICE_ACTION, self.on_build_project_execute)
         self.Bind(wx.EVT_MENU, self.on_build_project_execute, id=wx.ID_BUILD_PROJECT)
-        self.Bind(wx.EVT_TOOL, self.on_run_server_execute, id=wx.ID_TOOLBAR_RUN_STOP_SERVER)
-        self.Bind(wx.EVT_TOOL, self.on_run_server_execute, id=wx.ID_RUN_STOP_SERVER) 
+        self.m_choice_Runtimes.Bind(EVT_SPLIT_CHOICE_ACTION,self.on_run_server_execute)
+        self.Bind(wx.EVT_MENU, self.on_run_server_execute, id=wx.ID_RUN_STOP_SERVER) 
 
         #Git Binds
         self.Bind(wx.EVT_BUTTON, self.on_git_commit_execute_click, id=wx.ID_GIT_COMMIT)
@@ -284,6 +281,69 @@ class SpawnIDE(SpawnFrame):
             if path != "" :
                 if os.path.exists(path):
                     self.load_project(path)
+
+    #sampctl profiles
+    def is_project_config_file(self, file_path):
+        if not self.current_project_path or not file_path:
+            return False
+
+        project_root = os.path.realpath(self.current_project_path)
+
+        file_path = os.path.realpath(os.fsdecode(file_path))
+
+        config_names = {"pawn.json", "pawn.yaml"}
+
+        return (
+            os.path.dirname(file_path) == project_root
+            and os.path.basename(file_path).lower() in config_names
+        )
+                    
+    def load_project_profiles(self, preserve_selection=True):
+        if not self.current_project_path:
+            self.m_choice_Builds.SetItems(
+                [DEFAULT_PROFILE],
+                preserve_selection=False
+            )
+            self.m_choice_Runtimes.SetItems(
+                [DEFAULT_PROFILE],
+                preserve_selection=False
+            )
+            return False
+
+        try:
+            available = load_sampctl_profiles(self.current_project_path)
+
+        except Exception as e:
+            SpawnLogger.error(f"Load SAMPCTL profiles: {e}")
+
+            # On project switch, don't retain profiles from the
+            # previously opened project.
+            if not preserve_selection:
+                self.m_choice_Builds.SetItems(
+                    [DEFAULT_PROFILE],
+                    preserve_selection=False
+                )
+                self.m_choice_Runtimes.SetItems(
+                    [DEFAULT_PROFILE],
+                    preserve_selection=False
+                )
+
+            # On live reload, preserve the last valid configuration.
+            return False
+
+        self.m_choice_Builds.SetItems(
+            available["builds"],
+            preserve_selection=preserve_selection
+        )
+
+        self.m_choice_Runtimes.SetItems(
+            available["runtimes"],
+            preserve_selection=preserve_selection
+        )
+
+        return True
+
+    #----------------
 
     def on_toggle_tools_panel(self, event):
         if self.zen_mode:
@@ -373,7 +433,7 @@ class SpawnIDE(SpawnFrame):
 
         self._documentation_worker_purpose = purpose
         self._documentation_pending_term = term
-        self.set_documentation_status(_(u"Checking open.mp documentation..."))
+        self.set_documentation_status(_(u"Checking documentation..."))
         self.documentation_worker = DocumentationWorker(
             self.documentation_manager,
             mode="check",
@@ -564,11 +624,7 @@ class SpawnIDE(SpawnFrame):
             self,
             initial_tree_height=tree_height,
         )
-        self.m_auinotebook_Tools.AddPage(
-            self.documentation_panel,
-            _(u"Documentation"),
-            True,
-        )
+        self.m_auinotebook_Tools.AddPage(self.documentation_panel, _(u"Documentation"), True, wx.Bitmap(os.path.join(self.icons_folder,"nb_docs.png"),wx.BITMAP_TYPE_PNG))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.m_auinotebook_Tools, 1, wx.EXPAND)
@@ -583,7 +639,12 @@ class SpawnIDE(SpawnFrame):
             .BestSize(wx.Size(panel_width, -1))
             .MinSize(wx.Size(280, -1))
             .Resizable()
-            .CloseButton(False)
+            .CloseButton(True)
+            .LeftDockable(True)
+            .RightDockable(True)
+            .TopDockable(False)
+            .BottomDockable(False)
+            .DestroyOnClose(False)
             .Layer(5),
         )
         self.m_mgr.GetPane(self.m_toolsPanel).Show(panel_visible)
@@ -1319,15 +1380,6 @@ pawn.lock
         tab = self.m_auinotebook_Main.GetCurrentPage()
         if tab:
             self.reopen_with_encoding(tab, "cp1250")
-            
-
-##    def on_set_reset_settings_click(self, event):
-##        confirm = wx.MessageBox(_(u"Are you sure you want to reset all settings to their default values?"), _(u"Warning"), wx.YES_NO | wx.ICON_WARNING, self)
-##        if confirm == wx.NO:
-##            return
-##
-##        self.ide_cfg.reset_settings()
-##        self.check_environment_on_startup()
 
     def on_undo_click(self, event):
         tab = self.m_auinotebook_Main.GetCurrentPage()
@@ -1549,8 +1601,8 @@ pawn.lock
             git_ready = bool(git_path)
             
         if self.current_project_path and sampctl_ready:
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, True)
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, True)
+            self.m_choice_Builds.Enable(True)
+            self.m_choice_Runtimes.Enable(True)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, True)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, True)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, True)
@@ -1563,8 +1615,8 @@ pawn.lock
                 self.m_auiToolBar.GetContainingSizer().Layout()
             
         if  not self.current_project_path and sampctl_ready:
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
+            self.m_choice_Builds.Enable(False)
+            self.m_choice_Runtimes.Enable(False)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, False)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, False)
@@ -1577,15 +1629,15 @@ pawn.lock
                 self.m_auiToolBar.GetContainingSizer().Layout()
 
         if  not self.current_project_path and not sampctl_ready:
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
+            self.m_choice_Builds.Enable(False)
+            self.m_choice_Runtimes.Enable(False)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, False)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, False)
 
         if self.current_project_path and not sampctl_ready:
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
+            self.m_choice_Builds.Enable(False)
+            self.m_choice_Runtimes.Enable(False)
             self.m_menubar.Enable(wx.ID_SAMPCTL_DEPENDENCIES_MANAGER, False)
             self.m_menubar.Enable(wx.ID_RUN_STOP_SERVER, False)
             self.m_menubar.Enable(wx.ID_BUILD_PROJECT, False)
@@ -1615,7 +1667,7 @@ pawn.lock
             pass
 
         if self.server_process_thread and self.server_process_thread.is_alive():
-            self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
+            self.m_choice_Builds.Enable(False)
 
             self.m_menuItem_Ensure.Enable(False)
             self.m_menuItem_ProjectClose.Enable(False)
@@ -1623,11 +1675,7 @@ pawn.lock
             self.m_menuItem_NewProject.Enable(False)
             self.m_menuItem_OpenProjectFolder.Enable(False)
 
-            # Run/Stop must remain enabled so the user can stop the server.
-            self.m_auiToolBar.EnableTool(
-                wx.ID_TOOLBAR_RUN_STOP_SERVER,
-                True
-            )
+            self.m_choice_Runtimes.Enable(True)
             self.m_menuItem_RunStopServer.Enable(True)
 
   
@@ -2421,16 +2469,16 @@ pawn.lock
             self.check_environment_on_startup()
             return
 
+        selected_runtime = self.m_choice_Runtimes.GetStringSelection()
+        if selected_runtime == DEFAULT_PROFILE:
+            selected_runtime = None
+
         self.m_richText_ServerConsole.Clear()
 
-        self.m_auiToolBar.EnableTool(
-            wx.ID_TOOLBAR_BUILD_PROJECT,
-            False
-        )
+        self.m_choice_Builds.Enable(False)
         self.m_menuItem_Ensure.Enable(False)
         self.m_menuItem_ProjectClose.Enable(False)
         self.m_menuItem_CompileProject.Enable(False)
-        # self.m_menuItem_CleanProject.Enable(False)
         self.m_menuItem_NewProject.Enable(False)
         self.m_menuItem_OpenProjectFolder.Enable(False)
 
@@ -2449,56 +2497,52 @@ pawn.lock
             0
         )
 
-        tool_item = tb.FindTool(wx.ID_TOOLBAR_RUN_STOP_SERVER)
+        self.m_choice_Runtimes.SetBitmap(
+        wx.Bitmap(
+            os.path.join(self.icons_folder, "tb_server_stop.png"),
+            wx.BITMAP_TYPE_PNG
+        )
+        )
 
-        if tool_item:
-            tool_item.SetBitmap(
-                wx.Bitmap(
-                    os.path.join(
-                        self.icons_folder,
-                        "tb_server_stop.png"
-                    ),
-                    wx.BITMAP_TYPE_PNG
-                )
-            )
+        self.m_choice_Runtimes.SetActionToolTip("Stop Server")
 
-            tb.Realize()
-            tb.Refresh()
+        tb.Realize()
+        tb.Refresh()
 
-            pane = self.m_mgr.GetPane(tb)
+        pane = self.m_mgr.GetPane(tb)
 
-            if pane.IsShown():
-                tb.GetContainingSizer().Layout()
+        if pane.IsShown():
+            tb.GetContainingSizer().Layout()
 
         self.server_process_thread = BackgroundRunner(
             project_path=self.current_project_path,
             sampctl_executable=sampctl_bin_path,
             rich_text_ctrl=self.m_richText_ServerConsole,
-            on_finished_callback=self.on_server_stopped
+            on_finished_callback=self.on_server_stopped,
+            runtime_target=selected_runtime
         )
 
         self.server_process_thread.start()
 
     def on_server_stopped(self, manual_stop):
-        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, True)
+        self.m_choice_Builds.Enable(True)
         self.m_menuItem_Ensure.Enable(True)
         self.m_menuItem_ProjectClose.Enable(True)
         self.m_menuItem_CompileProject.Enable(True)
-        #self.m_menuItem_CleanProject.Enable(True)
         self.m_menuItem_NewProject.Enable(True)
         self.m_menuItem_OpenProjectFolder.Enable(True)
         self.m_mgr.Update()
         
         tb = self.m_auiToolBar
-        tool_item = tb.FindTool(wx.ID_TOOLBAR_RUN_STOP_SERVER)
-        if tool_item:
-            tool_item.SetBitmap(wx.Bitmap(os.path.join(self.icons_folder,"tb_server_run.png"), wx.BITMAP_TYPE_ANY ))
-            tb.Realize()
-            tb.Refresh()
+        self.m_choice_Runtimes.SetBitmap(wx.Bitmap(os.path.join(self.icons_folder, "tb_server_run.png"), wx.BITMAP_TYPE_PNG))
 
-            pane = self.m_mgr.GetPane(tb)
-            if pane.IsShown():
-                tb.GetContainingSizer().Layout()
+        self.m_choice_Runtimes.SetActionToolTip("Run Server")
+        tb.Realize()
+        tb.Refresh()
+
+        pane = self.m_mgr.GetPane(tb)
+        if pane.IsShown():
+            tb.GetContainingSizer().Layout()
 
             
             
@@ -2531,10 +2575,14 @@ pawn.lock
 
         if not self.on_save_all_files(None):
             return
+
+        selected_target = self.m_choice_Builds.GetStringSelection()
+        if selected_target == DEFAULT_PROFILE:
+            selected_target = None
         
         self.toggle_project_ui_state(False)
-        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, False)
-        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, False)
+        self.m_choice_Builds.Enable(False)
+        self.m_choice_Runtimes.Enable(False)
         self.m_menuItem_Ensure.Enable(False)
         self.m_menuItem_ProjectClose.Enable(False)
         self.m_menuItem_CompileProject.Enable(False)
@@ -2547,15 +2595,6 @@ pawn.lock
         self.select_output_page(self.m_panel_BuildTab)
         
         self.m_richText_BuildOutput.Clear()
-
-        
-        
-        
-        selected_target = ""
-
-        if hasattr(self, "m_choice_Builds") and self.m_choice_Builds:
-            selected_target = self.m_choice_Builds.GetStringSelection()
-
         
         self.m_richText_BuildOutput.BeginBold()
         self.m_richText_BuildOutput.WriteText(_("Starting the server build...\n\n"))
@@ -2576,8 +2615,8 @@ pawn.lock
     def on_build_project_finished(self, success):
         self.toggle_project_ui_state(True)
 
-        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_RUN_STOP_SERVER, True)
-        self.m_auiToolBar.EnableTool(wx.ID_TOOLBAR_BUILD_PROJECT, True)
+        self.m_choice_Builds.Enable(True)
+        self.m_choice_Runtimes.Enable(True)
         self.m_menuItem_Ensure.Enable(True)
         self.m_menuItem_ProjectClose.Enable(True)
         self.m_menuItem_CompileProject.Enable(True)
@@ -2601,19 +2640,6 @@ pawn.lock
     def on_open_settings_click(self, event):
         dlg = SettingsDialog(self)
         dlg.ShowModal()
-##        notebook = self.m_auinotebook_Main
-##
-##        global_config_path = getattr(self.ide_cfg, "config_path", "")
-##        for i in range(notebook.GetPageCount()):
-##            tab = notebook.GetPage(i)
-##            if hasattr(tab, 'file_path') and tab.file_path == global_config_path:
-##                notebook.SetSelection(i)
-##                return
-##        self.open_file_in_tab(global_config_path)
-##        active_tab = notebook.GetCurrentPage()
-##        if active_tab:
-##            notebook.SetPageText(notebook.GetSelection(), _(u"Settings"))
-##            notebook.SetPageToolTip(notebook.GetSelection(), "")
 
     def on_project_tree_right_click(self, event):
         item_id = event.GetItem()
@@ -2968,8 +2994,8 @@ pawn.lock
             if hasattr(self, "m_treeCtrl_Symbols"):
                 self.m_treeCtrl_Symbols.DeleteAllItems()
 
-            if hasattr(self, "m_choice_Builds"):
-                self.m_choice_Builds.Clear()
+            self.m_choice_Builds.SetItems([DEFAULT_PROFILE], preserve_selection=False)
+            self.m_choice_Runtimes.SetItems([DEFAULT_PROFILE], preserve_selection=False)
 
             if hasattr(self, "m_richText_ServerConsole"):
                 self.m_richText_ServerConsole.Clear()
@@ -3298,8 +3324,9 @@ pawn.lock
             tool_item = self.m_auiToolBar.FindTool(element_id)
             if tool_item:
                 self.m_auiToolBar.EnableTool(element_id, enabled)
-##        if hasattr(self, "m_choice_Builds"):
-##            self.m_choice_Builds.Enable(enabled)
+
+        self.m_choice_Builds.Enable(enabled)
+        self.m_choice_Runtimes.Enable(enabled)
 
         self.m_mgr.Update()
         self.m_auiToolBar.Realize()
@@ -3338,11 +3365,13 @@ pawn.lock
     def load_project(self,path):
         try:
             self.current_project_path = path
+            
+            self.load_project_profiles(preserve_selection=False)
+            
             pu.ensure_project_gitignore(path)
             
             self.toggle_project_ui_state(True)
        
-            #self.load_build_targets()
             self.file_watcher.start(path)
             
             if self.git_enabled:
@@ -3636,6 +3665,10 @@ pawn.lock
         finally:
             if saved_successfully:
                 active_tab.convert_modified_markers_to_saved()
+
+                if (hasattr(active_tab, "file_path") and self.is_project_config_file(active_tab.file_path)):
+                    self.load_project_profiles(preserve_selection=True)
+                    
                 #Apply saves IDE settings
                 global_config_path = getattr(self.ide_cfg, "config_path", "")
                 if active_tab.file_path == global_config_path:
@@ -3663,13 +3696,10 @@ pawn.lock
                         self.m_treeCtrl_GitHistory.DeleteAllItems()
                     
                 #------------------------
-                if hasattr(self, "file_watcher"):
-                    self.file_watcher.resume()
+                self.file_watcher.resume()
                 self.refresh_project_tree()
+                
         return saved_successfully
-
-                
-                
 
 if __name__ == "__main__":
     sys.excepthook = global_exception_handler

@@ -71,12 +71,13 @@ class BackgroundRunner(threading.Thread):
         - Graceful server termination support
         - Automatic UI notification on process exit
     """
-    def __init__(self, project_path, sampctl_executable, rich_text_ctrl, on_finished_callback=None):
+    def __init__(self, project_path, sampctl_executable, rich_text_ctrl, on_finished_callback=None, runtime_target=None):
         super().__init__()
         self.project_path = project_path
         self.sampctl_bin = sampctl_executable
         self.console = rich_text_ctrl
         self.on_finished = on_finished_callback
+        self.runtime_target = runtime_target
         self.process = None
         self._stop_requested = False
 
@@ -92,6 +93,8 @@ class BackgroundRunner(threading.Thread):
             return
 
         cmd = [self.sampctl_bin, "run"]
+        if self.runtime_target and self.runtime_target != "Default":
+            cmd.append(self.runtime_target)
 
         try:
             popen_kwargs = {

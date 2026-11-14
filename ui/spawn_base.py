@@ -31,6 +31,8 @@ import sys
 import gettext
 _ = gettext.gettext
 
+from ui.action_choice_ctrl import (SplitActionChoice,EVT_SPLIT_CHOICE_SELECT,EVT_SPLIT_CHOICE_ACTION)
+
 wx.ID_TOOLBAR_OPEN_FILE = 6000
 wx.ID_TOOLBAR_SAVE_ALL = 6001
 wx.ID_TOOLBAR_BUILD_PROJECT = 6002
@@ -169,19 +171,39 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_auiToolBar.AddSeparator()
 
-        self.m_tool_CompileProject = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_BUILD_PROJECT, _(u"Build Server"), wx.Bitmap(os.path.join(self.icons_folder,"tb_project_build.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Build Server"), wx.EmptyString, None )
+        # Build configuration and action
+        self.m_choice_Builds = SplitActionChoice(
+            self.m_auiToolBar,
+            choices=["Default"],
+            bitmap=wx.Bitmap(
+                os.path.join(self.icons_folder, "tb_project_build.png"),
+                wx.BITMAP_TYPE_PNG
+            )
+        )
 
-        m_choice_BuildsChoices = []
-        self.m_choice_Builds = wx.Choice( self.m_auiToolBar, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_BuildsChoices, 0 )
-        self.m_choice_Builds.SetSelection( 0 )
-        self.m_choice_Builds.SetMinSize( wx.Size( 180,-1 ) )
-        self.m_choice_Builds.SetMaxSize( wx.Size( 300,-1 ) )
-        #self.m_auiToolBar.AddControl( self.m_choice_Builds )
-        self.m_choice_Builds.Hide()
+        self.m_choice_Builds.SetMinSize(wx.Size(180, -1))
+        self.m_choice_Builds.SetMaxSize(wx.Size(300, -1))
+        self.m_choice_Builds.SetActionToolTip("Build project")
+        self.m_choice_Builds.SetSelectionToolTip("Select build configuration")
 
-        self.m_tool_RunServer = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_RUN_STOP_SERVER, _(u"Run / Stop Server"), wx.Bitmap(os.path.join(self.icons_folder,"tb_server_run.png"), wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Run / Stop Server"), wx.EmptyString, None )
+        self.m_auiToolBar.AddControl(self.m_choice_Builds)
 
-        #self.m_tool_RunLinter = self.m_auiToolBar.AddTool( wx.ID_TOOLBAR_LINTER_RUN, _(u"Verify code"), wx.Bitmap( u"assets/icons/tb_linter_run.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, _(u"Verify code"), wx.EmptyString, None )
+        # Runtime configuration and action
+        self.m_choice_Runtimes = SplitActionChoice(
+            self.m_auiToolBar,
+            choices=["Default"],
+            bitmap=wx.Bitmap(
+                os.path.join(self.icons_folder, "tb_server_run.png"),
+                wx.BITMAP_TYPE_PNG
+            )
+        )
+
+        self.m_choice_Runtimes.SetMinSize(wx.Size(180, -1))
+        self.m_choice_Runtimes.SetMaxSize(wx.Size(300, -1))
+        self.m_choice_Runtimes.SetActionToolTip("Run Server")
+        self.m_choice_Runtimes.SetSelectionToolTip("Select runtime configuration")
+
+        self.m_auiToolBar.AddControl(self.m_choice_Runtimes)
 
         self.m_auiToolBar.Realize()
         self.m_mgr.AddPane( self.m_auiToolBar, wx.aui.AuiPaneInfo() .Top() .CaptionVisible( False ).CloseButton( False ).PaneBorder( False ).Movable( False ).Dock().Resizable().FloatingSize( wx.Size( 43,219 ) ).DockFixed( True ).BottomDockable( False ).LeftDockable( False ).RightDockable( False ).Floatable( False ).Layer( 10 ) )
@@ -280,11 +302,6 @@ class SpawnFrame ( wx.Frame ):
         self.item_reopen_to_cp1256 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1256, u"Windows-1256 (Arabic)")
         self.item_reopen_to_cp1257 = encoding_reopen_submenu.Append(wx.ID_REOPEN_TO_CP1257, u"Windows-1257 (Baltic)")
         encoding_submenu.AppendSubMenu(encoding_reopen_submenu, _(u"Reopen"), wx.EmptyString)
-        
-##        encoding_convert_submenu = wx.Menu()
-##        self.item_convert_to_utf8 = encoding_convert_submenu.Append(wx.ID_CONVERT_TO_UTF8, _(u"UTF-8"))
-##        self.item_convert_to_cp1251 = encoding_convert_submenu.Append(wx.ID_CONVERT_TO_CP1251, _(u"Windows-1251 (CP1251)"))
-##        encoding_submenu.AppendSubMenu(encoding_convert_submenu, _(u"Convert"), wx.EmptyString)
 
         eol_submenu = wx.Menu()
         self.item_crlf = eol_submenu.AppendRadioItem(wx.ID_EOL_CRLF, u"Windows (CRLF)")
@@ -386,21 +403,22 @@ class SpawnFrame ( wx.Frame ):
         self.m_statusBar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
         self.SetStatusBarPane(-1)
         
-        self.m_projectPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+        self.m_projectPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         
-        self.m_mgr.AddPane( self.m_projectPanel, wx.aui.AuiPaneInfo() .Left() .Caption( _(u"Project") ).Dock().Resizable().FloatingSize( wx.Size( 260,59 ) ).BottomDockable( False ).TopDockable( False ).BestSize( wx.Size( 260,-1 ) ).MinSize( wx.Size( 170,-1 ) ).Layer( 5 ) )
+        self.m_mgr.AddPane( self.m_projectPanel, wx.aui.AuiPaneInfo().Left().Caption(_(u"Project")).Dock().Resizable().FloatingSize(wx.Size(260,59)).BottomDockable(False).TopDockable(False).BestSize(wx.Size(260,-1)).MinSize(wx.Size(170,-1)).Layer(5).DestroyOnClose(False))
         self.pane_left = self.m_mgr.GetPane(self.m_projectPanel)
         self.pane_left.Hide()
         bSizer_ProjectPanel = wx.BoxSizer( wx.VERTICAL )
 
-        self.m_splitter_ProjectPanel = wx.SplitterWindow( self.m_projectPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D|wx.SP_LIVE_UPDATE )
+        self.m_splitter_ProjectPanel = wx.SplitterWindow( self.m_projectPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_LIVE_UPDATE )
         self.m_splitter_ProjectPanel.Bind( wx.EVT_IDLE, self.m_splitter_ProjectPanelOnIdle )
-        self.m_splitter_ProjectPanel.SetMinimumPaneSize(260)
+        self.m_splitter_ProjectPanel.SetMinimumPaneSize(275)
+        self.m_splitter_ProjectPanel.SetSashGravity(1.0)
 
         self.m_panel_splitter_ProjectTree = wx.Panel( self.m_splitter_ProjectPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
         bSizer_splitter_ProjectTree = wx.BoxSizer( wx.VERTICAL )
 
-        self.m_treeCtrl_ProjectTree = wx.TreeCtrl( self.m_panel_splitter_ProjectTree, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TR_DEFAULT_STYLE|wx.TR_TWIST_BUTTONS )
+        self.m_treeCtrl_ProjectTree = wx.TreeCtrl( self.m_panel_splitter_ProjectTree, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TR_DEFAULT_STYLE|wx.TR_TWIST_BUTTONS)
         bSizer_splitter_ProjectTree.Add( self.m_treeCtrl_ProjectTree, 1, wx.EXPAND, 0 )
 
 
@@ -424,8 +442,8 @@ class SpawnFrame ( wx.Frame ):
         self.m_projectPanel.Layout()
         bSizer_ProjectPanel.Fit( self.m_projectPanel )
         
-        self.m_outputPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-        self.m_mgr.AddPane( self.m_outputPanel, wx.aui.AuiPaneInfo() .Bottom() .Caption( _(u"Output") ).Dock().Resizable().FloatingSize( wx.Size( 42,239 ) ).LeftDockable( False ).RightDockable( False ).Row( 1 ).BestSize( wx.Size( -1,200 ) ).MinSize( wx.Size( -1,120 ) ) )
+        self.m_outputPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        self.m_mgr.AddPane( self.m_outputPanel, wx.aui.AuiPaneInfo() .Bottom() .Caption( _(u"Output") ).Dock().Resizable().FloatingSize( wx.Size( 42,239 ) ).LeftDockable( False ).RightDockable( False ).Row( 1 ).BestSize( wx.Size( -1,200 ) ).MinSize( wx.Size( -1,120 ) ).DestroyOnClose(False))
 
         self.pane_bottom = self.m_mgr.GetPane(self.m_outputPanel)
         self.pane_bottom.Hide()
@@ -447,38 +465,14 @@ class SpawnFrame ( wx.Frame ):
         self.m_panel_BuildTab.Layout()
         bSizer_BuildTab.Fit( self.m_panel_BuildTab )
         self.m_auinotebook_Output.AddPage( self.m_panel_BuildTab, _(u"Build"), True, wx.Bitmap(os.path.join(self.icons_folder,"bo_build_info.png"), wx.BITMAP_TYPE_ANY ) )
-##        self.m_panel_ErrorsTab = wx.Panel( self.m_auinotebook_Output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-##        bSizer_ErrorsTab = wx.BoxSizer( wx.VERTICAL )
-##
-##        self.m_listCtrl_Errors = wx.ListCtrl( self.m_panel_ErrorsTab, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_HRULES|wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_VIRTUAL )
-##        bSizer_ErrorsTab.Add( self.m_listCtrl_Errors, 1, wx.EXPAND, 5 )
-##
-##
-##        self.m_panel_ErrorsTab.SetSizer( bSizer_ErrorsTab )
-##        self.m_panel_ErrorsTab.Layout()
-##        bSizer_ErrorsTab.Fit( self.m_panel_ErrorsTab )
-##        self.m_auinotebook_Output.AddPage( self.m_panel_ErrorsTab, _(u"Errors"), False, wx.Bitmap( u"assets/icons/bo_error.png", wx.BITMAP_TYPE_ANY ) )
-##        self.m_panel_WarningsTab = wx.Panel( self.m_auinotebook_Output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-##        bSizer_WarningsTab = wx.BoxSizer( wx.VERTICAL )
-##
-##        self.m_listCtrl_Warnings = wx.ListCtrl( self.m_panel_WarningsTab, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_HRULES|wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_VIRTUAL )
-##        bSizer_WarningsTab.Add( self.m_listCtrl_Warnings, 1, wx.EXPAND, 5 )
-##
-##
-##        self.m_panel_WarningsTab.SetSizer( bSizer_WarningsTab )
-##        self.m_panel_WarningsTab.Layout()
-##        bSizer_WarningsTab.Fit( self.m_panel_WarningsTab )
-##        self.m_auinotebook_Output.AddPage( self.m_panel_WarningsTab, _(u"Warnings"), False, wx.Bitmap( u"assets/icons/bo_warning.png", wx.BITMAP_TYPE_ANY ) )
-        self.m_panel_ServerTab = wx.Panel( self.m_auinotebook_Output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+
+        self.m_panel_ServerTab = wx.Panel( self.m_auinotebook_Output, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bSizer_ServerTab = wx.BoxSizer( wx.VERTICAL )
 
         self.m_richText_ServerConsole = wx.richtext.RichTextCtrl( self.m_panel_ServerTab, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_AUTO_URL|wx.TE_READONLY|wx.VSCROLL|wx.HSCROLL|wx.NO_BORDER|wx.WANTS_CHARS )
         self.m_richText_ServerConsole.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
-      
-        #self.m_richText_ServerConsole.SetBackgroundColour( wx.Colour( 0, 0, 0 ) )
 
         bSizer_ServerTab.Add( self.m_richText_ServerConsole, 1, wx.EXPAND, 5 )
-
 
         self.m_panel_ServerTab.SetSizer( bSizer_ServerTab )
         self.m_panel_ServerTab.Layout()
@@ -570,7 +564,7 @@ class EditorTabPanel ( wx.Panel ):
 
         bSizer_EditorTab = wx.BoxSizer( wx.HORIZONTAL )
 
-        self.m_scintilla_Editor = wx.stc.StyledTextCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_scintilla_Editor = wx.stc.StyledTextCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE)
         self.m_scintilla_Editor.SetUseTabs ( False )
         self.m_scintilla_Editor.SetTabWidth ( 4 )
         self.m_scintilla_Editor.SetIndent ( 4 )
