@@ -21,7 +21,7 @@
 
 from git import Repo
 
-from core.git_manager import GitManager
+from core.git.git_manager import GitManager
 
 
 def test_nonexistent_directory_is_not_repository():

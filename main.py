@@ -28,6 +28,7 @@ import shutil
 import traceback
 import logging
 import platform
+from dataclasses import replace
 from pathlib import Path
 
 import gettext
@@ -44,13 +45,18 @@ from ui.bug_report_dialog import BugReportDialog
 from ui.new_project_dialog import NewProjectDialog
 from ui.documentation_panel import DocumentationPanel
 from ui.git_commit_history_dialog import GitCommitHistoryDialog
+from ui.shortcut_capture_dialog import KeyboardShortcutsDialog
 from ui.dependency_manager_dialog import DependencyManagerDialog
 from ui.action_choice_ctrl import (EVT_SPLIT_CHOICE_SELECT,EVT_SPLIT_CHOICE_ACTION)
 
 from core.documentation_manager import (OpenMPDocumentationManager,DocumentationNetworkError)
+from core.shortcuts.command_registry import (CommandRegistry, ShortcutCommand)
 from core.sampctl_profiles import (DEFAULT_PROFILE, load_sampctl_profiles)
 from core.pawn_config import find_config, load_config, save_config
+from core.shortcuts.keybindings_manager import KeybindingsManager
+from core.shortcuts.shortcut_manager import ShortcutManager
 from core.documentation_worker import DocumentationWorker
+from core.shortcuts.shortcut_parser import ShortcutParser
 from core.project_creator import ProjectCreateWorker
 from core.file_watcher import ProjectFileWatcher
 from core.platform_utils import PlatformUtils
@@ -61,14 +67,14 @@ from core.logger import SpawnLogger
 import core.project_utils as pu
 
 from git import Repo
-from core.git_manager import GitManager
-from core.git_worker import GitCommitWorker
-from core.git_reset_worker import GitResetWorker
-from core.git_stage_worker import GitStageAllWorker
-from core.git_unstage_worker import GitUnstageAllWorker
-from core.git_single_reset_worker import GitSingleResetWorker
-from core.git_single_stage_worker import GitSingleStageWorker
-from core.git_reset_commit_worker import GitResetCommitWorker
+from core.git.git_manager import GitManager
+from core.git.git_worker import GitCommitWorker
+from core.git.git_reset_worker import GitResetWorker
+from core.git.git_stage_worker import GitStageAllWorker
+from core.git.git_unstage_worker import GitUnstageAllWorker
+from core.git.git_single_reset_worker import GitSingleResetWorker
+from core.git.git_single_stage_worker import GitSingleStageWorker
+from core.git.git_reset_commit_worker import GitResetCommitWorker
 
 def global_exception_handler(exc_type, exc_value, exc_traceback):
     SpawnLogger.exception("".join(traceback.format_exception(exc_type,exc_value,exc_traceback)))
@@ -100,6 +106,8 @@ class SpawnIDE(SpawnFrame):
         SpawnLogger.initialize()
 
         self.ide_cfg = ConfigManager()
+
+        self.keybindings_manager = KeybindingsManager(self.ide_cfg.appdata_dir)
 
         self.documentation_manager = OpenMPDocumentationManager()
         self.documentation_worker = None
@@ -157,6 +165,7 @@ class SpawnIDE(SpawnFrame):
         self.Bind(wx.EVT_MENU, self.on_ide_close_request, id=wx.ID_EXIT)
         
         self.Bind(wx.EVT_MENU, self.on_open_settings_click, id=wx.ID_SETTINGS)
+        self.Bind(wx.EVT_MENU, self.on_open_keyboard_shortcuts_click, id=self.ID_KEYBOARD_SHORTCUTS)
         
         self.Bind(wx.EVT_MENU, self.on_open_find_dialog, id=wx.ID_FIND_REPLACE)
         self.Bind(wx.EVT_MENU, self.on_execute_go_to_line, id=wx.ID_GO_TO_LINE)
@@ -231,11 +240,27 @@ class SpawnIDE(SpawnFrame):
 
         self.Bind(wx.EVT_MENU, self.on_close_current_file_click, id=wx.ID_CLOSE_CURRENT_FILE)
 
-        #self.m_auinotebook_Main.Bind(wx.aui.EVT_AUINOTEBOOK_TAB_RIGHT_DOWN,self.on_editor_tab_context_menu)
-
         self.m_treeCtrl_ProjectTree.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_project_tree_right_click)
         
         self.current_project_path = None
+
+        self.ID_SHORTCUT_PROJECT_REFRESH = int(wx.NewIdRef())
+        self.ID_SHORTCUT_PROJECT_RENAME = int(wx.NewIdRef())
+        self.ID_SHORTCUT_PROJECT_DELETE = int(wx.NewIdRef())
+
+        self.ID_SHORTCUT_DOCUMENTATION_BACK = int(wx.NewIdRef())
+        self.ID_SHORTCUT_DOCUMENTATION_FORWARD = int(wx.NewIdRef())
+        self.ID_SHORTCUT_DOCUMENTATION_SEARCH = int(wx.NewIdRef())
+
+        self.command_registry = CommandRegistry()
+        self._register_shortcut_commands()
+        self._register_panel_shortcut_commands()
+        self._bind_panel_shortcut_events()
+        self.shortcut_parser = ShortcutParser()
+        self.shortcut_manager = ShortcutManager(self, self.command_registry, self.keybindings_manager)
+        self.shortcut_manager.bind()
+        self.update_shortcut_menu_labels()
+
         self.file_watcher = ProjectFileWatcher(self)
 
         
@@ -281,6 +306,725 @@ class SpawnIDE(SpawnFrame):
             if path != "" :
                 if os.path.exists(path):
                     self.load_project(path)
+
+
+    #Keyboard Shortcuts
+    def _has_active_editor(self):
+        notebook = self.m_auinotebook_Main
+        tab = notebook.GetCurrentPage()
+
+        return (
+            tab is not None
+            and hasattr(tab, "m_scintilla_Editor")
+        )
+
+    def _has_git_repository(self):
+        manager = getattr(self, "git_manager", None)
+
+        return bool(
+            self.git_enabled
+            and self.current_project_path
+            and os.path.isdir(self.current_project_path)
+            and manager is not None
+            and manager.is_repo
+        )
+
+    def _has_git_changes(self):
+        if not self._has_git_repository():
+            return False
+
+        return bool(self.git_manager.status_cache)
+
+    def _has_git_unstaged_changes(self):
+        if not self._has_git_repository():
+            return False
+
+        return any(
+            status in ("modified", "untracked", "deleted")
+            for status in self.git_manager.status_cache.values()
+        )
+
+    def _has_git_staged_changes(self):
+        if not self._has_git_repository():
+            return False
+
+        return any(
+            status == "staged"
+            for status in self.git_manager.status_cache.values()
+        )
+
+    def _has_git_discardable_changes(self):
+        if not self._has_git_repository():
+            return False
+
+        return any(
+            status in ("modified", "staged", "deleted")
+            for status in self.git_manager.status_cache.values()
+        )
+
+    def on_documentation_back_shortcut(self, event):
+
+        panel = getattr(self, "documentation_panel", None)
+
+        if panel and panel.web_view.CanGoBack():
+            panel.web_view.GoBack()
+
+
+    def on_documentation_forward_shortcut(self, event):
+
+        panel = getattr(self, "documentation_panel", None)
+
+        if panel and panel.web_view.CanGoForward():
+            panel.web_view.GoForward()
+
+
+    def on_documentation_search_shortcut(self, event):
+
+        panel = getattr(self, "documentation_panel", None)
+
+        if panel:
+            panel.search_ctrl.SetFocus()
+    
+    def _prepare_project_tree_shortcut_context(self):
+        tree = self.m_treeCtrl_ProjectTree
+
+        item_id = tree.GetSelection()
+
+        if not item_id.IsOk():
+            return False
+
+        if item_id == tree.GetRootItem():
+            return False
+
+        item_data = tree.GetItemData(item_id)
+
+        if not item_data:
+            return False
+
+        absolute_path = (
+            item_data.GetPath()
+            if hasattr(item_data, "GetPath")
+            else str(item_data)
+        )
+
+        if not absolute_path or not os.path.exists(absolute_path):
+            return False
+
+        self._context_selected_path = absolute_path
+        self._context_selected_item_id = item_id
+
+        return True
+
+
+    def on_project_explorer_refresh_shortcut(self, event):
+        self.refresh_project_tree()
+
+
+    def on_project_explorer_rename_shortcut(self, event):
+
+        if not self._prepare_project_tree_shortcut_context():
+            return
+
+        self.on_tree_rename_item(event)
+
+
+    def on_project_explorer_delete_shortcut(self, event):
+
+        if not self._prepare_project_tree_shortcut_context():
+            return
+
+        self.on_tree_delete_item(event)
+    
+    def _bind_panel_shortcut_events(self):
+        bindings = [
+            # Project Explorer
+            (
+                self.ID_SHORTCUT_PROJECT_REFRESH,
+                self.on_project_explorer_refresh_shortcut
+            ),
+            (
+                self.ID_SHORTCUT_PROJECT_RENAME,
+                self.on_project_explorer_rename_shortcut
+            ),
+            (
+                self.ID_SHORTCUT_PROJECT_DELETE,
+                self.on_project_explorer_delete_shortcut
+            ),
+
+            # Source Control
+            (wx.ID_GIT_REFRESH, self.on_git_manual_refresh),
+            (wx.ID_GIT_STAGE_ALL, self.on_git_stage_all_click),
+            (wx.ID_GIT_UNSTAGE_ALL, self.on_git_unstage_all_click),
+            (wx.ID_GIT_DISCARD_ALL, self.on_git_reset_all_changes_click),
+            (wx.ID_GIT_COMMIT, self.on_git_commit_execute_click),
+            (wx.ID_GIT_COMMIT_HISTORY, self.on_git_view_history_click),
+            (wx.ID_GIT_TERMINAL, self.on_git_open_terminal_click),
+
+            # Documentation
+            (
+                self.ID_SHORTCUT_DOCUMENTATION_BACK,
+                self.on_documentation_back_shortcut
+            ),
+            (
+                self.ID_SHORTCUT_DOCUMENTATION_FORWARD,
+                self.on_documentation_forward_shortcut
+            ),
+            (
+                self.ID_SHORTCUT_DOCUMENTATION_SEARCH,
+                self.on_documentation_search_shortcut
+            )
+        ]
+
+        for event_id, handler in bindings:
+            self.Bind(wx.EVT_MENU, handler, id=event_id)
+    
+    def _register_panel_shortcut_commands(self):
+        commands = [
+
+            # PROJECT EXPLORER
+
+            ShortcutCommand(
+                "project_explorer.refresh",
+                _(u"Refresh Project Explorer"),
+                "Project Explorer",
+                "project_explorer",
+                "F5",
+                self.ID_SHORTCUT_PROJECT_REFRESH
+            ),
+
+            ShortcutCommand(
+                "project_explorer.rename",
+                _(u"Rename Selected Item"),
+                "Project Explorer",
+                "project_explorer",
+                "F2",
+                self.ID_SHORTCUT_PROJECT_RENAME
+            ),
+
+            ShortcutCommand(
+                "project_explorer.delete",
+                _(u"Delete Selected Item"),
+                "Project Explorer",
+                "project_explorer",
+                None,
+                self.ID_SHORTCUT_PROJECT_DELETE
+            ),
+
+            # SOURCE CONTROL
+
+            ShortcutCommand(
+                "source_control.refresh",
+                _(u"Refresh Repository"),
+                "Source Control",
+                "source_control",
+                "F5",
+                wx.ID_GIT_REFRESH
+            ),
+
+            ShortcutCommand(
+                "source_control.stage_all",
+                _(u"Stage All Changes"),
+                "Source Control",
+                "source_control",
+                None,
+                wx.ID_GIT_STAGE_ALL
+            ),
+
+            ShortcutCommand(
+                "source_control.unstage_all",
+                _(u"Unstage All Changes"),
+                "Source Control",
+                "source_control",
+                None,
+                wx.ID_GIT_UNSTAGE_ALL
+            ),
+
+            ShortcutCommand(
+                "source_control.discard_all",
+                _(u"Discard All Changes"),
+                "Source Control",
+                "source_control",
+                None,
+                wx.ID_GIT_DISCARD_ALL
+            ),
+
+            ShortcutCommand(
+                "source_control.commit",
+                _(u"Commit Changes"),
+                "Source Control",
+                "source_control",
+                None,
+                wx.ID_GIT_COMMIT
+            ),
+
+            ShortcutCommand(
+                "source_control.commit_history",
+                _(u"Commit History"),
+                "Source Control",
+                "source_control",
+                None,
+                wx.ID_GIT_COMMIT_HISTORY
+            ),
+
+            ShortcutCommand(
+                "source_control.open_terminal",
+                _(u"Open Git Terminal"),
+                "Source Control",
+                "source_control",
+                None,
+                wx.ID_GIT_TERMINAL
+            ),
+
+            # DOCUMENTATION
+
+            ShortcutCommand(
+                "documentation.back",
+                _(u"Navigate Back"),
+                "Documentation",
+                "documentation",
+                None,
+                self.ID_SHORTCUT_DOCUMENTATION_BACK
+            ),
+
+            ShortcutCommand(
+                "documentation.forward",
+                _(u"Navigate Forward"),
+                "Documentation",
+                "documentation",
+                None,
+                self.ID_SHORTCUT_DOCUMENTATION_FORWARD
+            )
+        ]
+
+        for command in commands:
+            enabled_when = None
+
+            if command.context == "editor":
+                enabled_when = self._has_active_editor
+
+            availability_map = {
+
+                "source_control.refresh":
+                    self._has_git_repository,
+
+                "source_control.stage_all":
+                    self._has_git_unstaged_changes,
+
+                "source_control.unstage_all":
+                    self._has_git_staged_changes,
+
+                "source_control.discard_all":
+                    self._has_git_discardable_changes,
+
+                "source_control.commit":
+                    self._has_git_changes,
+
+                "source_control.commit_history":
+                    self._has_git_repository,
+
+                "source_control.open_terminal":
+                    self._has_git_repository,
+            }
+
+            if command.command_id in availability_map:
+                enabled_when = availability_map[command.command_id]
+
+            if enabled_when is not None:
+                command = replace(
+                    command,
+                    enabled_when=enabled_when
+                )
+
+            self.command_registry.register(command)
+    
+    def update_shortcut_menu_labels(self):
+        """
+        Update MenuBar shortcut labels using the active keymap.
+        """
+
+        for command in self.command_registry.all():
+            menu_item = command.menu_item
+
+            if menu_item is None:
+                continue
+
+            shortcut = self.keybindings_manager.get_shortcut(
+                command.command_id,
+                command.default_shortcut
+            )
+
+            if shortcut is not None:
+                try:
+                    shortcut = self.shortcut_parser.format(
+                        self.shortcut_parser.parse(shortcut)
+                    )
+                except (ValueError, TypeError):
+                    SpawnLogger.error(
+                        f"Invalid shortcut for {command.command_id}: {shortcut}"
+                    )
+                    shortcut = None
+
+            label = command.label
+
+            if shortcut:
+                label += f"\t{shortcut}"
+
+            menu_item.SetItemLabel(label)
+                    
+    def on_open_keyboard_shortcuts_click(self, event):
+        dialog = KeyboardShortcutsDialog(self, self.command_registry, self.keybindings_manager, self.shortcut_manager)
+
+        try:
+            dialog.ShowModal()
+        finally:
+            dialog.Destroy()
+                    
+    def _register_shortcut_commands(self):
+        commands = [
+            # FILE
+            ShortcutCommand(
+                "file.new_file",
+                _(u"New File"),
+                "File",
+                "global",
+                "Ctrl+N",
+                wx.ID_NEW_FILE,
+                self.m_menuItem_NewFile
+            ),
+            ShortcutCommand(
+                "file.new_project",
+                _(u"New Project"),
+                "File",
+                "global",
+                None,
+                wx.ID_NEW_PROJECT,
+                self.m_menuItem_NewProject
+            ),
+            ShortcutCommand(
+                "file.open_file",
+                _(u"Open File..."),
+                "File",
+                "global",
+                "Ctrl+O",
+                wx.ID_OPEN_FILE,
+                self.m_menuItem_OpenFile
+            ),
+            ShortcutCommand(
+                "file.open_server_folder",
+                _(u"Open Server Folder..."),
+                "File",
+                "global",
+                "Ctrl+Shift+O",
+                wx.ID_OPEN_SERVER_FOLDER,
+                self.m_menuItem_OpenProjectFolder
+            ),
+            ShortcutCommand(
+                "file.save",
+                _(u"Save"),
+                "File",
+                "global",
+                "Ctrl+S",
+                wx.ID_SAVE,
+                self.m_menuItem_Save
+            ),
+            ShortcutCommand(
+                "file.save_all",
+                _(u"Save All"),
+                "File",
+                "global",
+                "Ctrl+Shift+S",
+                wx.ID_SAVE_ALL,
+                self.m_menuItem_SaveAll
+            ),
+            ShortcutCommand(
+                "file.close",
+                _(u"Close"),
+                "File",
+                "global",
+                "Ctrl+W",
+                wx.ID_CLOSE_CURRENT_FILE,
+                self.m_menuItem_CloseFile
+            ),
+            ShortcutCommand(
+                "app.exit",
+                _(u"Exit"),
+                "File",
+                "global",
+                "Alt+F4",
+                wx.ID_EXIT,
+                self.m_menuItem_Exit
+            ),
+            # EDIT
+            ShortcutCommand(
+                "editor.undo",
+                _(u"Undo"),
+                "Edit",
+                "editor",
+                "Ctrl+Z",
+                wx.ID_UNDO,
+                self.m_menuItem_Undo
+            ),
+            ShortcutCommand(
+                "editor.redo",
+                _(u"Redo"),
+                "Edit",
+                "editor",
+                "Ctrl+Y",
+                wx.ID_REDO,
+                self.m_menuItem_Redo
+            ),
+            ShortcutCommand(
+                "editor.cut",
+                _(u"Cut"),
+                "Edit",
+                "editor",
+                "Ctrl+X",
+                wx.ID_CUT,
+                self.m_menuItem_Cut
+            ),
+            ShortcutCommand(
+                "editor.copy",
+                _(u"Copy"),
+                "Edit",
+                "editor",
+                "Ctrl+C",
+                wx.ID_COPY,
+                self.m_menuItem_Copy
+            ),
+            ShortcutCommand(
+                "editor.paste",
+                _(u"Paste"),
+                "Edit",
+                "editor",
+                "Ctrl+V",
+                wx.ID_PASTE,
+                self.m_menuItem_Paste
+            ),
+            ShortcutCommand(
+                "editor.select_all",
+                _(u"Select All"),
+                "Edit",
+                "editor",
+                "Ctrl+A",
+                wx.ID_SELECT_ALL,
+                self.m_menuItem_SelectAll
+            ),
+            ShortcutCommand(
+                "editor.find_replace",
+                _(u"Find / Replace"),
+                "Edit",
+                "editor",
+                "Ctrl+F",
+                wx.ID_FIND_REPLACE,
+                self.m_menuItem_FindReplace
+            ),
+            ShortcutCommand(
+                "editor.go_to_line",
+                _(u"Go to Line"),
+                "Edit",
+                "editor",
+                "Ctrl+G",
+                wx.ID_GO_TO_LINE,
+                self.m_menuItem_GoToLine
+            ),
+            ShortcutCommand(
+                "editor.toggle_comment",
+                _(u"Toggle Line Comment"),
+                "Edit",
+                "editor",
+                "Ctrl+/",
+                wx.ID_TOGGLE_COMMENT,
+                self.m_menuItem_ToggleComment
+            ),
+            ShortcutCommand(
+                "editor.toggle_block_comment",
+                _(u"Toggle Block Comment"),
+                "Edit",
+                "editor",
+                "Ctrl+Alt+A",
+                wx.ID_TOGGLE_BLOCK_COMMENT,
+                self.m_menuItem_ToggleBlockComment
+            ),
+            # SELECTION
+            ShortcutCommand(
+                "editor.move_line_up",
+                _(u"Move Line Up"),
+                "Selection",
+                "editor",
+                "Alt+Up",
+                wx.ID_MOVE_LINE_UP,
+                self.m_menuItem_MoveLineUp
+            ),
+            ShortcutCommand(
+                "editor.move_line_down",
+                _(u"Move Line Down"),
+                "Selection",
+                "editor",
+                "Alt+Down",
+                wx.ID_MOVE_LINE_DOWN,
+                self.m_menuItem_MoveLineDown
+            ),
+            ShortcutCommand(
+                "editor.duplicate_line",
+                _(u"Duplicate Line"),
+                "Selection",
+                "editor",
+                "Ctrl+D",
+                wx.ID_DUPLICATE_LINE,
+                self.m_menuItem_DuplicateLine
+            ),
+            ShortcutCommand(
+                "editor.delete_line",
+                _(u"Delete Line"),
+                "Selection",
+                "editor",
+                "Ctrl+Shift+K",
+                wx.ID_DELETE_LINE,
+                self.m_menuItem_DeleteLine
+            ),
+            # VIEW
+            ShortcutCommand(
+                "view.full_screen",
+                _(u"Full Screen"),
+                "View",
+                "global",
+                "F11",
+                wx.ID_FULLSCREEN,
+                self.m_menuItem_FullScreen
+            ),
+            ShortcutCommand(
+                "view.zen_mode",
+                _(u"Toggle Zen Mode"),
+                "View",
+                "global",
+                "Ctrl+K",
+                wx.ID_TOGGLE_ZEN_MODE,
+                self.m_menuItem_ZenMode
+            ),
+            ShortcutCommand(
+                "view.toggle_toolbar",
+                _(u"Toggle Toolbar"),
+                "View",
+                "global",
+                "Ctrl+1",
+                wx.ID_TOGGLE_TOOLBAR,
+                self.m_menuItem_ToggleToolbar
+            ),
+            ShortcutCommand(
+                "view.toggle_statusbar",
+                _(u"Toggle StatusBar"),
+                "View",
+                "global",
+                "Ctrl+2",
+                wx.ID_TOGGLE_STATUSBAR,
+                self.m_menuItem_ToggleStatusbar
+            ),
+            ShortcutCommand(
+                "view.toggle_project_panel",
+                _(u"Toggle Project Panel"),
+                "View",
+                "global",
+                "Ctrl+3",
+                wx.ID_TOGGLE_PROJECT_PANEL,
+                self.m_menuItem_ToggleProjectPanel
+            ),
+            ShortcutCommand(
+                "view.toggle_output_panel",
+                _(u"Toggle Output Panel"),
+                "View",
+                "global",
+                "Ctrl+4",
+                wx.ID_TOGGLE_OUTPUT_PANEL,
+                self.m_menuItem_ToggleOutputPanel
+            ),
+            ShortcutCommand(
+                "view.toggle_tools_panel",
+                _(u"Toggle Tools Panel"),
+                "View",
+                "global",
+                "Ctrl+5",
+                self.ID_TOGGLE_TOOLS_PANEL,
+                self.m_menuItem_ToggleToolsPanel
+            ),
+            ShortcutCommand(
+                "view.zoom_in",
+                _(u"Zoom In"),
+                "View",
+                "editor",
+                "Ctrl+=",
+                wx.ID_ZOOM_IN,
+                self.m_menuItem_ZoomIn
+            ),
+            ShortcutCommand(
+                "view.zoom_out",
+                _(u"Zoom Out"),
+                "View",
+                "editor",
+                "Ctrl+-",
+                wx.ID_ZOOM_OUT,
+                self.m_menuItem_ZoomOut
+            ),
+            ShortcutCommand(
+                "view.reset_zoom",
+                _(u"Reset Zoom"),
+                "View",
+                "editor",
+                "Ctrl+0",
+                wx.ID_RESET_ZOOM,
+                self.m_menuItem_ResetZoom
+            ),
+            # BUILD / SERVER
+            ShortcutCommand(
+                "project.build",
+                _(u"Build Server"),
+                "Build",
+                "global",
+                "F5",
+                wx.ID_BUILD_PROJECT,
+                self.m_menuItem_CompileProject
+            ),
+            ShortcutCommand(
+                "server.run_stop",
+                _(u"Run / Stop Server"),
+                "Server",
+                "global",
+                "F6",
+                wx.ID_RUN_STOP_SERVER,
+                self.m_menuItem_RunStopServer
+            ),
+            # OTHER COMMANDS WITHOUT DEFAULT SHORTCUTS
+            ShortcutCommand(
+                "project.package_manager",
+                _(u"Package Manager..."),
+                "Project",
+                "global",
+                None,
+                wx.ID_SAMPCTL_DEPENDENCIES_MANAGER,
+                self.m_menuItem_Ensure
+            ),
+            ShortcutCommand(
+                "project.close",
+                _(u"Close Project"),
+                "Project",
+                "global",
+                None,
+                wx.ID_CLOSE_PROJECT,
+                self.m_menuItem_ProjectClose
+            ),
+            ShortcutCommand(
+                "help.documentation",
+                _(u"Documentation"),
+                "Help",
+                "global",
+                None,
+                self.ID_OPENMP_DOCUMENTATION,
+                self.m_menuItem_OpenMPDocumentation
+            ),
+        ]
+
+        for command in commands:
+            self.command_registry.register(command)
+    #------------------
 
     #sampctl profiles
     def is_project_config_file(self, file_path):
@@ -868,7 +1612,7 @@ class SpawnIDE(SpawnFrame):
  
 
             self.m_statusBar.Hide()
-            #self.SetMenuBar(None)
+            self.SetMenuBar(None)
 
             if self.current_project_path:
                 pane = self.m_mgr.GetPane(self.m_projectPanel)
@@ -886,7 +1630,7 @@ class SpawnIDE(SpawnFrame):
             pane.Show(True)
 
             self.m_statusBar.Show()
-            #self.SetMenuBar(self.m_menubar)
+            self.SetMenuBar(self.m_menubar)
 
             if self.current_project_path:
                 pane = self.m_mgr.GetPane(self.m_projectPanel)
@@ -3658,7 +4402,7 @@ pawn.lock
                         if getattr(self, 'git_manager', None) and self.git_manager.is_repo:
                             self.git_manager.update_statuses_cache()
                     #---------------------
-                    self.refresh_project_tree()
+                    #self.refresh_project_tree()
                     
         except Exception as f:
             SpawnLogger.error(f"Save Current File: {f}")

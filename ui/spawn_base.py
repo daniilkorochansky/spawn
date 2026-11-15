@@ -213,15 +213,15 @@ class SpawnFrame ( wx.Frame ):
         self.m_menuItem_NewProject = wx.MenuItem( self.m_file, wx.ID_NEW_PROJECT, _(u"New Project..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_NewProject )
 
-        self.m_menuItem_NewFile = wx.MenuItem( self.m_file, wx.ID_NEW_FILE, _(u"New File")+ u"\t" + u"Ctrl+N", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_NewFile = wx.MenuItem( self.m_file, wx.ID_NEW_FILE, _(u"New File"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_NewFile )
 
         self.m_file.AppendSeparator()
 
-        self.m_menuItem_OpenFile = wx.MenuItem( self.m_file, wx.ID_OPEN_FILE, _(u"Open File...")+ u"\t" + u"Ctrl+O", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_OpenFile = wx.MenuItem( self.m_file, wx.ID_OPEN_FILE, _(u"Open File..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_OpenFile )
 
-        self.m_menuItem_OpenProjectFolder = wx.MenuItem( self.m_file, wx.ID_OPEN_SERVER_FOLDER, _(u"Open Server Folder...")+ u"\t" + u"Ctrl+Shift+O", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_OpenProjectFolder = wx.MenuItem( self.m_file, wx.ID_OPEN_SERVER_FOLDER, _(u"Open Server Folder..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_OpenProjectFolder )
 
         self.recent_files_submenu = wx.Menu()
@@ -229,61 +229,61 @@ class SpawnFrame ( wx.Frame ):
 
         self.m_file.AppendSeparator()
 
-        self.m_menuItem_Save = wx.MenuItem( self.m_file, wx.ID_SAVE, _(u"Save")+ u"\t" + u"Ctrl+S", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Save = wx.MenuItem( self.m_file, wx.ID_SAVE, _(u"Save"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_Save )
 
-        self.m_menuItem_SaveAll = wx.MenuItem( self.m_file, wx.ID_SAVE_ALL, _(u"Save All")+ u"\t" + u"Ctrl+Shift+S", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_SaveAll = wx.MenuItem( self.m_file, wx.ID_SAVE_ALL, _(u"Save All"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_SaveAll )
 
         self.m_file.AppendSeparator()
 
-        self.m_menuItem_CloseFile = wx.MenuItem( self.m_file, wx.ID_CLOSE_CURRENT_FILE, _(u"Close")+ u"\t" + u"Ctrl+W", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_CloseFile = wx.MenuItem( self.m_file, wx.ID_CLOSE_CURRENT_FILE, _(u"Close"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_CloseFile )
 
         self.m_file.AppendSeparator()
 
-        self.m_menuItem_Exit = wx.MenuItem( self.m_file, wx.ID_EXIT, _(u"Exit")+ u"\t" + u"Alt+F4", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Exit = wx.MenuItem( self.m_file, wx.ID_EXIT, _(u"Exit"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_file.Append( self.m_menuItem_Exit )
 
         self.m_menubar.Append( self.m_file, _(u"File") )
 
         self.m_edit = wx.Menu()
-        self.m_menuItem_Undo = wx.MenuItem( self.m_edit, wx.ID_UNDO, _(u"Undo")+ u"\t" + u"Ctrl+Z", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Undo = wx.MenuItem( self.m_edit, wx.ID_UNDO, _(u"Undo"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_Undo )
 
-        self.m_menuItem_Redo = wx.MenuItem( self.m_edit, wx.ID_REDO, _(u"Redo")+ u"\t" + u"Ctrl+Y", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Redo = wx.MenuItem( self.m_edit, wx.ID_REDO, _(u"Redo"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_Redo )
 
         self.m_edit.AppendSeparator()
 
-        self.m_menuItem_Cut = wx.MenuItem( self.m_edit, wx.ID_CUT, _(u"Cut")+ u"\t" + u"Ctrl+X", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Cut = wx.MenuItem( self.m_edit, wx.ID_CUT, _(u"Cut"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_Cut )
 
-        self.m_menuItem_Copy = wx.MenuItem( self.m_edit, wx.ID_COPY, _(u"Copy")+ u"\t" + u"Ctrl+C", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Copy = wx.MenuItem( self.m_edit, wx.ID_COPY, _(u"Copy"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_Copy )
 
-        self.m_menuItem_Paste = wx.MenuItem( self.m_edit, wx.ID_PASTE, _(u"Paste")+ u"\t" + u"Ctrl+V", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_Paste = wx.MenuItem( self.m_edit, wx.ID_PASTE, _(u"Paste"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_Paste )
 
         self.m_edit.AppendSeparator()
 
-        self.m_menuItem_SelectAll = wx.MenuItem( self.m_edit, wx.ID_SELECT_ALL, _(u"Select All")+ u"\t" + u"Ctrl+A", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_SelectAll = wx.MenuItem( self.m_edit, wx.ID_SELECT_ALL, _(u"Select All"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_SelectAll )
 
         self.m_edit.AppendSeparator()
 
-        self.m_menuItem_FindReplace = wx.MenuItem( self.m_edit, wx.ID_FIND_REPLACE, _(u"Find / Replace...")+ u"\t" + u"Ctrl+F", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_FindReplace = wx.MenuItem( self.m_edit, wx.ID_FIND_REPLACE, _(u"Find / Replace..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_FindReplace )
 
-        self.m_menuItem_GoToLine = wx.MenuItem( self.m_edit, wx.ID_GO_TO_LINE, _(u"Go to Line...")+ u"\t" + u"Ctrl+G", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_GoToLine = wx.MenuItem( self.m_edit, wx.ID_GO_TO_LINE, _(u"Go to Line..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_GoToLine )
 
         self.m_edit.AppendSeparator()
 
-        self.m_menuItem_ToggleComment = wx.MenuItem( self.m_edit, wx.ID_TOGGLE_COMMENT, _(u"Toggle Line Comment")+ u"\t" + u"Ctrl+/", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleComment = wx.MenuItem( self.m_edit, wx.ID_TOGGLE_COMMENT, _(u"Toggle Line Comment"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_ToggleComment )
 
-        self.m_menuItem_ToggleBlockComment = wx.MenuItem( self.m_edit, wx.ID_TOGGLE_BLOCK_COMMENT, _(u"Toggle Block Comment")+ u"\t" + u"Ctrl+Alt+A", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleBlockComment = wx.MenuItem( self.m_edit, wx.ID_TOGGLE_BLOCK_COMMENT, _(u"Toggle Block Comment"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_edit.Append( self.m_menuItem_ToggleBlockComment )
 
 
@@ -311,49 +311,49 @@ class SpawnFrame ( wx.Frame ):
         
         #Selection Menu
         self.m_selection = wx.Menu()
-        self.m_menuItem_MoveLineUp = wx.MenuItem( self.m_selection, wx.ID_MOVE_LINE_UP, _(u"Move Line Up")+ u"\t" + u"Alt+Up", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_MoveLineUp = wx.MenuItem( self.m_selection, wx.ID_MOVE_LINE_UP, _(u"Move Line Up"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_selection.Append( self.m_menuItem_MoveLineUp)
 
-        self.m_menuItem_MoveLineDown = wx.MenuItem( self.m_selection, wx.ID_MOVE_LINE_DOWN, _(u"Move Line Down")+ u"\t" + u"Alt+Down", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_MoveLineDown = wx.MenuItem( self.m_selection, wx.ID_MOVE_LINE_DOWN, _(u"Move Line Down"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_selection.Append( self.m_menuItem_MoveLineDown)
 
-        self.m_menuItem_DuplicateLine = wx.MenuItem( self.m_selection, wx.ID_DUPLICATE_LINE, _(u"Duplicate Line")+ u"\t" + u"Ctrl+D", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_DuplicateLine = wx.MenuItem( self.m_selection, wx.ID_DUPLICATE_LINE, _(u"Duplicate Line"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_selection.Append( self.m_menuItem_DuplicateLine)
 
-        self.m_menuItem_DeleteLine = wx.MenuItem( self.m_selection, wx.ID_DELETE_LINE, _(u"Delete Line")+ u"\t" + u"Ctrl+Shift+K", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_DeleteLine = wx.MenuItem( self.m_selection, wx.ID_DELETE_LINE, _(u"Delete Line"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_selection.Append( self.m_menuItem_DeleteLine)
 
         self.m_menubar.Append( self.m_selection, _(u"Selection") )
         #View Menu  
         self.m_view = wx.Menu()
-        self.m_menuItem_FullScreen = wx.MenuItem( self.m_view, wx.ID_FULLSCREEN, _(u"Full Screen")+ u"\t" + u"F11", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_FullScreen = wx.MenuItem( self.m_view, wx.ID_FULLSCREEN, _(u"Full Screen"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_FullScreen )
 
-        self.m_menuItem_ZenMode = wx.MenuItem( self.m_view, wx.ID_TOGGLE_ZEN_MODE, _(u"Toggle Zen Mode")+ u"\t" + u"Ctrl+K", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ZenMode = wx.MenuItem( self.m_view, wx.ID_TOGGLE_ZEN_MODE, _(u"Toggle Zen Mode"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ZenMode )
 
         self.m_view.AppendSeparator()
-        self.m_menuItem_ToggleToolbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_TOOLBAR, _(u"Toggle Toolbar")+ u"\t" + u"Ctrl+1", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleToolbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_TOOLBAR, _(u"Toggle Toolbar"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleToolbar )
 
-        self.m_menuItem_ToggleStatusbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_STATUSBAR, _(u"Toggle StatusBar")+ u"\t" + u"Ctrl+2", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleStatusbar = wx.MenuItem( self.m_view, wx.ID_TOGGLE_STATUSBAR, _(u"Toggle StatusBar"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleStatusbar )
 
-        self.m_menuItem_ToggleProjectPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_PROJECT_PANEL, _(u"Toggle Project Panel")+ u"\t" + u"Ctrl+3", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleProjectPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_PROJECT_PANEL, _(u"Toggle Project Panel"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleProjectPanel )
 
-        self.m_menuItem_ToggleOutputPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_OUTPUT_PANEL, _(u"Toggle Output Panel")+ u"\t" + u"Ctrl+4", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ToggleOutputPanel = wx.MenuItem( self.m_view, wx.ID_TOGGLE_OUTPUT_PANEL, _(u"Toggle Output Panel"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ToggleOutputPanel )
 
         self.m_view.AppendSeparator()
 
-        self.m_menuItem_ZoomIn = wx.MenuItem( self.m_view, wx.ID_ZOOM_IN, _(u"Zoom In")+ u"\t" + u"Ctrl+=", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ZoomIn = wx.MenuItem( self.m_view, wx.ID_ZOOM_IN, _(u"Zoom In"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ZoomIn )
 
-        self.m_menuItem_ZoomOut = wx.MenuItem( self.m_view, wx.ID_ZOOM_OUT, _(u"Zoom Out")+ u"\t" + u"Ctrl+-", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ZoomOut = wx.MenuItem( self.m_view, wx.ID_ZOOM_OUT, _(u"Zoom Out"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ZoomOut )
 
-        self.m_menuItem_ResetZoom = wx.MenuItem( self.m_view, wx.ID_RESET_ZOOM, _(u"Reset Zoom")+ u"\t" + u"Ctrl+0", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_ResetZoom = wx.MenuItem( self.m_view, wx.ID_RESET_ZOOM, _(u"Reset Zoom"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_view.Append( self.m_menuItem_ResetZoom )
 
         self.m_menubar.Append( self.m_view, _(u"View") )
@@ -370,13 +370,13 @@ class SpawnFrame ( wx.Frame ):
         self.m_menubar.Append( self.m_project, _(u"Project") )
 
         self.m_build = wx.Menu()
-        self.m_menuItem_CompileProject = wx.MenuItem( self.m_build, wx.ID_BUILD_PROJECT, _(u"Build Server")+ u"\t" + u"F5", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_CompileProject = wx.MenuItem( self.m_build, wx.ID_BUILD_PROJECT, _(u"Build Server"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_build.Append( self.m_menuItem_CompileProject )
 
         self.m_menubar.Append( self.m_build, _(u"Build") )
 
         self.m_server = wx.Menu()
-        self.m_menuItem_RunStopServer = wx.MenuItem( self.m_server, wx.ID_RUN_STOP_SERVER, _(u"Run / Stop Server")+ u"\t" + u"F6", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menuItem_RunStopServer = wx.MenuItem( self.m_server, wx.ID_RUN_STOP_SERVER, _(u"Run / Stop Server"), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_server.Append( self.m_menuItem_RunStopServer )
         self.m_menubar.Append( self.m_server, _(u"Server") )       
 
@@ -384,6 +384,22 @@ class SpawnFrame ( wx.Frame ):
         
         self.m_menuItem_Settings = wx.MenuItem( self.m_tools, wx.ID_SETTINGS, _(u"Settings..."), wx.EmptyString, wx.ITEM_NORMAL )
         self.m_tools.Append( self.m_menuItem_Settings )
+
+        self.m_menuItem_KeyboardShortcuts = wx.MenuItem(
+            self.m_tools,
+            wx.ID_ANY,
+            _(u"Keyboard Shortcuts..."),
+            wx.EmptyString,
+            wx.ITEM_NORMAL
+        )
+
+        self.m_tools.Append(
+            self.m_menuItem_KeyboardShortcuts
+        )
+
+        self.ID_KEYBOARD_SHORTCUTS = (
+            self.m_menuItem_KeyboardShortcuts.GetId()
+        )
 
         self.m_menubar.Append( self.m_tools, _(u"Tools") )
 
