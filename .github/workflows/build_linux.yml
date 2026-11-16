@@ -109,14 +109,14 @@ jobs:
 
       - name: Create archive
         run: |
-          tar -czf "Spawn_${{ inputs.version }}_Linux_x64.tar.gz" \
+          tar -czf "Spawn_${{ inputs.version }}_Linux_amd64.tar.gz" \
             -C dist Spawn
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: Spawn_${{ inputs.version }}_Linux_x64
+          name: Spawn_${{ inputs.version }}_Linux_amd64
           path: |
-            Spawn_${{ inputs.version }}_Linux_x64.tar.gz
+            Spawn_${{ inputs.version }}_Linux_amd64.tar.gz
             Spawn_${{ inputs.version }}_Linux_amd64.deb
           if-no-files-found: error
