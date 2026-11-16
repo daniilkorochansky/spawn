@@ -41,6 +41,7 @@ except ImportError:
 from core.docs.documentation_manager import DocumentationFormatError, DocumentationRelease
 import core.docs.documentation_worker as documentation_worker_module
 from core.docs.documentation_worker import DocumentationWorker
+from core.docs.documentation_manager import OpenMPDocumentationManager
 
 
 @pytest.fixture(autouse=True)
@@ -95,8 +96,6 @@ class FakeManager:
 
     @staticmethod
     def validate_docset(path):
-        from core.documentation_manager import OpenMPDocumentationManager
-
         return OpenMPDocumentationManager.validate_docset(path)
 
 
@@ -262,7 +261,7 @@ def test_extract_docset_enforces_unpacked_size_limit(tmp_path, monkeypatch):
     extraction_root = tmp_path / "extract"
     extraction_root.mkdir()
     worker = make_worker(tmp_path / "worker")
-    monkeypatch.setattr("core.documentation_worker.MAX_UNPACKED_BYTES", 8)
+    monkeypatch.setattr("core.docs.documentation_worker.MAX_UNPACKED_BYTES", 8)
 
     with pytest.raises(DocumentationFormatError, match="too large"):
         worker._extract_docset(archive_path, extraction_root)
@@ -292,7 +291,7 @@ def test_download_archive_writes_stream_and_reports_progress(tmp_path):
     release = DocumentationRelease("1.0", "https://github.com/example/docset.tgz", 6)
     destination = tmp_path / "download.tgz"
 
-    with patch("core.documentation_worker.requests.get", return_value=response) as get:
+    with patch("core.docs.documentation_worker.requests.get", return_value=response) as get:
         worker._download_archive(release, destination)
 
     assert destination.read_bytes() == b"abcdef"
@@ -310,7 +309,7 @@ def test_download_archive_rejects_empty_response(tmp_path):
     response.headers = {}
     response.iter_content.return_value = [b"", b""]
 
-    with patch("core.documentation_worker.requests.get", return_value=response):
+    with patch("core.docs.documentation_worker.requests.get", return_value=response):
         with pytest.raises(RuntimeError, match="empty file"):
             worker._download_archive(
                 DocumentationRelease("1.0", "https://github.com/example/docset.tgz"),
@@ -324,7 +323,7 @@ def test_download_archive_rejects_incomplete_response(tmp_path):
     response.headers = {"Content-Length": "10"}
     response.iter_content.return_value = [b"short"]
 
-    with patch("core.documentation_worker.requests.get", return_value=response):
+    with patch("core.docs.documentation_worker.requests.get", return_value=response):
         with pytest.raises(RuntimeError, match="Incomplete documentation download"):
             worker._download_archive(
                 DocumentationRelease("1.0", "https://github.com/example/docset.tgz"),

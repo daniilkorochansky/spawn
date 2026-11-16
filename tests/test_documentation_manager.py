@@ -193,7 +193,7 @@ def test_fetch_latest_release_reads_feed_and_head_content_length(manager):
     )
     head_response = Mock(ok=True, headers={"Content-Length": "4096"})
 
-    with patch("core.documentation_manager.requests.Session") as session_class:
+    with patch("core.docs.documentation_manager.requests.Session") as session_class:
         session = session_class.return_value
         session.get.return_value = response
         session.head.return_value = head_response
@@ -219,7 +219,7 @@ def test_fetch_latest_release_uses_range_probe_when_head_has_no_size(manager):
         headers={"Content-Range": "bytes 0-0/12345"},
     )
 
-    with patch("core.documentation_manager.requests.Session") as session_class:
+    with patch("core.docs.documentation_manager.requests.Session") as session_class:
         session = session_class.return_value
         session.get.side_effect = [feed_response, probe_response]
         session.head.return_value = head_response
@@ -232,7 +232,7 @@ def test_fetch_latest_release_uses_range_probe_when_head_has_no_size(manager):
 
 def test_fetch_latest_release_rejects_invalid_xml(manager):
     response = Mock(content=b"<not-closed>")
-    with patch("core.documentation_manager.requests.Session") as session_class:
+    with patch("core.docs.documentation_manager.requests.Session") as session_class:
         session_class.return_value.get.return_value = response
 
         with pytest.raises(DocumentationFormatError, match="not valid XML"):
@@ -240,7 +240,7 @@ def test_fetch_latest_release_rejects_invalid_xml(manager):
 
 def test_fetch_latest_release_rejects_missing_feed_fields(manager):
     response = Mock(content=b"<entry><version>1.0</version></entry>")
-    with patch("core.documentation_manager.requests.Session") as session_class:
+    with patch("core.docs.documentation_manager.requests.Session") as session_class:
         session_class.return_value.get.return_value = response
 
         with pytest.raises(DocumentationFormatError, match="missing version or URL"):
@@ -253,14 +253,14 @@ def test_fetch_latest_release_rejects_untrusted_download_host(manager):
             b"<url>https://example.com/docset.tgz</url></entry>"
         )
     )
-    with patch("core.documentation_manager.requests.Session") as session_class:
+    with patch("core.docs.documentation_manager.requests.Session") as session_class:
         session_class.return_value.get.return_value = response
 
         with pytest.raises(DocumentationFormatError, match="unexpected download URL"):
             manager.fetch_latest_release()
 
 def test_fetch_latest_release_maps_network_errors(manager):
-    with patch("core.documentation_manager.requests.Session") as session_class:
+    with patch("core.docs.documentation_manager.requests.Session") as session_class:
         session_class.return_value.get.side_effect = requests.ConnectionError("offline")
 
         with pytest.raises(DocumentationNetworkError, match="offline"):
@@ -269,7 +269,7 @@ def test_fetch_latest_release_maps_network_errors(manager):
 def test_fetch_latest_release_maps_http_errors(manager):
     response = Mock(status_code=503)
     error = requests.HTTPError(response=response)
-    with patch("core.documentation_manager.requests.Session") as session_class:
+    with patch("core.docs.documentation_manager.requests.Session") as session_class:
         session_class.return_value.get.side_effect = error
 
         with pytest.raises(DocumentationFormatError, match="HTTP 503"):
