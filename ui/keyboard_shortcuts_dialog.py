@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------------------------------------------
-#   Spawn — A fast and modern, open-source IDE with a native user interface for SA-MP and open.mp server development.
+#   Spawn — IDE with a native user interface for SA-MP and open.mp server development.
 #   Copyright (C) 2026  Daniil Korochansky
 #
 #   This file is part of Spawn.
@@ -19,6 +19,9 @@
 #   along with Spawn.  If not, see <https://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------------------------------------------------
 
+import os
+import sys
+
 import wx
 import wx.xrc
 import wx.propgrid
@@ -26,12 +29,23 @@ import wx.propgrid
 import gettext
 _ = gettext.gettext
 
+def get_app_root_dir():
+    if 'NUITKA_ONEFILE_PARENT' in os.environ or getattr(sys, 'frozen', False):
+        return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+
+    ui_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.dirname(ui_dir)
+
+APP_ROOT = get_app_root_dir()
+
 class KeyboardShortcuts ( wx.Dialog ):
 
     def __init__( self, parent ):
         wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"Keyboard Shortcuts"), pos = wx.DefaultPosition, size = wx.Size( 566,407 ), style = wx.DEFAULT_DIALOG_STYLE|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER )
 
         self.SetSizeHints( wx.Size( 340,280 ), wx.DefaultSize )
+
+        self.icons_folder = os.path.join(APP_ROOT, "assets", "icons")
 
         bSizerMain = wx.BoxSizer( wx.VERTICAL )
 
@@ -49,17 +63,17 @@ class KeyboardShortcuts ( wx.Dialog ):
 
         self.m_bpButtonNew = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
 
-        self.m_bpButtonNew.SetBitmap( wx.ArtProvider.GetBitmap( wx.ART_PLUS, wx.ART_BUTTON ) )
+        self.m_bpButtonNew.SetBitmap(wx.Bitmap(os.path.join(self.icons_folder,"ks_new.png"), wx.BITMAP_TYPE_PNG))
         bSizerSubMain.Add( self.m_bpButtonNew, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
         self.m_bpButtonClone = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
 
-        self.m_bpButtonClone.SetBitmap( wx.ArtProvider.GetBitmap( wx.ART_COPY, wx.ART_BUTTON ) )
+        self.m_bpButtonClone.SetBitmap(wx.Bitmap(os.path.join(self.icons_folder,"ks_clone.png"), wx.BITMAP_TYPE_PNG))
         bSizerSubMain.Add( self.m_bpButtonClone, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
         self.m_bpButtonRemove = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
 
-        self.m_bpButtonRemove.SetBitmap( wx.ArtProvider.GetBitmap( wx.ART_DELETE, wx.ART_BUTTON ) )
+        self.m_bpButtonRemove.SetBitmap(wx.Bitmap(os.path.join(self.icons_folder,"ks_remove.png"), wx.BITMAP_TYPE_PNG))
         bSizerSubMain.Add( self.m_bpButtonRemove, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
 
@@ -70,7 +84,7 @@ class KeyboardShortcuts ( wx.Dialog ):
         self.m_searchCtrl.ShowCancelButton( False )
         bSizerMain.Add( self.m_searchCtrl, 0, wx.ALL|wx.EXPAND, 5 )
 
-        self.m_propertyGridManager = wx.propgrid.PropertyGridManager(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.propgrid.PGMAN_DEFAULT_STYLE)
+        self.m_propertyGridManager = wx.propgrid.PropertyGridManager(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.propgrid.PGMAN_DEFAULT_STYLE|wx.propgrid.PG_BOLD_MODIFIED|wx.propgrid.PG_HIDE_MARGIN)
         self.m_propertyGridManager.SetExtraStyle( wx.propgrid.PG_EX_MODE_BUTTONS )
 
         self.m_propertyGridPage = self.m_propertyGridManager.AddPage( _(u"Shortcuts"), wx.NullBitmap )
@@ -78,13 +92,13 @@ class KeyboardShortcuts ( wx.Dialog ):
 
         bSizerBottom = wx.BoxSizer( wx.HORIZONTAL )
 
-        self.m_bpButtonImport = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
+        self.m_bpButtonImport = wx.BitmapButton( self, wx.ID_ANY, wx.Bitmap(os.path.join(self.icons_folder,"ks_import.png"), wx.BITMAP_TYPE_PNG), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
         bSizerBottom.Add( self.m_bpButtonImport, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
-        self.m_bpButtonExport = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
+        self.m_bpButtonExport = wx.BitmapButton( self, wx.ID_ANY, wx.Bitmap(os.path.join(self.icons_folder,"ks_export.png"), wx.BITMAP_TYPE_PNG), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
         bSizerBottom.Add( self.m_bpButtonExport, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
-        self.m_bpButtonReset = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
+        self.m_bpButtonReset = wx.BitmapButton( self, wx.ID_ANY, wx.Bitmap(os.path.join(self.icons_folder,"ks_reset.png"), wx.BITMAP_TYPE_PNG), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|0 )
         bSizerBottom.Add( self.m_bpButtonReset, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
 

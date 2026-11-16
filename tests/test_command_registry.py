@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import pytest
 
 from core.shortcuts.command_registry import CommandRegistry, ShortcutCommand

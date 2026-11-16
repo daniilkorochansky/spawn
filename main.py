@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------------------------------------------
-#   Spawn — A fast and modern, open-source IDE with a native user interface for SA-MP and open.mp server development.
+#   Spawn — IDE with a native user interface for SA-MP and open.mp server development.
 #   Copyright (C) 2026  Daniil Korochansky
 #
 #   This file is part of Spawn.
@@ -49,13 +49,13 @@ from ui.shortcut_capture_dialog import KeyboardShortcutsDialog
 from ui.dependency_manager_dialog import DependencyManagerDialog
 from ui.action_choice_ctrl import (EVT_SPLIT_CHOICE_SELECT,EVT_SPLIT_CHOICE_ACTION)
 
-from core.documentation_manager import (OpenMPDocumentationManager,DocumentationNetworkError)
+from core.docs.documentation_manager import (OpenMPDocumentationManager,DocumentationNetworkError)
 from core.shortcuts.command_registry import (CommandRegistry, ShortcutCommand)
 from core.sampctl_profiles import (DEFAULT_PROFILE, load_sampctl_profiles)
 from core.pawn_config import find_config, load_config, save_config
 from core.shortcuts.keybindings_manager import KeybindingsManager
 from core.shortcuts.shortcut_manager import ShortcutManager
-from core.documentation_worker import DocumentationWorker
+from core.docs.documentation_worker import DocumentationWorker
 from core.shortcuts.shortcut_parser import ShortcutParser
 from core.project_creator import ProjectCreateWorker
 from core.file_watcher import ProjectFileWatcher

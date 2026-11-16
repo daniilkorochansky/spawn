@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------------------------------------------
-#   Spawn — A fast and modern, open-source IDE with a native user interface for SA-MP and open.mp server development.
+#   Spawn — IDE with a native user interface for SA-MP and open.mp server development.
 #   Copyright (C) 2026  Daniil Korochansky
 #
 #   This file is part of Spawn.
@@ -34,7 +34,7 @@ import requests
 import wx
 
 from core.logger import SpawnLogger
-from core.documentation_manager import (
+from core.docs.documentation_manager import (
     DocumentationFormatError,
     DocumentationRelease,
     OpenMPDocumentationManager,

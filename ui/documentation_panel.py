@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------------------------------------------
-#   Spawn — A fast and modern, open-source IDE with a native user interface for SA-MP and open.mp server development.
+#   Spawn — IDE with a native user interface for SA-MP and open.mp server development.
 #   Copyright (C) 2026  Daniil Korochansky
 #
 #   This file is part of Spawn.
@@ -33,7 +33,7 @@ import wx.html2
 import gettext
 _ = gettext.gettext
 
-from core.documentation_index import DocumentationEntry, DocumentationIndex
+from core.docs.documentation_index import DocumentationEntry, DocumentationIndex
 
 def get_app_root_dir():
     if 'NUITKA_ONEFILE_PARENT' in os.environ or getattr(sys, 'frozen', False):

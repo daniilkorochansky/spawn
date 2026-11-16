@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------------------------------------------
-#   Spawn — A fast and modern, open-source IDE with a native user interface for SA-MP and open.mp server development.
+#   Spawn — IDE with a native user interface for SA-MP and open.mp server development.
 #   Copyright (C) 2026  Daniil Korochansky
 #
 #   This file is part of Spawn.
@@ -36,7 +36,7 @@ class ShortcutCaptureDialog(wx.Dialog):
         super().__init__(
             parent,
             title=_(u"Assign Shortcut"),
-            size=wx.Size(380, 150),
+            size=wx.Size(380, 160),
             style=wx.DEFAULT_DIALOG_STYLE
         )
 
@@ -236,19 +236,12 @@ class KeyboardShortcutsDialog(KeyboardShortcuts):
             (
                 self.m_bpButtonReset,
                 wx.ART_UNDO,
-                _(u"Reset Current Keymap")
+                _(u"Reset Keymap")
             )
         ]
 
         for button, art_id, tooltip in button_art:
 
-            bitmap = wx.ArtProvider.GetBitmap(
-                art_id,
-                wx.ART_BUTTON
-            )
-
-            if bitmap.IsOk():
-                button.SetBitmap(bitmap)
 
             button.SetToolTip(tooltip)
 
@@ -257,11 +250,11 @@ class KeyboardShortcutsDialog(KeyboardShortcuts):
         )
 
         self.m_bpButtonClone.SetToolTip(
-            _(u"Duplicate Current Keymap")
+            _(u"Duplicate Keymap")
         )
 
         self.m_bpButtonRemove.SetToolTip(
-            _(u"Delete Current Keymap")
+            _(u"Delete Keymap")
         )
 
     def _bind_events(self):
@@ -717,7 +710,7 @@ class KeyboardShortcutsDialog(KeyboardShortcuts):
                 if conflicts:
 
                     conflict_names = "\n".join(
-                        f"• {item.label} ({item.command_id})"
+                        f"{item.label} ({item.command_id})"
                         for item in conflicts
                     )
 
@@ -887,6 +880,13 @@ class KeyboardShortcutsDialog(KeyboardShortcuts):
             # New rollback point after successful Apply.
             self._snapshot = (
                 self.keybindings_manager.get_data_copy()
+            )
+
+            result = wx.MessageBox(
+                _(u"Saved successfully"),
+                _(u"Keyboard Shortcuts"),
+                wx.OK | wx.ICON_INFORMATION,
+                self
             )
 
         except Exception as exc:
