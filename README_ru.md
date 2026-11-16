@@ -50,7 +50,7 @@ sudo apt install ./Spawn_X.X.X_Linux_amd64.deb
 
 #### Установка вручную
 1. Откройте [последнюю версию](https://github.com/daniilkorochansky/spawn/releases).
-2. Загрузите и распакуйте архив `Spawn_X.X.X_Linux_x64.tar.gz`.
+2. Загрузите и распакуйте архив `Spawn_X.X.X_Linux_amd64.tar.gz`.
 3. Установите зависимости:
 * **Ubuntu / Debian / Linux Mint:**
   ```bash
@@ -66,11 +66,11 @@ sudo apt install ./Spawn_X.X.X_Linux_amd64.deb
   ```
 4. Откройте терминал в каталоге, содержащем загруженный архив, и распакуйте его.
 ```bash
-tar -xzf Spawn_X.X.X_Linux_x64.tar.gz
+tar -xzf Spawn_X.X.X_Linux_amd64.tar.gz
 ```
 5. Присвойте исполняемому файлу `Spawn` права на запуск.
 ```bash
-cd Spawn_X.X.X_Linux_x64
+cd Spawn_X.X.X_Linux_amd64
 chmod +x Spawn
 ```
 6. Запустите `Spawn`
